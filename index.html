@@ -53,10 +53,10 @@
 
         <select id="urgencyFilter" aria-label="Filter by urgency" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
           <option value="ALL">All Urgency Types</option>
-          <option value="Urgent / Deadline">Urgent / Deadline Only</option>
-          <option value="Space">Space / Capacity</option>
-          <option value="Medical">Medical</option>
-          <option value="Behavior">Behavior / Rescue Only</option>
+          <option value="deadline">Urgent / Deadline Only</option>
+          <option value="capacity">Space / Capacity / High-Risk</option>
+          <option value="medical">Medical Alert</option>
+          <option value="rescue">Behavior / Rescue Only</option>
         </select>
       </div>
     </div>
@@ -108,6 +108,25 @@
       if (diffHrs < 24) return `Verified ${diffHrs}h ago`;
       const days = Math.floor(diffHrs / 24);
       return `Updated ${days}d ago`;
+    }
+
+    function matchesUrgency(dog, filterVal) {
+      if (!filterVal || filterVal === 'ALL') return true;
+      const blob = `${dog.deadline_or_urgency || ''} ${dog.urgency_type || ''} ${dog.needs_type || ''} ${dog.transport_note || ''}`.toLowerCase();
+
+      if (filterVal === 'deadline') {
+        return /euthanasia|final call|deadline|out of time|needs rescue final|red list/.test(blob);
+      }
+      if (filterVal === 'capacity') {
+        return /space|capacity|greatest risk|red status|u-los|long-stay/.test(blob);
+      }
+      if (filterVal === 'medical') {
+        return /medical|orange|blue|parvo|injured|hospice|uri/.test(blob);
+      }
+      if (filterVal === 'rescue') {
+        return /rescue only|u-behavior|transfer|urgent needs|new hope|priority|needs rescue/.test(blob);
+      }
+      return blob.includes(filterVal.toLowerCase());
     }
 
     async function copyAnimalId(btn, idText) {
@@ -166,14 +185,12 @@
           (d.needs_type || '').toLowerCase().includes(selectedRole.toLowerCase());
 
         const matchesCounty = county === 'ALL' || d.county === county;
-
-        const urgencyBlob = `${d.urgency_type || ''} ${d.deadline_or_urgency || ''}`.toLowerCase();
-        const matchesUrgency = urgency === 'ALL' || urgencyBlob.includes(urgency.toLowerCase());
+        const isUrgencyMatch = matchesUrgency(d, urgency);
 
         const searchBlob = `${d.animal_id || ''} ${d.name || ''} ${d.breed || ''} ${d.shelter || ''} ${d.city || ''} ${d.county || ''}`.toLowerCase();
         const matchesQuery = !query || searchBlob.includes(query);
 
-        return matchesRole && matchesCounty && matchesUrgency && matchesQuery;
+        return matchesRole && matchesCounty && isUrgencyMatch && matchesQuery;
       });
 
       document.getElementById('countLabel').textContent =
@@ -192,8 +209,9 @@
         const shelter = escapeHtml(d.shelter || 'California Shelter');
         const locStr = escapeHtml(formatLocation(d));
         const ageLabel = escapeHtml(formatAge(d.updated_at || d.last_checked));
-        const deadline = escapeHtml(d.deadline_or_urgency || 'Urgent');
-        const isDeadline = deadline.toLowerCase().includes('urgent') || deadline.toLowerCase().includes('deadline');
+        const rawDeadline = d.deadline_or_urgency || 'Urgent';
+        const deadline = escapeHtml(rawDeadline);
+        const isDeadline = /euthanasia|final call|deadline|out of time|needs rescue final|red list/i.test(rawDeadline);
         const badgeStyle = isDeadline
           ? 'bg-red-100 text-red-800'
           : 'bg-amber-100 text-amber-900';
@@ -291,4 +309,3 @@
   </script>
 </body>
 </html>
-
