@@ -439,8 +439,10 @@ def scrape_24petconnect_board(
         location = extract_field(txt, ("Located at", "Location")) or shelter_name
         photo_url = c.get("img") or ""
 
-        if not href:
-            href = f"https://24petconnect.com/{portal_code}/Details/{portal_code}/{animal_id}"
+        # Normalize broken board-scoped KernCountyRescue links to valid DetailsMain/KERN/{ID} URLs
+        if portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
+            code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
+            href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
 
         urgency_type = default_urgency
         badge = default_badge
