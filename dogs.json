@@ -1,5 +1,65 @@
 [
   {
+    "id": "oas-21918580",
+    "animal_id": "21918580",
+    "name": "OAS #21918580",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Exit Deadline (11/23/2026)",
+    "deadline_or_urgency": "DEADLINE 11/23/2026",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/21918/21918580/104084518.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=21918580",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22628095",
+    "animal_id": "22628095",
+    "name": "OAS #22628095",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Exit Deadline (11/23/2026)",
+    "deadline_or_urgency": "DEADLINE 11/23/2026",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22628/22628095/104160873.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22628095",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22731520",
+    "animal_id": "22731520",
+    "name": "OAS #22731520",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Exit Deadline (11/23/2026)",
+    "deadline_or_urgency": "DEADLINE 11/23/2026",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22731/22731520/104193289.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22731520",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
     "id": "laas-a1905992",
     "animal_id": "A1905992",
     "name": "LAAS A1905992",
@@ -16,8 +76,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1905992&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A1905992&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2146436",
@@ -36,8 +96,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2146436&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2146436&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2235193",
@@ -56,28 +116,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2235193&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2235193&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
-  },
-  {
-    "id": "laas-a2283265",
-    "animal_id": "A2283265",
-    "name": "LAAS A2283265",
-    "breed": "SPAYED FEMALE WHITE ALASKAN HUSKY",
-    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
-    "city": "Los Angeles",
-    "county": "Los Angeles",
-    "state": "CA",
-    "size": "",
-    "age": "",
-    "urgency_type": "LAAS Euthanasia Alert (6 Shelters)",
-    "deadline_or_urgency": "EUTHANASIA ALERT",
-    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
-    "transport_note": "Active on LAAS Euthanasia Alert",
-    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2283265&LOCATION=LACT1",
-    "listing_url": "https://petharbor.com/detail.asp?ID=A2283265&LOCATION=LACT1&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2288736",
@@ -96,8 +136,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2288736&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2288736&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2289899",
@@ -116,8 +156,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2289899&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2289899&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2291904",
@@ -136,8 +176,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2291904&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2291904&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2292203",
@@ -156,8 +196,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2292203&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2292203&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2292884",
@@ -176,8 +216,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2292884&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2292884&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2293482",
@@ -196,8 +236,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2293482&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2293482&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296431",
@@ -216,8 +256,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296431&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296431&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298913",
@@ -236,8 +276,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298913&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298913&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299155",
@@ -256,8 +296,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299155&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299155&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299661",
@@ -276,8 +316,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299661&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299661&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299867",
@@ -296,8 +336,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299867&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299867&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300828",
@@ -316,8 +356,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300828&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300828&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301061",
@@ -336,8 +376,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301061&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301061&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302969",
@@ -356,8 +396,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302969&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302969&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2303047",
@@ -376,8 +416,8 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2303047&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2303047&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2303398",
@@ -396,8 +436,28 @@
     "transport_note": "Active on LAAS Euthanasia Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2303398&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2303398&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_euth&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "laas-a2305013",
+    "animal_id": "A2305013",
+    "name": "LAAS A2305013",
+    "breed": "SPAYED FEMALE BLACK/BROWN ROTTWEILER",
+    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
+    "city": "Los Angeles",
+    "county": "Los Angeles",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "LAAS Euthanasia Alert (6 Shelters)",
+    "deadline_or_urgency": "EUTHANASIA ALERT",
+    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+    "transport_note": "Active on LAAS Euthanasia Alert",
+    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2305013&LOCATION=LACT",
+    "listing_url": "https://petharbor.com/detail.asp?ID=A2305013&LOCATION=LACT&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1938058",
@@ -416,8 +476,8 @@
     "transport_note": "I have been at the shelter since Sep 18, 2026.",
     "photo_url": "https://24petconnect.com/image/710488214",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1938058",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1399425",
@@ -436,8 +496,8 @@
     "transport_note": "I have been at the shelter since Oct 03, 2026.",
     "photo_url": "https://24petconnect.com/image/716373246",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1399425",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1929034",
@@ -456,8 +516,8 @@
     "transport_note": "I have been at the shelter since Jul 22, 2026.",
     "photo_url": "https://24petconnect.com/image/709410442",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1929034",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1931731",
@@ -476,8 +536,8 @@
     "transport_note": "I have been at the shelter since Aug 10, 2026.",
     "photo_url": "https://24petconnect.com/image/710169318",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1931731",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1411560",
@@ -496,8 +556,8 @@
     "transport_note": "121 days in shelter | Kennel SJ FOSTER | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1411560&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1411560",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1413343",
@@ -516,8 +576,8 @@
     "transport_note": "21 days in shelter | Kennel SJ CF04 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1413343&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1413343",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1409837",
@@ -536,8 +596,8 @@
     "transport_note": "150 days in shelter | Kennel SJ CC02 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1409837&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1409837",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1411883",
@@ -556,8 +616,8 @@
     "transport_note": "115 days in shelter | Kennel SJ CF02 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1411883&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1411883",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416677",
@@ -576,8 +636,8 @@
     "transport_note": "28 days in shelter | Kennel SJ CF03 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416677&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416677",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417938",
@@ -596,8 +656,8 @@
     "transport_note": "1 days in shelter | Kennel SJ CE06 | Stray Wait",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417938&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417938",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a599333",
@@ -616,8 +676,8 @@
     "transport_note": "32 days in shelter. Must exit by Tue COB / Wed 6:30am if Final Call.",
     "photo_url": "https://24petconnect.com/image/717285682",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A599333",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615748",
@@ -636,8 +696,8 @@
     "transport_note": "25 days in shelter. Must exit by Tue COB / Wed 6:30am if Final Call.",
     "photo_url": "https://24petconnect.com/image/716893679",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615748",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615629",
@@ -656,8 +716,8 @@
     "transport_note": "31 days in shelter. Must exit by Tue COB / Wed 6:30am if Final Call.",
     "photo_url": "https://24petconnect.com/image/718962929",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615629",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615564",
@@ -676,8 +736,8 @@
     "transport_note": "32 days in shelter. Must exit by Tue COB / Wed 6:30am if Final Call.",
     "photo_url": "https://24petconnect.com/image/717371671",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615564",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615620",
@@ -696,8 +756,108 @@
     "transport_note": "31 days in shelter. Must exit by Tue COB / Wed 6:30am if Final Call.",
     "photo_url": "https://24petconnect.com/image/716893672",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615620",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22355068",
+    "animal_id": "22355068",
+    "name": "OAS #22355068",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Priority Urgent Dog",
+    "deadline_or_urgency": "OAS PRIORITY",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22355/22355068/104132324.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22355068",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22707504",
+    "animal_id": "22707504",
+    "name": "OAS #22707504",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Priority Urgent Dog",
+    "deadline_or_urgency": "OAS PRIORITY",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22707/22707504/104170264.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22707504",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22721890",
+    "animal_id": "22721890",
+    "name": "OAS #22721890",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Priority Urgent Dog",
+    "deadline_or_urgency": "OAS PRIORITY",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22721/22721890/104132112.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22721890",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22751213",
+    "animal_id": "22751213",
+    "name": "OAS #22751213",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Priority Urgent Dog",
+    "deadline_or_urgency": "OAS PRIORITY",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22751/22751213/104105831.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22751213",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "oas-22877307",
+    "animal_id": "22877307",
+    "name": "OAS #22877307",
+    "breed": "",
+    "shelter": "Oakland Animal Services",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "OAS Priority Urgent Dog",
+    "deadline_or_urgency": "OAS PRIORITY",
+    "needs_type": "Rescue Pull, Foster, or Adopt",
+    "transport_note": "",
+    "photo_url": "https://cdn.rescuegroups.org/5970/pictures/animals/22877/22877307/104193718.jpg",
+    "listing_url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22877307",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056391",
@@ -716,8 +876,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718611681",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056391",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056380",
@@ -736,8 +896,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718621594",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056380",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1052396",
@@ -756,8 +916,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/719187014",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1052396",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056392",
@@ -776,8 +936,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718613470",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056392",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056303",
@@ -796,8 +956,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718174343",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056303",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1054371",
@@ -816,8 +976,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718551500",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1054371",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056383",
@@ -836,8 +996,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718573665",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056383",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-ccas-a1056311",
@@ -856,8 +1016,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/718727662",
     "listing_url": "https://24petconnect.com/DetailsMain/CCAS/A1056311",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261378",
@@ -876,8 +1036,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/718579664",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261378",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261314",
@@ -896,8 +1056,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719151697",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261314",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261394",
@@ -916,8 +1076,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719222637",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261394",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261549",
@@ -936,8 +1096,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719222642",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261549",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261434",
@@ -956,8 +1116,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719379790",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261434",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261311",
@@ -976,8 +1136,8 @@
     "transport_note": "URI/CAGE FIGHTING",
     "photo_url": "https://24petconnect.com/image/719335628",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261311",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261210",
@@ -996,8 +1156,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719222635",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261210",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261427",
@@ -1016,8 +1176,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719222638",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261427",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261202",
@@ -1036,8 +1196,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/718953668",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261202",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261486",
@@ -1056,8 +1216,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719022791",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261486",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261379",
@@ -1076,8 +1236,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719216333",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261379",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261283",
@@ -1096,8 +1256,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719391472",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261283",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261253",
@@ -1116,8 +1276,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719160186",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261253",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261166",
@@ -1136,8 +1296,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/718579661",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261166",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261169",
@@ -1156,8 +1316,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719391470",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261169",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261168",
@@ -1176,8 +1336,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719216331",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261168",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261190",
@@ -1196,8 +1356,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/719384576",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261190",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261167",
@@ -1216,8 +1376,8 @@
     "transport_note": "URI",
     "photo_url": "https://24petconnect.com/image/718579662",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261167",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a1535725",
@@ -1236,8 +1396,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1535725&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A1535725&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a1609755",
@@ -1256,8 +1416,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1609755&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A1609755&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2074927",
@@ -1276,8 +1436,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2074927&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2074927&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2165547",
@@ -1296,8 +1456,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2165547&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2165547&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2174618",
@@ -1316,8 +1476,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2174618&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2174618&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2250734",
@@ -1336,8 +1496,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2250734&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2250734&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2269312",
@@ -1356,8 +1516,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2269312&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2269312&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2270624",
@@ -1376,8 +1536,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2270624&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2270624&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2271123",
@@ -1396,8 +1556,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2271123&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2271123&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2271608",
@@ -1416,8 +1576,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2271608&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2271608&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2272049",
@@ -1436,8 +1596,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2272049&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2272049&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2274026",
@@ -1456,8 +1616,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2274026&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2274026&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2283318",
@@ -1476,8 +1636,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2283318&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2283318&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2284082",
@@ -1496,8 +1656,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2284082&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2284082&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2285283",
@@ -1516,8 +1676,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2285283&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2285283&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2286938",
@@ -1536,8 +1696,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2286938&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2286938&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2286985",
@@ -1556,8 +1716,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2286985&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2286985&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2287506",
@@ -1576,8 +1736,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2287506&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2287506&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2287811",
@@ -1596,8 +1756,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2287811&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2287811&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2288149",
@@ -1616,8 +1776,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2288149&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2288149&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2288930",
@@ -1636,8 +1796,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2288930&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2288930&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2289025",
@@ -1656,8 +1816,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2289025&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2289025&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2289422",
@@ -1676,8 +1836,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2289422&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2289422&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2289424",
@@ -1696,8 +1856,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2289424&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2289424&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2289569",
@@ -1716,8 +1876,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2289569&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2289569&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2290539",
@@ -1736,8 +1896,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2290539&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2290539&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2291134",
@@ -1756,8 +1916,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2291134&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2291134&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2292400",
@@ -1776,8 +1936,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2292400&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2292400&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2292427",
@@ -1796,8 +1956,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2292427&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2292427&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2292728",
@@ -1816,8 +1976,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2292728&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2292728&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2293421",
@@ -1836,8 +1996,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2293421&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2293421&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2293616",
@@ -1856,8 +2016,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2293616&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2293616&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2294239",
@@ -1876,8 +2036,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2294239&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2294239&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2294536",
@@ -1896,8 +2056,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2294536&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2294536&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2294568",
@@ -1916,8 +2076,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2294568&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2294568&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2294704",
@@ -1936,8 +2096,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2294704&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2294704&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2295408",
@@ -1956,8 +2116,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2295408&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2295408&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2295806",
@@ -1976,8 +2136,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2295806&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2295806&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296313",
@@ -1996,8 +2156,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296313&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296313&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296422",
@@ -2016,8 +2176,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296422&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296422&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296570",
@@ -2036,8 +2196,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296570&LOCATION=LACT5",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296570&LOCATION=LACT5&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296694",
@@ -2056,8 +2216,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296694&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296694&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296865",
@@ -2076,8 +2236,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296865&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296865&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296899",
@@ -2096,8 +2256,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296899&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296899&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2296981",
@@ -2116,8 +2276,28 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2296981&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2296981&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "laas-a2297070",
+    "animal_id": "A2297070",
+    "name": "LAAS A2297070",
+    "breed": "SPAYED FEMALE BLACK PIT BULL",
+    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
+    "city": "Los Angeles",
+    "county": "Los Angeles",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "LAAS Urgent Needs / Escalating Stress",
+    "deadline_or_urgency": "URGENT NEEDS ALERT",
+    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+    "transport_note": "Active on LAAS Urgent Needs Alert",
+    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2297070&LOCATION=LACT3",
+    "listing_url": "https://petharbor.com/detail.asp?ID=A2297070&LOCATION=LACT3&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2297078",
@@ -2136,8 +2316,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2297078&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2297078&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298540",
@@ -2156,8 +2336,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298540&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298540&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298542",
@@ -2176,8 +2356,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298542&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298542&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298736",
@@ -2196,8 +2376,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298736&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298736&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298737",
@@ -2216,8 +2396,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298737&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298737&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298738",
@@ -2236,8 +2416,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298738&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298738&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298739",
@@ -2256,8 +2436,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298739&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298739&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298740",
@@ -2276,8 +2456,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298740&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298740&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298742",
@@ -2296,8 +2476,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298742&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298742&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298743",
@@ -2316,8 +2496,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298743&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298743&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298744",
@@ -2336,8 +2516,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298744&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298744&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298747",
@@ -2356,8 +2536,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298747&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298747&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298759",
@@ -2376,8 +2556,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298759&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298759&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298760",
@@ -2396,8 +2576,28 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298760&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298760&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "laas-a2298774",
+    "animal_id": "A2298774",
+    "name": "LAAS A2298774",
+    "breed": "FEMALE WHITE/CREAM SIBERIAN HUSKY",
+    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
+    "city": "Los Angeles",
+    "county": "Los Angeles",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "LAAS Urgent Medical (Orange Alert)",
+    "deadline_or_urgency": "ORANGE MEDICAL ALERT",
+    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+    "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
+    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2298774&LOCATION=LACT4",
+    "listing_url": "https://petharbor.com/detail.asp?ID=A2298774&LOCATION=LACT4&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298884",
@@ -2416,8 +2616,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298884&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298884&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298961",
@@ -2436,8 +2636,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298961&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298961&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2298971",
@@ -2456,8 +2656,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2298971&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2298971&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299230",
@@ -2476,8 +2676,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299230&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299230&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299356",
@@ -2496,8 +2696,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299356&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299356&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2299533",
@@ -2516,8 +2716,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2299533&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2299533&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300058",
@@ -2536,8 +2736,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300058&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300058&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300126",
@@ -2556,8 +2756,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300126&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300126&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300173",
@@ -2576,8 +2776,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300173&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300173&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300222",
@@ -2596,8 +2796,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300222&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300222&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300368",
@@ -2616,8 +2816,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300368&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300368&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300753",
@@ -2636,8 +2836,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300753&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300753&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300784",
@@ -2656,8 +2856,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300784&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300784&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2300909",
@@ -2676,8 +2876,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2300909&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2300909&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301136",
@@ -2696,8 +2896,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301136&LOCATION=LACT1",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301136&LOCATION=LACT1&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301303",
@@ -2716,8 +2916,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301303&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301303&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301337",
@@ -2736,8 +2936,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301337&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301337&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301422",
@@ -2756,8 +2956,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301422&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301422&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2301944",
@@ -2776,28 +2976,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2301944&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2301944&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
-  },
-  {
-    "id": "laas-a2302208",
-    "animal_id": "A2302208",
-    "name": "LAAS A2302208",
-    "breed": "SPAYED FEMALE RED/WHITE SIBERIAN HUSKY",
-    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
-    "city": "Los Angeles",
-    "county": "Los Angeles",
-    "state": "CA",
-    "size": "",
-    "age": "",
-    "urgency_type": "LAAS Urgent Medical (Orange Alert)",
-    "deadline_or_urgency": "ORANGE MEDICAL ALERT",
-    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
-    "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
-    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2302208&LOCATION=LACT",
-    "listing_url": "https://petharbor.com/detail.asp?ID=A2302208&LOCATION=LACT&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302210",
@@ -2816,8 +2996,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302210&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302210&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302262",
@@ -2836,8 +3016,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302262&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302262&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302551",
@@ -2856,8 +3036,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302551&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302551&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302660",
@@ -2876,8 +3056,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302660&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302660&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2302852",
@@ -2896,8 +3076,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2302852&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2302852&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2303137",
@@ -2916,8 +3096,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2303137&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2303137&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304223",
@@ -2936,8 +3116,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304223&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304223&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304880",
@@ -2956,8 +3136,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304880&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304880&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304881",
@@ -2976,8 +3156,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304881&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304881&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304882",
@@ -2996,8 +3176,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304882&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304882&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304884",
@@ -3016,8 +3196,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304884&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304884&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2304972",
@@ -3036,8 +3216,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2304972&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2304972&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305217",
@@ -3056,8 +3236,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305217&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305217&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305236",
@@ -3076,8 +3256,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305236&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305236&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305476",
@@ -3096,8 +3276,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305476&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305476&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305498",
@@ -3116,8 +3296,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305498&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305498&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305519",
@@ -3136,8 +3316,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305519&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305519&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305562",
@@ -3156,8 +3336,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305562&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305562&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305579",
@@ -3176,8 +3356,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305579&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305579&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305625",
@@ -3196,8 +3376,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305625&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305625&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305705",
@@ -3216,8 +3396,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305705&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305705&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305765",
@@ -3236,8 +3416,28 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305765&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305765&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
+  },
+  {
+    "id": "laas-a2305915",
+    "animal_id": "A2305915",
+    "name": "LAAS A2305915",
+    "breed": "",
+    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
+    "city": "Los Angeles",
+    "county": "Los Angeles",
+    "state": "CA",
+    "size": "",
+    "age": "",
+    "urgency_type": "LAAS Severe Medical (Blue Alert)",
+    "deadline_or_urgency": "BLUE MEDICAL ALERT",
+    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+    "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
+    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2305915&LOCATION=LACT",
+    "listing_url": "https://petharbor.com/detail.asp?ID=A2305915&LOCATION=LACT&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305922",
@@ -3256,8 +3456,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305922&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305922&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305923",
@@ -3276,8 +3476,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305923&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305923&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2305932",
@@ -3296,8 +3496,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2305932&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2305932&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306053",
@@ -3316,8 +3516,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306053&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306053&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306172",
@@ -3336,8 +3536,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306172&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306172&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306256",
@@ -3356,8 +3556,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306256&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306256&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306329",
@@ -3376,8 +3576,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306329&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306329&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306386",
@@ -3396,8 +3596,8 @@
     "transport_note": "Active on LAAS Urgent Needs Alert",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306386&LOCATION=LACT4",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306386&LOCATION=LACT4&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_yellow2&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306413",
@@ -3416,8 +3616,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306413&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306413&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306434",
@@ -3436,8 +3636,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306434&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306434&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2306664",
@@ -3456,28 +3656,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2306664&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2306664&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
-  },
-  {
-    "id": "laas-a2307080",
-    "animal_id": "A2307080",
-    "name": "LAAS A2307080",
-    "breed": "",
-    "shelter": "LA Animal Services (Success Story Do you have a success story to share?Send it to us!Be sure to include your name, city, state and zip code. Featured Pet Would you like to include a Featured Adoptable Pet on your own web page? You can, and it's easy! Simply copy and paste the above HTML into your page, and you will have a Featured Pet from the shelter list you've chosen already. Customize this Featured Adoptable Pet)",
-    "city": "Los Angeles",
-    "county": "Los Angeles",
-    "state": "CA",
-    "size": "",
-    "age": "",
-    "urgency_type": "LAAS Urgent Needs / Escalating Stress",
-    "deadline_or_urgency": "URGENT NEEDS ALERT",
-    "needs_type": "New Hope Rescue Pull / Foster / Adopt",
-    "transport_note": "Active on LAAS Urgent Needs Alert",
-    "photo_url": "https://petharbor.com/get_image.asp?RES=detail&ID=A2307080&LOCATION=LACT4",
-    "listing_url": "https://petharbor.com/detail.asp?ID=A2307080&LOCATION=LACT4&searchtype=rnd&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=dummy&kiosk=1",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2307102",
@@ -3496,8 +3676,8 @@
     "transport_note": "Active on LAAS Orange Alert (Urgent Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2307102&LOCATION=LACT3",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2307102&LOCATION=LACT3&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_orange&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "laas-a2307216",
@@ -3516,8 +3696,8 @@
     "transport_note": "Active on LAAS Blue Alert (Severe Medical)",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A2307216&LOCATION=LACT",
     "listing_url": "https://petharbor.com/detail.asp?ID=A2307216&LOCATION=LACT&searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&tWidth=200&view=sysadm.v_lact_alert_blue&fontface=arial&fontsize=10&miles=20&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&atype=&where=type_DOG",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1944666",
@@ -3536,8 +3716,8 @@
     "transport_note": "I have been at the shelter since Oct 31, 2026.",
     "photo_url": "https://24petconnect.com/image/718360139",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1944666",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1898929",
@@ -3556,8 +3736,8 @@
     "transport_note": "I have been at the shelter since Nov 09, 2026.",
     "photo_url": "https://24petconnect.com/image/718978142",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1898929",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1944478",
@@ -3576,8 +3756,8 @@
     "transport_note": "I have been at the shelter since Oct 30, 2026.",
     "photo_url": "https://24petconnect.com/image/715051791",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1944478",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946622",
@@ -3596,8 +3776,8 @@
     "transport_note": "I have been at the shelter since Nov 14, 2026.",
     "photo_url": "https://24petconnect.com/image/718019364",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946622",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1944002",
@@ -3616,8 +3796,8 @@
     "transport_note": "I have been at the shelter since Oct 27, 2026.",
     "photo_url": "https://24petconnect.com/image/718754746",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1944002",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946606",
@@ -3636,8 +3816,8 @@
     "transport_note": "I have been at the shelter since Nov 14, 2026.",
     "photo_url": "https://24petconnect.com/image/718001294",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946606",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1941336",
@@ -3656,8 +3836,8 @@
     "transport_note": "I have been at the shelter since Oct 10, 2026.",
     "photo_url": "https://24petconnect.com/image/717094243",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1941336",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1947170",
@@ -3676,8 +3856,8 @@
     "transport_note": "I have been at the shelter since Nov 18, 2026.",
     "photo_url": "https://24petconnect.com/image/718990980",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1947170",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1941084",
@@ -3696,8 +3876,8 @@
     "transport_note": "I went to a foster home.",
     "photo_url": "https://24petconnect.com/image/718597615",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1941084",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1939872",
@@ -3716,8 +3896,8 @@
     "transport_note": "I have been at the shelter since Sep 30, 2026.",
     "photo_url": "https://24petconnect.com/image/713167485",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1939872",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1942148",
@@ -3736,8 +3916,8 @@
     "transport_note": "I have been at the shelter since Oct 15, 2026.",
     "photo_url": "https://24petconnect.com/image/714231088",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1942148",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1946282",
@@ -3756,8 +3936,8 @@
     "transport_note": "I have been at the shelter since Nov 12, 2026.",
     "photo_url": "https://24petconnect.com/image/719009338",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1946282",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1930841",
@@ -3776,8 +3956,8 @@
     "transport_note": "I have been at the shelter since Aug 04, 2026.",
     "photo_url": "https://24petconnect.com/image/708134667",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1930841",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1943511",
@@ -3796,8 +3976,8 @@
     "transport_note": "I have been at the shelter since Oct 23, 2026.",
     "photo_url": "https://24petconnect.com/image/718543021",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1943511",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1944134",
@@ -3816,8 +3996,8 @@
     "transport_note": "I have been at the shelter since Oct 28, 2026.",
     "photo_url": "https://24petconnect.com/image/718543023",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1944134",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1914483",
@@ -3836,8 +4016,8 @@
     "transport_note": "I went to a foster home.",
     "photo_url": "https://24petconnect.com/image/716716478",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1914483",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1945677",
@@ -3856,8 +4036,8 @@
     "transport_note": "I have been at the shelter since Nov 06, 2026.",
     "photo_url": "https://24petconnect.com/image/716597688",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1945677",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946585",
@@ -3876,8 +4056,8 @@
     "transport_note": "I have been at the shelter since Nov 14, 2026.",
     "photo_url": "https://24petconnect.com/image/718014137",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946585",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1947100",
@@ -3896,8 +4076,8 @@
     "transport_note": "I have been at the shelter since Nov 17, 2026.",
     "photo_url": "https://24petconnect.com/image/719002347",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1947100",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1946647",
@@ -3916,8 +4096,8 @@
     "transport_note": "I have been at the shelter since Nov 14, 2026.",
     "photo_url": "https://24petconnect.com/image/718181038",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1946647",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1945579",
@@ -3936,8 +4116,8 @@
     "transport_note": "I have been at the shelter since Nov 05, 2026.",
     "photo_url": "https://24petconnect.com/image/716804673",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1945579",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1940183",
@@ -3956,8 +4136,8 @@
     "transport_note": "I have been at the shelter since Oct 02, 2026.",
     "photo_url": "https://24petconnect.com/image/715981513",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1940183",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a0986548",
@@ -3976,8 +4156,8 @@
     "transport_note": "I have been at the shelter since Nov 18, 2026.",
     "photo_url": "https://24petconnect.com/image/718737668",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A0986548",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-sbco1-a855456",
@@ -3996,8 +4176,8 @@
     "transport_note": "U-Behavior",
     "photo_url": "https://24petconnect.com/image/719378398",
     "listing_url": "https://24petconnect.com/DetailsMain/SBCO1/A855456",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-sbco1-a839591",
@@ -4016,8 +4196,8 @@
     "transport_note": "U-Behavior",
     "photo_url": "https://24petconnect.com/image/719209855",
     "listing_url": "https://24petconnect.com/DetailsMain/SBCO1/A839591",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-sbco1-a855381",
@@ -4036,8 +4216,8 @@
     "transport_note": "U-Behavior",
     "photo_url": "https://24petconnect.com/image/719209870",
     "listing_url": "https://24petconnect.com/DetailsMain/SBCO1/A855381",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-sbco1-a855382",
@@ -4056,8 +4236,8 @@
     "transport_note": "U-Behavior",
     "photo_url": "https://24petconnect.com/image/719209871",
     "listing_url": "https://24petconnect.com/DetailsMain/SBCO1/A855382",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-sbco1-a855457",
@@ -4076,8 +4256,8 @@
     "transport_note": "U-Behavior",
     "photo_url": "https://24petconnect.com/image/719378399",
     "listing_url": "https://24petconnect.com/DetailsMain/SBCO1/A855457",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1404638",
@@ -4096,8 +4276,8 @@
     "transport_note": "232 days in shelter | Kennel SJ CJ02 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1404638&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1404638",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1413178",
@@ -4116,8 +4296,8 @@
     "transport_note": "62 days in shelter | Kennel SJ CD04 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1413178&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1413178",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1413905",
@@ -4136,8 +4316,8 @@
     "transport_note": "80 days in shelter | Kennel SJ CI08 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1413905&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1413905",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416365",
@@ -4156,8 +4336,8 @@
     "transport_note": "34 days in shelter | Kennel SJ OD06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416365&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416365",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1305758",
@@ -4176,8 +4356,8 @@
     "transport_note": "93 days in shelter | Kennel SJ OE03 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1305758&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1305758",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1283655",
@@ -4196,8 +4376,8 @@
     "transport_note": "15 days in shelter | Kennel SJ OE06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1283655&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1283655",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416359",
@@ -4216,8 +4396,8 @@
     "transport_note": "34 days in shelter | Kennel SJ AA04 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416359&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416359",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1412847",
@@ -4236,8 +4416,8 @@
     "transport_note": "97 days in shelter | Kennel SJ AD06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1412847&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1412847",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a0875896",
@@ -4256,8 +4436,8 @@
     "transport_note": "Kennel SJ CI07 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A0875896&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A0875896",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417555",
@@ -4276,8 +4456,8 @@
     "transport_note": "11 days in shelter | Kennel SJ ER02 | Stray Wait",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417555&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417555",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417694",
@@ -4296,8 +4476,8 @@
     "transport_note": "7 days in shelter | Kennel SJ CB04 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417694&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417694",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1412090",
@@ -4316,8 +4496,8 @@
     "transport_note": "110 days in shelter | Kennel SJ CG02 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1412090&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1412090",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1415507",
@@ -4336,8 +4516,8 @@
     "transport_note": "51 days in shelter | Kennel SJ AA01 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1415507&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1415507",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417356",
@@ -4356,8 +4536,8 @@
     "transport_note": "15 days in shelter | Kennel SJ CE04 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417356&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417356",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417540",
@@ -4376,8 +4556,8 @@
     "transport_note": "11 days in shelter | Kennel SJ SB05 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417540&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417540",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1414539",
@@ -4396,8 +4576,8 @@
     "transport_note": "68 days in shelter | Kennel SJ AC03 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1414539&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1414539",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416846",
@@ -4416,8 +4596,8 @@
     "transport_note": "25 days in shelter | Kennel SJ FOSTER | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416846&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416846",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1211610",
@@ -4436,8 +4616,8 @@
     "transport_note": "46 days in shelter | Kennel SJ CA04 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1211610&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1211610",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1412234",
@@ -4456,8 +4636,8 @@
     "transport_note": "108 days in shelter | Kennel SJ AC06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1412234&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1412234",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416637",
@@ -4476,8 +4656,8 @@
     "transport_note": "29 days in shelter | Kennel SJ CI01 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416637&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416637",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416327",
@@ -4496,8 +4676,8 @@
     "transport_note": "35 days in shelter | Kennel SJ OD01 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416327&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416327",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1414983",
@@ -4516,8 +4696,8 @@
     "transport_note": "60 days in shelter | Kennel SJ OE07 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1414983&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1414983",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1415653",
@@ -4536,8 +4716,8 @@
     "transport_note": "48 days in shelter | Kennel SJ OE05 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1415653&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1415653",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1396712",
@@ -4556,8 +4736,8 @@
     "transport_note": "335 days in shelter | Kennel SJ FOSTER | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1396712&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1396712",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1414418",
@@ -4576,8 +4756,8 @@
     "transport_note": "70 days in shelter | Kennel SJ CJ06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1414418&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1414418",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1409332",
@@ -4596,8 +4776,8 @@
     "transport_note": "158 days in shelter | Kennel SJ AB02 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1409332&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1409332",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1415432",
@@ -4616,8 +4796,8 @@
     "transport_note": "53 days in shelter | Kennel SJ CA03 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1415432&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1415432",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1416074",
@@ -4636,8 +4816,8 @@
     "transport_note": "12 days in shelter | Kennel SJ AA06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1416074&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1416074",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1411586",
@@ -4656,8 +4836,8 @@
     "transport_note": "121 days in shelter | Kennel SJ OE04 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1411586&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1411586",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1405483",
@@ -4676,8 +4856,8 @@
     "transport_note": "137 days in shelter | Kennel SJ CG04 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1405483&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1405483",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1400355",
@@ -4696,8 +4876,8 @@
     "transport_note": "230 days in shelter | Kennel SJ CK07 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1400355&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1400355",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417049",
@@ -4716,8 +4896,8 @@
     "transport_note": "21 days in shelter | Kennel SJ CB08 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417049&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417049",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1413177",
@@ -4736,8 +4916,8 @@
     "transport_note": "63 days in shelter | Kennel SJ CE02 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1413177&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1413177",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417796",
@@ -4756,8 +4936,8 @@
     "transport_note": "4 days in shelter | Kennel SJ CD06 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417796&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417796",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417255",
@@ -4776,8 +4956,8 @@
     "transport_note": "17 days in shelter | Kennel SJ CE03 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417255&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417255",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1402390",
@@ -4796,8 +4976,8 @@
     "transport_note": "8 days in shelter | Kennel SJ CC08 | Evaluation",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1402390&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1402390",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1402638",
@@ -4816,8 +4996,8 @@
     "transport_note": "276 days in shelter | Kennel SJ CG07 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1402638&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1402638",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1405361",
@@ -4836,8 +5016,8 @@
     "transport_note": "220 days in shelter | Kennel SJ CK02 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1405361&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1405361",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1412695",
@@ -4856,8 +5036,8 @@
     "transport_note": "100 days in shelter | Kennel SJ CK06 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1412695&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1412695",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "sj-acs-a1417097",
@@ -4876,8 +5056,8 @@
     "transport_note": "20 days in shelter | Kennel SJ CA05 | Available",
     "photo_url": "https://petharbor.com/get_image.asp?RES=Detail&ID=A1417097&LOCATION=SNJS",
     "listing_url": "https://24petconnect.com/SNJSAllPets/Details/SNJS/A1417097",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615401",
@@ -4896,8 +5076,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/712515508",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615401",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615402",
@@ -4916,8 +5096,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/712519324",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615402",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615405",
@@ -4936,8 +5116,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/712527481",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615405",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615407",
@@ -4956,8 +5136,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/712522667",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615407",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615408",
@@ -4976,8 +5156,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/712525969",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615408",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615409",
@@ -4996,8 +5176,8 @@
     "transport_note": "39 days in shelter",
     "photo_url": "https://24petconnect.com/image/714174280",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615409",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "stanislaus-a615749",
@@ -5016,8 +5196,8 @@
     "transport_note": "25 days in shelter",
     "photo_url": "https://24petconnect.com/image/719379216",
     "listing_url": "https://24petconnect.com/DetailsMain/STSL/A615749",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261256",
@@ -5036,8 +5216,8 @@
     "transport_note": "",
     "photo_url": "https://24petconnect.com/image/719011594",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261256",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261543",
@@ -5056,8 +5236,8 @@
     "transport_note": "BITE DOG",
     "photo_url": "https://24petconnect.com/image/719407762",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261543",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261197",
@@ -5076,8 +5256,8 @@
     "transport_note": "TIMID/ATTACKED DOG",
     "photo_url": "https://24petconnect.com/image/719391481",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261197",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261141",
@@ -5096,8 +5276,8 @@
     "transport_note": "FOUGHT KENNEL MATE",
     "photo_url": "https://24petconnect.com/image/719413803",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261141",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261204",
@@ -5116,8 +5296,8 @@
     "transport_note": "TIMID/ATTACKED DOG",
     "photo_url": "https://24petconnect.com/image/719391471",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261204",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261545",
@@ -5136,8 +5316,8 @@
     "transport_note": "BITE DOG",
     "photo_url": "https://24petconnect.com/image/719222641",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261545",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261200",
@@ -5156,8 +5336,8 @@
     "transport_note": "TIMID",
     "photo_url": "https://24petconnect.com/image/718953667",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261200",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1210506",
@@ -5176,8 +5356,8 @@
     "transport_note": "SKITTISH/NO INTEREST/TIMID",
     "photo_url": "https://24petconnect.com/image/719395648",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1210506",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261627",
@@ -5196,8 +5376,8 @@
     "transport_note": "TIMID",
     "photo_url": "https://24petconnect.com/image/719222644",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261627",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-kerncountyrescue-a1261544",
@@ -5216,8 +5396,8 @@
     "transport_note": "BITE DOG",
     "photo_url": "https://24petconnect.com/image/719222640",
     "listing_url": "https://24petconnect.com/DetailsMain/KERN/A1261544",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1828310",
@@ -5236,8 +5416,8 @@
     "transport_note": "I have been at the shelter since Oct 29, 2026.",
     "photo_url": "https://24petconnect.com/image/717777695",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1828310",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946167",
@@ -5256,8 +5436,8 @@
     "transport_note": "I have been at the shelter since Nov 10, 2026.",
     "photo_url": "https://24petconnect.com/image/718415879",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946167",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1941081",
@@ -5276,8 +5456,8 @@
     "transport_note": "I have been at the shelter since Oct 08, 2026.",
     "photo_url": "https://24petconnect.com/image/712348528",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1941081",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946353",
@@ -5296,8 +5476,8 @@
     "transport_note": "I have been at the shelter since Nov 12, 2026.",
     "photo_url": "https://24petconnect.com/image/717794594",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946353",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1941089",
@@ -5316,8 +5496,8 @@
     "transport_note": "I have been at the shelter since Oct 08, 2026.",
     "photo_url": "https://24petconnect.com/image/711799577",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1941089",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946154",
@@ -5336,8 +5516,8 @@
     "transport_note": "I have been at the shelter since Nov 10, 2026.",
     "photo_url": "https://24petconnect.com/image/719390558",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946154",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946286",
@@ -5356,8 +5536,8 @@
     "transport_note": "I have been at the shelter since Nov 12, 2026.",
     "photo_url": "https://24petconnect.com/image/718354539",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946286",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1928980",
@@ -5376,8 +5556,8 @@
     "transport_note": "I have been at the shelter since Jul 22, 2026.",
     "photo_url": "https://24petconnect.com/image/708034231",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1928980",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1939656",
@@ -5396,8 +5576,8 @@
     "transport_note": "I have been at the shelter since Sep 29, 2026.",
     "photo_url": "https://24petconnect.com/image/713167488",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1939656",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1598412",
@@ -5416,8 +5596,8 @@
     "transport_note": "I have been at the shelter since Oct 13, 2026.",
     "photo_url": "https://24petconnect.com/image/718716992",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1598412",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1922718",
@@ -5436,8 +5616,8 @@
     "transport_note": "I have been at the shelter since Oct 28, 2026.",
     "photo_url": "https://24petconnect.com/image/717094259",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1922718",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1806817",
@@ -5456,8 +5636,8 @@
     "transport_note": "I have been at the shelter since Sep 01, 2026.",
     "photo_url": "https://24petconnect.com/image/715541938",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1806817",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1847341",
@@ -5476,8 +5656,8 @@
     "transport_note": "I have been at the shelter since Jun 01, 2026.",
     "photo_url": "https://24petconnect.com/image/715544100",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1847341",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1946169",
@@ -5496,8 +5676,8 @@
     "transport_note": "I have been at the shelter since Nov 11, 2026.",
     "photo_url": "https://24petconnect.com/image/717464319",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1946169",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1941934",
@@ -5516,8 +5696,8 @@
     "transport_note": "I have been at the shelter since Oct 14, 2026.",
     "photo_url": "https://24petconnect.com/image/714552013",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1941934",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1941933",
@@ -5536,8 +5716,8 @@
     "transport_note": "I have been at the shelter since Oct 14, 2026.",
     "photo_url": "https://24petconnect.com/image/714552016",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1941933",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1912051",
@@ -5556,8 +5736,8 @@
     "transport_note": "I have been at the shelter since Nov 10, 2026.",
     "photo_url": "https://24petconnect.com/image/718514611",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1912051",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1943699",
@@ -5576,8 +5756,8 @@
     "transport_note": "I have been at the shelter since Oct 26, 2026.",
     "photo_url": "https://24petconnect.com/image/719136487",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1943699",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1941325",
@@ -5596,8 +5776,8 @@
     "transport_note": "I have been at the shelter since Oct 09, 2026.",
     "photo_url": "https://24petconnect.com/image/712745939",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1941325",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1896416",
@@ -5616,8 +5796,8 @@
     "transport_note": "I have been at the shelter since Oct 26, 2026.",
     "photo_url": "https://24petconnect.com/image/717956687",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1896416",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1944372",
@@ -5636,8 +5816,8 @@
     "transport_note": "I have been at the shelter since Oct 29, 2026.",
     "photo_url": "https://24petconnect.com/image/714850771",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1944372",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdpublic-a1931968",
@@ -5656,8 +5836,8 @@
     "transport_note": "I have been at the shelter since Aug 13, 2026.",
     "photo_url": "https://24petconnect.com/image/711805553",
     "listing_url": "https://24petconnect.com/RVSDPublic/Details/RVSD/A1931968",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   },
   {
     "id": "24pc-rvsdrescue-a1945887",
@@ -5676,7 +5856,7 @@
     "transport_note": "I have been at the shelter since Nov 08, 2026.",
     "photo_url": "https://24petconnect.com/image/718354549",
     "listing_url": "https://24petconnect.com/RVSDRescue/Details/RVSD/A1945887",
-    "updated_at": "2026-11-22T06:09:40Z",
-    "last_checked": "2026-11-22T06:09:40Z"
+    "updated_at": "2026-11-22T06:15:07Z",
+    "last_checked": "2026-11-22T06:15:07Z"
   }
 ]
