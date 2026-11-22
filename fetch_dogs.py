@@ -358,36 +358,37 @@ def extract_oas_cards_from_page(page) -> list[dict]:
 
 
 def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[dict]:
-    print("  OAS direct request blocked (403); checking proxy and embedded Shelterluv widget...")
+    print("  OAS direct request blocked (403); checking public relays for Shelterluv embed...")
+    encoded = urllib.parse.quote(target_url, safe="")
     proxy_candidates = [
-        f"https://api.allorigins.win/raw?url={urllib.parse.quote(target_url, safe='')}",
+        f"https://api.codetabs.com/v1/proxy?quest={encoded}",
+        f"https://corsproxy.io/?{encoded}",
+        f"https://api.allorigins.win/raw?url={encoded}",
         f"https://r.jina.ai/{target_url}",
     ]
 
     fetched_blobs = []
     for p_url in proxy_candidates:
+        host = p_url.split("/")[2]
         try:
-            headers = {"User-Agent": USER_AGENT}
-            if "r.jina.ai" in p_url:
-                headers["X-With-Iframe"] = "true"
-                headers["X-Timeout"] = "25"
-            req = urllib.request.Request(p_url, headers=headers)
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            req = urllib.request.Request(p_url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=25) as resp:
                 body = resp.read().decode("utf-8", errors="replace")
                 if body and "403 ERROR" not in body[:400]:
+                    print(f"  OAS relay succeeded via {host} ({len(body)} chars)")
                     fetched_blobs.append(body)
         except Exception as exc:
-            print(f"  OAS proxy attempt failed ({p_url.split('/')[2]}): {exc}")
+            print(f"  OAS relay failed ({host}): {exc}")
 
-    # 1. If the outer HTML contains a Shelterluv iframe URL, load it directly in Playwright
+    # 1. Extract Shelterluv iframe/script embed URL from the page HTML and load it directly in Playwright
     for blob in fetched_blobs:
         iframe_match = re.search(
-            r"""https?://(?:www\.|new\.)?shelterluv\.com/[^"'\s<>]+""",
+            r"""https?://(?:www\.|new\.)?shelterluv\.com/[^"'\s<>\\]+""",
             blob,
             re.IGNORECASE,
         )
         if iframe_match:
-            embed_url = iframe_match.group(0).replace("&amp;", "&")
+            embed_url = iframe_match.group(0).replace("&amp;", "&").replace("\\/", "/")
             print(f"  Found OAS Shelterluv embed URL: {embed_url}")
             try:
                 page.goto(embed_url, wait_until="networkidle", timeout=35000)
@@ -403,7 +404,7 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
             except Exception as exc:
                 print(f"  OAS Shelterluv embed load error: {exc}")
 
-    # 2. Otherwise parse any animalId links directly from the fetched proxy content
+    # 2. Otherwise parse any animalId links directly from the fetched proxy HTML
     results = []
     seen_hrefs = set()
     for blob in fetched_blobs:
@@ -421,8 +422,8 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
                 results.append(dog)
 
     if not results:
-        sample = clean_space(fetched_blobs[0])[:200] if fetched_blobs else "all proxies blocked"
-        print(f"  OAS proxy diagnostic -> {sample}")
+        sample = clean_space(fetched_blobs[0])[:220] if fetched_blobs else "all relays blocked by CloudFront"
+        print(f"  OAS diagnostic -> {sample}")
     else:
         print(f"  OAS proxy dogs saved: {len(results)}")
 
