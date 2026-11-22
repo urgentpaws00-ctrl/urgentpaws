@@ -40,7 +40,6 @@ def parse_iso_date(date_str: str) -> datetime | None:
 
 
 def is_direct_dog_url(raw: str) -> str:
-    """Validates that a URL is a deep link to a specific animal page, never a bare shelter homepage."""
     val = (raw or "").strip().rstrip(".,;)")
     if not val or val.startswith("/"):
         return ""
@@ -90,11 +89,15 @@ def detect_urgency_type(text: str, kill_date: str = "") -> str:
     return "Urgent / Deadline"
 
 
-def query_rescuegroups(keyword: str) -> dict:
-    url = (
-        "https://api.rescuegroups.org/v5/public/animals/search/available/dogs"
-        "?include=orgs,locations,pictures&sort=-animals.updatedDate&limit=250"
-    )
+def fetch_rescuegroups_shelters_ca() -> list[dict]:
+    if not RESCUEGROUPS_API_KEY:
+        print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
+        return []
+
+    now_utc = datetime.now(timezone.utc)
+    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
+
+    url = "https://api.rescuegroups.org/v5/public/animals/search/available/dogs?include=orgs,locations,pictures&limit=250"
     payload = {
         "data": {
             "filters": [
@@ -102,11 +105,6 @@ def query_rescuegroups(keyword: str) -> dict:
                     "fieldName": "locations.state",
                     "operation": "equals",
                     "criteria": "CA"
-                },
-                {
-                    "fieldName": "animals.descriptionText",
-                    "operation": "contains",
-                    "criteria": keyword
                 }
             ]
         }
@@ -125,46 +123,34 @@ def query_rescuegroups(keyword: str) -> dict:
 
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            body = json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
-        print(f"RescueGroups API error for '{keyword}': {exc}")
-        return {}
-
-
-def fetch_rescuegroups_shelters_ca() -> list[dict]:
-    if not RESCUEGROUPS_API_KEY:
-        print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
+        print(f"RescueGroups API error: {exc}")
         return []
 
-    now_utc = datetime.now(timezone.utc)
-    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
+    raw_animals = body.get("data", [])
+    print(f"API returned {len(raw_animals)} total CA dogs")
 
-    raw_animals = []
     orgs_by_id = {}
     locations_by_id = {}
     pics_by_id = {}
 
-    for keyword in ("urgent", "euthanasia", "deadline"):
-        body = query_rescuegroups(keyword)
-        batch = body.get("data", [])
-        print(f"API keyword '{keyword}' returned: {len(batch)} dogs")
-        raw_animals.extend(batch)
-
-        for item in body.get("included", []):
-            item_type = item.get("type")
-            item_id = item.get("id")
-            attrs = item.get("attributes", {})
-            if item_type == "orgs":
-                orgs_by_id[item_id] = attrs
-            elif item_type == "locations":
-                locations_by_id[item_id] = attrs
-            elif item_type == "pictures":
-                pics_by_id[item_id] = attrs
+    for item in body.get("included", []):
+        item_type = item.get("type")
+        item_id = item.get("id")
+        attrs = item.get("attributes", {})
+        if item_type == "orgs":
+            orgs_by_id[item_id] = attrs
+        elif item_type == "locations":
+            locations_by_id[item_id] = attrs
+        elif item_type == "pictures":
+            pics_by_id[item_id] = attrs
 
     now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     results = []
     skipped_stale = 0
     skipped_non_shelter = 0
+    skipped_not_urgent = 0
     skipped_no_direct_url = 0
 
     for animal in raw_animals:
@@ -196,6 +182,7 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
 
         dog_text = f"{name} {desc} {kill_reason}"
         if not (kill_date or kill_reason or URGENT_KEYWORDS.search(dog_text)):
+            skipped_not_urgent += 1
             continue
 
         listing_url = resolve_direct_dog_url(attrs=attrs, desc=desc)
@@ -245,8 +232,9 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         })
 
     print(
-        f"Kept: {len(results)} | Skipped stale (>21d): {skipped_stale} | "
-        f"Skipped non-shelter: {skipped_non_shelter} | Skipped missing direct URL: {skipped_no_direct_url}"
+        f"Kept: {len(results)} | Skipped stale: {skipped_stale} | "
+        f"Skipped non-shelter: {skipped_non_shelter} | Skipped not urgent: {skipped_not_urgent} | "
+        f"Skipped no direct URL: {skipped_no_direct_url}"
     )
     return results
 
