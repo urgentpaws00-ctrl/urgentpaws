@@ -245,7 +245,7 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Relay Fallback)
+# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Proxy + Shelterluv)
 # ---------------------------------------------------------------------------
 def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) -> dict | None:
     if NON_DOG_PATTERN.search(txt):
@@ -309,74 +309,7 @@ def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) ->
     }
 
 
-def fetch_oas_via_relay(target_url: str, now_iso: str) -> list[dict]:
-    relay_url = f"https://r.jina.ai/{target_url}"
-    print("  OAS direct request blocked (403); trying reader relay fallback...")
-    try:
-        req = urllib.request.Request(
-            relay_url,
-            headers={
-                "User-Agent": USER_AGENT,
-                "X-Return-Format": "markdown",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=35) as resp:
-            md = resp.read().decode("utf-8", errors="replace")
-    except Exception as exc:
-        print(f"  OAS relay error: {exc}")
-        return []
-
-    results = []
-    seen_hrefs = set()
-
-    # Match markdown links pointing to individual OAS animal pages
-    for m in re.finditer(r"\[([^\]]*)\]\((https?://[^\s)]+animalId=\d+[^\s)]*)\)", md, re.IGNORECASE):
-        href = m.group(2).strip()
-        if href in seen_hrefs:
-            continue
-        seen_hrefs.add(href)
-
-        start = max(0, m.start() - 450)
-        end = min(len(md), m.end() + 200)
-        chunk = md[start:end]
-
-        img_matches = re.findall(r"!\[[^\]]*\]\((https?://[^\s)]+)\)", chunk)
-        img = img_matches[-1] if img_matches else ""
-
-        # Strip markdown syntax to recover plain card lines
-        plain = re.sub(r"!\[[^\]]*\]\([^\)]+\)", "", chunk)
-        plain = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", plain)
-        plain = re.sub(r"[#*_`>]+", " ", plain)
-
-        heading_match = re.search(r"###?\s*([^\n\r]+)", chunk)
-        heading = clean_space(re.sub(r"[#*_`]+", "", heading_match.group(1))) if heading_match else ""
-
-        dog = parse_oas_card(href, plain, img, heading, now_iso)
-        if dog:
-            results.append(dog)
-
-    print(f"  OAS relay dogs saved: {len(results)}")
-    return results
-
-
-def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
-    url = "https://www.oaklandanimalservices.org/rescue-needed/"
-    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
-
-    status = None
-    try:
-        resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
-        status = resp.status if resp else None
-        if status == 403:
-            return fetch_oas_via_relay(url, now_iso)
-        try:
-            page.wait_for_selector("a[href*='animalId=']", timeout=10000)
-        except Exception:
-            page.wait_for_timeout(3000)
-    except Exception as exc:
-        print(f"  OAS direct load error: {exc}")
-        return fetch_oas_via_relay(url, now_iso)
-
+def extract_oas_cards_from_page(page) -> list[dict]:
     raw_cards = []
     seen_hrefs = set()
 
@@ -421,8 +354,101 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
             seen_hrefs.add(href)
             raw_cards.append(c)
 
+    return raw_cards
+
+
+def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[dict]:
+    print("  OAS direct request blocked (403); checking proxy and embedded Shelterluv widget...")
+    proxy_candidates = [
+        f"https://api.allorigins.win/raw?url={urllib.parse.quote(target_url, safe='')}",
+        f"https://r.jina.ai/{target_url}",
+    ]
+
+    fetched_blobs = []
+    for p_url in proxy_candidates:
+        try:
+            headers = {"User-Agent": USER_AGENT}
+            if "r.jina.ai" in p_url:
+                headers["X-With-Iframe"] = "true"
+                headers["X-Timeout"] = "25"
+            req = urllib.request.Request(p_url, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = resp.read().decode("utf-8", errors="replace")
+                if body and "403 ERROR" not in body[:400]:
+                    fetched_blobs.append(body)
+        except Exception as exc:
+            print(f"  OAS proxy attempt failed ({p_url.split('/')[2]}): {exc}")
+
+    # 1. If the outer HTML contains a Shelterluv iframe URL, load it directly in Playwright
+    for blob in fetched_blobs:
+        iframe_match = re.search(
+            r"""https?://(?:www\.|new\.)?shelterluv\.com/[^"'\s<>]+""",
+            blob,
+            re.IGNORECASE,
+        )
+        if iframe_match:
+            embed_url = iframe_match.group(0).replace("&amp;", "&")
+            print(f"  Found OAS Shelterluv embed URL: {embed_url}")
+            try:
+                page.goto(embed_url, wait_until="networkidle", timeout=35000)
+                page.wait_for_timeout(3500)
+                raw_cards = extract_oas_cards_from_page(page)
+                if raw_cards:
+                    results = [
+                        d for c in raw_cards
+                        if (d := parse_oas_card(c["href"], c["text"], c.get("img") or "", c.get("heading") or "", now_iso))
+                    ]
+                    print(f"  OAS Shelterluv embed dogs saved: {len(results)}")
+                    return results
+            except Exception as exc:
+                print(f"  OAS Shelterluv embed load error: {exc}")
+
+    # 2. Otherwise parse any animalId links directly from the fetched proxy content
+    results = []
+    seen_hrefs = set()
+    for blob in fetched_blobs:
+        for m in re.finditer(r"https?://[^\s\"'<>)]+animalId=\d+[^\s\"'<>)]*", blob, re.IGNORECASE):
+            href = m.group(0).replace("&amp;", "&").strip()
+            if href in seen_hrefs:
+                continue
+            seen_hrefs.add(href)
+            chunk = blob[max(0, m.start() - 500):min(len(blob), m.end() + 250)]
+            img_m = re.search(r"https?://[^\s\"'<>)]+\.(?:jpg|jpeg|png|webp)", chunk, re.IGNORECASE)
+            img = img_m.group(0) if img_m else ""
+            plain = clean_space(re.sub(r"<[^>]+>", " ", chunk))
+            dog = parse_oas_card(href, plain, img, "", now_iso)
+            if dog:
+                results.append(dog)
+
+    if not results:
+        sample = clean_space(fetched_blobs[0])[:200] if fetched_blobs else "all proxies blocked"
+        print(f"  OAS proxy diagnostic -> {sample}")
+    else:
+        print(f"  OAS proxy dogs saved: {len(results)}")
+
+    return results
+
+
+def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
+    url = "https://www.oaklandanimalservices.org/rescue-needed/"
+    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
+
+    try:
+        resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
+        status = resp.status if resp else None
+        if status == 403:
+            return fetch_oas_via_proxy_and_embed(page, url, now_iso)
+        try:
+            page.wait_for_selector("a[href*='animalId=']", timeout=10000)
+        except Exception:
+            page.wait_for_timeout(3000)
+    except Exception as exc:
+        print(f"  OAS direct load error: {exc}")
+        return fetch_oas_via_proxy_and_embed(page, url, now_iso)
+
+    raw_cards = extract_oas_cards_from_page(page)
     if not raw_cards:
-        return fetch_oas_via_relay(url, now_iso)
+        return fetch_oas_via_proxy_and_embed(page, url, now_iso)
 
     results = []
     for c in raw_cards:
