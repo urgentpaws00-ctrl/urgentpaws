@@ -124,7 +124,7 @@
     async function loadDogs() {
       const grid = document.getElementById('dogGrid');
       try {
-        const res = await fetch(`./dogs.json?t=${Date.now()}`);
+        const res = await fetch(`https://raw.githubusercontent.com/urgentpaws00-ctrl/urgentpaws/main/dogs.json?t=${Date.now()}`);
         if (!res.ok) throw new Error('Feed fetch failed');
         allDogs = await res.json();
       } catch {
