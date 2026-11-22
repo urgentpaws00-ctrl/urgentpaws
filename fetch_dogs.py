@@ -20,6 +20,33 @@ RESCUED_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+LAAS_ALERT_BOARDS = [
+    {
+        "label": "LAAS Euthanasia Alert",
+        "badge": "EUTHANASIA ALERT",
+        "urgency_type": "LAAS Euthanasia Alert (6 Shelters)",
+        "url": "https://petharbor.com/results.asp?WHERE=type_DOG&PAGE=1&searchtype=ALL&friends=1&samaritans=1&nosuccess=0&rows=50&imght=120&imgres=thumb&view=sysadm.v_lact_alert_euth&start=3&SHELTERLIST=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&OrderBy=shelter",
+    },
+    {
+        "label": "LAAS Urgent Needs Alert",
+        "badge": "URGENT NEEDS ALERT",
+        "urgency_type": "LAAS Urgent Needs / Escalating Stress",
+        "url": "https://petharbor.com/results.asp?WHERE=type_DOG&PAGE=1&searchtype=ALL&friends=1&samaritans=1&nosuccess=0&rows=50&imght=120&imgres=thumb&view=sysadm.v_lact_alert_yellow2&start=3&SHELTERLIST=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&OrderBy=shelter",
+    },
+    {
+        "label": "LAAS Orange Alert (Urgent Medical)",
+        "badge": "ORANGE MEDICAL ALERT",
+        "urgency_type": "LAAS Urgent Medical (Orange Alert)",
+        "url": "https://petharbor.com/results.asp?searchtype=ALL&start=3&friends=1&samaritans=1&nosuccess=0&orderby=shelter&rows=50&imght=120&imgres=Detail&view=sysadm.v_lact_alert_orange&shelterlist=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&where=type_DOG&PAGE=1",
+    },
+    {
+        "label": "LAAS Blue Alert (Severe Medical)",
+        "badge": "BLUE MEDICAL ALERT",
+        "urgency_type": "LAAS Severe Medical (Blue Alert)",
+        "url": "https://petharbor.com/results.asp?WHERE=type_DOG&PAGE=1&searchtype=ALL&friends=1&samaritans=1&nosuccess=0&rows=50&imght=120&imgres=thumb&view=sysadm.v_lact_alert_blue&start=3&SHELTERLIST=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&OrderBy=shelter",
+    },
+]
+
 
 def clean_space(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
@@ -33,24 +60,24 @@ def extract_field(text: str, labels: tuple[str, ...]) -> str:
     return ""
 
 
-def parse_date_days_ago(val) -> int:
-    if val is None or val == "":
-        return 0
-    if isinstance(val, (int, float)) and val > 1_000_000_000_000:
-        dt = datetime.fromtimestamp(val / 1000.0, tz=timezone.utc)
-        return max(0, (datetime.now(timezone.utc) - dt).days)
-    s = str(val).strip()
-    for fmt in ("%Y.%m.%d", "%Y-%m-%d", "%m/%d/%Y", "%b %d, %Y", "%B %d, %Y"):
-        try:
-            dt = datetime.strptime(s[:20], fmt).replace(tzinfo=timezone.utc)
-            return max(0, (datetime.now(timezone.utc) - dt).days)
-        except ValueError:
-            continue
-    return 0
+def is_active_flag(val) -> bool:
+    if val is None:
+        return False
+    s = clean_space(str(val)).lower()
+    if not s:
+        return False
+    inactive = {
+        "none", "n/a", "na", "no", "not needed", "not applicable",
+        "normal", "standard", "0", "false", "null", "-", "unknown",
+    }
+    if s in inactive:
+        return False
+    if s.startswith("not ") or s.startswith("no "):
+        return False
+    return True
 
 
 def find_petconnect_cards_across_frames(page) -> list[dict]:
-    """Extracts 24Petconnect animal cards from the main page or embedded county iframes."""
     all_cards = []
     seen_keys = set()
 
@@ -76,7 +103,6 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
                         });
                     }
 
-                    // Fallback if cards don't wrap standard <a> links
                     if (out.length === 0) {
                         const gridItems = Array.from(document.querySelectorAll(".gridResult, [class*='gridResult'], [class*='petCard']"));
                         for (const el of gridItems) {
@@ -107,11 +133,11 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 1. STANISLAUS COUNTY — RED STATUS & FINAL CALL (Direct HTML)
+# 1. STANISLAUS COUNTY — RED STATUS & FINAL CALL
 # ---------------------------------------------------------------------------
 def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
     url = "https://www.stanislausanimalservices.com/atrisk/adopt-dogs.shtm?color=red&sort=orderByIntakeDate"
-    print("[1/7] Scraping Stanislaus County RED / Final Call dogs...")
+    print("[1/8] Scraping Stanislaus County RED / Final Call dogs...")
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=40000)
         page.wait_for_timeout(3000)
@@ -131,7 +157,6 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
                 if (!txt || txt.length < 25 || txt.length > 1800) continue;
                 const m = txt.match(idRegex);
                 if (!m) continue;
-                // Pick the smallest container that holds an animal ID and an image or details
                 const childMatch = Array.from(el.children).some(ch => idRegex.test(ch.innerText || "") && ch.querySelector("img"));
                 if (childMatch) continue;
 
@@ -155,14 +180,12 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
     results = []
     for item in raw_cards:
         txt = item.get("text", "")
-        # Skip dogs already safely in foster homes (F01)
         if re.search(r"\bF01\b|in a foster home", txt, re.IGNORECASE):
             continue
 
         aid = item["animal_id"]
         lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
 
-        # Name usually appears right before the Animal ID line or at the top of the card
         name = f"Stanislaus {aid}"
         for idx, ln in enumerate(lines):
             if aid in ln and idx > 0 and len(lines[idx - 1]) < 35 and "finalcall" not in lines[idx - 1].lower():
@@ -210,97 +233,135 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES — /rescue-needed/ (Shelterluv Embed)
+# 2. OAKLAND ANIMAL SERVICES — /rescue-needed/ (Direct Card & Ribbon Scraper)
 # ---------------------------------------------------------------------------
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
     url = "https://www.oaklandanimalservices.org/rescue-needed/"
-    print("[2/7] Scraping Oakland Animal Services /rescue-needed/...")
+    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
+
+    status = None
     try:
-        page.goto(url, wait_until="networkidle", timeout=45000)
-        page.wait_for_timeout(4000)
+        resp = page.goto(url, wait_until="domcontentloaded", timeout=45000)
+        status = resp.status if resp else None
+        page.wait_for_timeout(4500)
     except Exception as exc:
-        print(f"  OAS error: {exc}")
+        print(f"  OAS load error: {exc}")
         return []
 
-    animal_ids = []
-    seen_ids = set()
+    raw_cards = []
+    seen_hrefs = set()
+
     for frame in page.frames:
         try:
-            html_blob = frame.content()
+            cards = frame.evaluate(
+                """() => {
+                    const out = [];
+                    const links = Array.from(document.querySelectorAll("a[href]"))
+                        .filter(a => /more info/i.test(a.innerText || "") || /animalId=/i.test(a.href || ""));
+
+                    for (const a of links) {
+                        let card = a.parentElement;
+                        while (card && card !== document.body) {
+                            const hasImg = !!card.querySelector("img");
+                            const moreInfoCount = Array.from(card.querySelectorAll("a"))
+                                .filter(el => /more info/i.test(el.innerText || "")).length;
+                            if (hasImg && moreInfoCount <= 1) break;
+                            card = card.parentElement;
+                        }
+                        if (!card || card === document.body) card = a.parentElement || a;
+
+                        const img = card.querySelector("img");
+                        const heading = card.querySelector("h1, h2, h3, h4, strong, b, [class*='name'], [class*='title']");
+                        out.push({
+                            href: a.href || "",
+                            img: img ? (img.src || img.getAttribute("data-src") || "") : "",
+                            heading: heading ? (heading.innerText || "").trim() : "",
+                            text: (card.innerText || "").trim()
+                        });
+                    }
+                    return out;
+                }"""
+            )
         except Exception:
             continue
-        for m in re.finditer(r"animalId=(\d+)", html_blob):
-            if m.group(1) not in seen_ids:
-                seen_ids.add(m.group(1))
-                animal_ids.append(m.group(1))
 
-    print(f"  Found {len(animal_ids)} OAS /rescue-needed/ IDs")
-    results = []
-    for aid in animal_ids:
-        detail_url = f"https://www.oaklandanimalservices.org/rescue-needed/animal/?animalId={aid}"
-        try:
-            page.goto(detail_url, wait_until="networkidle", timeout=30000)
-            page.wait_for_timeout(2000)
-        except Exception:
-            continue
-
-        combined_text = ""
-        photo_url = ""
-        for frame in page.frames:
-            try:
-                txt = frame.inner_text("body")
-                if txt:
-                    combined_text += "\n" + txt
-                if not photo_url:
-                    imgs = frame.eval_on_selector_all("img", "els => els.map(i => i.src || '')")
-                    for src in imgs:
-                        if src and not src.endswith(".svg") and "logo" not in src.lower() and ("shelterluv" in src.lower() or "amazonaws" in src.lower()):
-                            photo_url = src
-                            break
-            except Exception:
+        for c in cards:
+            href = (c.get("href") or "").strip()
+            if not href or href in seen_hrefs:
                 continue
+            seen_hrefs.add(href)
+            raw_cards.append(c)
 
-        if NON_DOG_PATTERN.search(combined_text[:500]):
+    if not raw_cards:
+        try:
+            title = page.title()
+            body_preview = clean_space(page.inner_text("body"))[:220]
+            iframe_urls = [f.url for f in page.frames if f.url and f.url != url]
+            print(f"  OAS diagnostic -> status={status} | title='{title}' | iframes={iframe_urls} | preview='{body_preview}'")
+        except Exception:
+            pass
+        return []
+
+    results = []
+    for c in raw_cards:
+        href = c["href"]
+        txt = c["text"]
+        if NON_DOG_PATTERN.search(txt):
             continue
 
-        lines = [clean_space(ln) for ln in combined_text.splitlines() if clean_space(ln)]
-        name = f"OAS #{aid}"
-        shelter_id = aid
-        breed = ""
-        for idx, ln in enumerate(lines):
-            if ln.lower().startswith("animal id"):
-                m = re.search(r"([A-Z]?\d{4,8})", ln)
-                if m:
-                    shelter_id = m.group(1)
-                if idx > 0 and len(lines[idx - 1]) < 40:
-                    name = lines[idx - 1]
-                break
+        id_match = re.search(r"animalid=(\d+)", href, re.IGNORECASE) or re.search(r"(\d{6,9})", href)
+        aid = id_match.group(1) if id_match else re.sub(r"\W+", "", (c.get("heading") or "oas"))[:12]
 
-        for ln in lines:
-            if len(ln) < 55 and any(k in ln.lower() for k in ("mix", "pit", "terrier", "shepherd", "husky", "retriever", "hound", "chihuahua", "malinois", "doberman")):
-                breed = ln
-                break
+        date_match = re.search(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b", txt)
+        is_priority = bool(re.search(r"\bPRIORITY\b", txt, re.IGNORECASE))
+        is_out_of_time = bool(re.search(r"OUT OF TIME", txt, re.IGNORECASE))
 
-        deadline_match = re.search(r"(DEADLINE[^\n\r]*|OUT OF TIME[^\n\r]*|PRIORITY[^\n\r]*)", combined_text, re.IGNORECASE)
-        badge = clean_space(deadline_match.group(1))[:36] if deadline_match else "OAS Rescue Needed"
+        if is_out_of_time:
+            badge = "OUT OF TIME"
+            urgency_type = "OAS Out of Time (Immediate Exit)"
+        elif date_match:
+            badge = f"DEADLINE {date_match.group(1)}"
+            urgency_type = f"OAS Exit Deadline ({date_match.group(1)})"
+        elif is_priority:
+            badge = "OAS PRIORITY"
+            urgency_type = "OAS Priority Urgent Dog"
+        else:
+            badge = "OAS Rescue Needed"
+            urgency_type = "OAS Rescue Needed / At Risk"
+
+        lines = [
+            clean_space(ln)
+            for ln in txt.splitlines()
+            if clean_space(ln)
+            and not re.match(r"^(more info\.{0,3}|priority|\d{1,2}/\d{1,2}/\d{2,4})$", clean_space(ln), re.IGNORECASE)
+        ]
+
+        name = clean_space(c.get("heading") or "")
+        if not name or re.match(r"^(priority|\d{1,2}/\d{1,2}/\d{2,4})$", name, re.IGNORECASE):
+            name = lines[0] if lines else f"OAS #{aid}"
+
+        meta_line = " ".join(ln for ln in lines if ln != name)
+        age_match = re.search(r"\b(Puppy|Young|Adult|Senior)\b", meta_line, re.IGNORECASE)
+        weight_match = re.search(r"\b(\d+\s*lbs?)\b", meta_line, re.IGNORECASE)
+        breed_match = re.search(r"\b(?:Male|Female),\s*(.+)$", meta_line, re.IGNORECASE)
 
         results.append({
-            "id": f"oas-{shelter_id.lower()}",
-            "animal_id": shelter_id,
+            "id": f"oas-{aid}",
+            "animal_id": aid,
             "name": name,
-            "breed": breed,
+            "breed": clean_space(breed_match.group(1)).rstrip(".") if breed_match else "",
             "shelter": "Oakland Animal Services",
             "city": "Oakland",
             "county": "Alameda",
             "state": "CA",
-            "size": "",
-            "age": "",
-            "urgency_type": "OAS Rescue Needed / At Risk",
+            "size": weight_match.group(1) if weight_match else "",
+            "age": age_match.group(1).title() if age_match else "",
+            "urgency_type": urgency_type,
             "deadline_or_urgency": badge,
             "needs_type": "Rescue Pull, Foster, or Adopt",
-            "transport_note": "Listed directly on OAS Rescue Needed urgent board",
-            "photo_url": photo_url,
-            "listing_url": detail_url,
+            "transport_note": meta_line[:140],
+            "photo_url": c.get("img") or "",
+            "listing_url": href,
             "updated_at": now_iso,
             "last_checked": now_iso,
         })
@@ -310,7 +371,7 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 3-6. 24PETCONNECT MUNICIPAL URGENT BOARDS (Kern, Contra Costa, Devore, Riverside)
+# 3-6. 24PETCONNECT MUNICIPAL URGENT BOARDS
 # ---------------------------------------------------------------------------
 def scrape_24petconnect_board(
     page,
@@ -347,13 +408,11 @@ def scrape_24petconnect_board(
         if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
             continue
 
-        # Extract Animal ID (e.g., A1261085, A855351, A1053905, A1937091)
         id_match = re.search(r"\b(A\d{5,8})\b", txt) or re.search(r"/(A\d{5,8})\b", href)
         animal_id = id_match.group(1).upper() if id_match else ""
         if not animal_id or animal_id in seen_ids:
             continue
 
-        # Filter strictly for Devore / mixed adoption boards
         if require_urgent_flag:
             has_flag = bool(
                 re.search(
@@ -422,7 +481,6 @@ def scrape_24petconnect_board(
             "last_checked": now_iso,
         })
 
-    # Optional detail-page verification (used for Riverside RVSDPublic to capture exact ***DEADLINE*** & filter out RESCUED)
     if inspect_details_for_deadline and results:
         verified = []
         for dog in results[:35]:
@@ -462,10 +520,113 @@ def scrape_24petconnect_board(
 
 
 # ---------------------------------------------------------------------------
-# 7. SAN JOSE ACS — ARCGIS REST JSON API (Inspects Schema + Flags At-Risk Dogs)
+# 7. LA ANIMAL SERVICES (6 CITY SHELTERS) — NEW HOPE ALERT BOARDS
+# ---------------------------------------------------------------------------
+def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
+    print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...")
+    results = []
+    seen_ids = set()
+
+    for board in LAAS_ALERT_BOARDS:
+        try:
+            page.goto(board["url"], wait_until="domcontentloaded", timeout=35000)
+            page.wait_for_timeout(3000)
+        except Exception as exc:
+            print(f"  {board['label']} error: {exc}")
+            continue
+
+        rows = page.evaluate(
+            """() => {
+                const out = [];
+                const trs = Array.from(document.querySelectorAll("table tr"));
+                for (const tr of trs) {
+                    const link = tr.querySelector("a[href*='detail.asp'], a[href*='Details']");
+                    if (!link) continue;
+                    const tds = Array.from(tr.querySelectorAll("td")).map(td => (td.innerText || "").trim());
+                    const img = tr.querySelector("img");
+                    out.push({
+                        href: link.href || "",
+                        img: img ? img.src : "",
+                        cells: tds,
+                        text: (tr.innerText || "").trim()
+                    });
+                }
+                return out;
+            }"""
+        )
+
+        if not rows:
+            cards = find_petconnect_cards_across_frames(page)
+            for c in cards:
+                rows.append({"href": c.get("href", ""), "img": c.get("img", ""), "cells": [], "text": c.get("text", "")})
+
+        board_count = 0
+        for r in rows:
+            txt = r.get("text") or ""
+            href = r.get("href") or ""
+            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+                continue
+
+            id_match = re.search(r"\b(A\d{6,8})\b", href + " " + txt, re.IGNORECASE)
+            animal_id = id_match.group(1).upper() if id_match else ""
+            if not animal_id or animal_id in seen_ids:
+                continue
+            seen_ids.add(animal_id)
+
+            cells = [clean_space(c) for c in (r.get("cells") or []) if clean_space(c)]
+            name = ""
+            breed = ""
+            age = ""
+            shelter_loc = "LA Animal Services"
+
+            if cells:
+                name_clean = re.sub(r"\(?\bA\d{6,8}\b\)?", "", cells[0]).strip(" -()")
+                if name_clean and len(name_clean) < 35:
+                    name = name_clean
+                for cell in cells[1:]:
+                    if any(s in cell.lower() for s in ("east valley", "west valley", "west la", "south la", "harbor", "north central", "chesterfield", "shelter")):
+                        shelter_loc = f"LA Animal Services ({cell})"
+                    elif re.search(r"\b\d+\s*(yr|year|mo|month|wk|week)", cell, re.IGNORECASE) and not age:
+                        age = cell
+                    elif any(b in cell.lower() for b in ("pit", "terrier", "shepherd", "husky", "mix", "retriever", "chihuahua", "hound", "rottweiler", "bulldog", "boxer", "poodle", "malinois", "doberman")) and not breed:
+                        breed = cell
+
+            if not name:
+                name = extract_field(txt, ("Meet", "Name")) or f"LAAS {animal_id}"
+
+            results.append({
+                "id": f"laas-{animal_id.lower()}",
+                "animal_id": animal_id,
+                "name": name,
+                "breed": breed,
+                "shelter": shelter_loc,
+                "city": "Los Angeles",
+                "county": "Los Angeles",
+                "state": "CA",
+                "size": "",
+                "age": age,
+                "urgency_type": board["urgency_type"],
+                "deadline_or_urgency": board["badge"],
+                "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+                "transport_note": f"Active on {board['label']}",
+                "photo_url": r.get("img") or "",
+                "listing_url": href or f"https://24petconnect.com/LACT/Details/LACT/{animal_id}",
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
+            board_count += 1
+
+        print(f"  {board['label']}: {board_count} dogs")
+
+    print(f"  LAAS total alert dogs saved: {len(results)}")
+    return results
+
+
+# ---------------------------------------------------------------------------
+# 8. SAN JOSE ACS — ARCGIS REST JSON API (Strict Schema Filtering)
 # ---------------------------------------------------------------------------
 def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
-    print("[7/7] Querying San Jose ACS ArcGIS MapServer Layer 1 (JSON)...")
+    print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...")
     api_url = (
         "https://geo.sanjoseca.gov/server/rest/services/DPW/DPW_AnimalCareServices/"
         "MapServer/1/query?where=ANIMALTYPE%3D%27Dog%27&outFields=*&returnGeometry=false&f=json"
@@ -483,43 +644,69 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         return []
 
     features = data.get("features", [])
-    print(f"  San Jose ArcGIS returned {len(features)} sheltered dogs")
-    if features:
-        sample_attrs = features[0].get("attributes", {})
-        print(f"  San Jose ArcGIS schema fields: {list(sample_attrs.keys())}")
 
-    urgent_regex = re.compile(r"\b(urgent|rescue|special|medical|at risk|euth|behavior|transfer|hold)\b", re.IGNORECASE)
+    rescue_statuses = sorted({str(f["attributes"].get("RESCUESTATUS") or "").strip() for f in features if f["attributes"].get("RESCUESTATUS")})
+    rescue_priorities = sorted({str(f["attributes"].get("RESCUEPRIORITY") or "").strip() for f in features if f["attributes"].get("RESCUEPRIORITY")})
+    foster_priorities = sorted({str(f["attributes"].get("FOSTERPRIORITY") or "").strip() for f in features if f["attributes"].get("FOSTERPRIORITY")})
+    animal_statuses = sorted({str(f["attributes"].get("ANIMALSTATUS") or "").strip() for f in features if f["attributes"].get("ANIMALSTATUS")})
+    print(
+        f"  SJ ACS values -> RESCUESTATUS: {rescue_statuses} | RESCUEPRIORITY: {rescue_priorities} | "
+        f"FOSTERPRIORITY: {foster_priorities} | ANIMALSTATUS: {animal_statuses}"
+    )
+
     results = []
-
     for feat in features:
         attrs = feat.get("attributes", {})
-        joined_vals = " ".join(str(v) for v in attrs.values() if v is not None)
 
-        # Look dynamically for intake date or urgent/rescue/medical flags in any field
-        stay_days = 0
-        for k, v in attrs.items():
-            if any(tok in k.lower() for tok in ("intake", "arrival", "in_date", "indate", "datein")):
-                stay_days = max(stay_days, parse_date_days_ago(v))
+        rescue_status = clean_space(str(attrs.get("RESCUESTATUS") or ""))
+        rescue_priority = clean_space(str(attrs.get("RESCUEPRIORITY") or ""))
+        foster_priority = clean_space(str(attrs.get("FOSTERPRIORITY") or ""))
+        animal_status = clean_space(str(attrs.get("ANIMALSTATUS") or ""))
 
-        has_urgent_flag = bool(urgent_regex.search(joined_vals))
-        # Only include dogs explicitly flagged in status/notes OR staying 45+ days in kennel
-        if not (has_urgent_flag or stay_days >= 45):
+        try:
+            days_in = int(float(attrs.get("DAYSINSHELTER") or 0))
+        except (TypeError, ValueError):
+            days_in = 0
+
+        has_rescue_priority = is_active_flag(rescue_priority)
+        has_rescue_status = is_active_flag(rescue_status)
+        has_foster_priority = is_active_flag(foster_priority)
+        is_stray_hold = bool(re.search(r"\b(stray|hold|quarantine|bite|court|custody)\b", animal_status, re.IGNORECASE))
+
+        if not (has_rescue_priority or has_rescue_status or has_foster_priority or (days_in >= 45 and not is_stray_hold)):
             continue
 
-        aid = str(
-            attrs.get("ANIMALID")
-            or attrs.get("PETID")
-            or attrs.get("ENTERPRISEID")
-            or attrs.get("FACILITYID")
-            or attrs.get("OBJECTID")
-            or ""
-        ).strip()
-        name = str(attrs.get("PETNAME") or attrs.get("ANIMALNAME") or attrs.get("NAME") or f"San Jose {aid}").strip()
-        breed = str(attrs.get("PRIMARYBREED") or attrs.get("BREED") or attrs.get("PETBREED") or "").strip()
-        age = str(attrs.get("PETAGE") or "").strip()
-        size = str(attrs.get("PETSIZE") or "").strip()
-        photo_url = str(attrs.get("PHOTOURL") or attrs.get("IMAGEURL") or attrs.get("PHOTOLINK") or "").strip()
-        direct_url = str(attrs.get("PETURL") or attrs.get("URL") or attrs.get("WEBLINK") or pet_compass_url).strip()
+        aid = clean_space(str(attrs.get("ANIMALID") or attrs.get("OBJECTID") or ""))
+        name = clean_space(str(attrs.get("PETNAME") or f"San Jose {aid}"))
+        breed = clean_space(str(attrs.get("BREED") or ""))
+        age = clean_space(str(attrs.get("PETAGE") or ""))
+        size = clean_space(str(attrs.get("PETSIZE") or ""))
+        weight = clean_space(str(attrs.get("PETWEIGHT") or ""))
+        if weight and not size:
+            size = f"{weight} lbs"
+
+        photo_url = clean_space(str(attrs.get("PHOTOLINK") or ""))
+        direct_url = clean_space(str(attrs.get("WEBLINK") or "")) or pet_compass_url
+
+        if has_rescue_priority:
+            badge = f"SJ Rescue: {rescue_priority[:24]}"
+            urgency_type = f"SJ ACS Rescue Priority ({rescue_priority})"
+            needs = "Rescue Pull / Foster"
+        elif has_rescue_status:
+            badge = f"SJ Rescue: {rescue_status[:24]}"
+            urgency_type = f"SJ ACS Rescue Needed ({rescue_status})"
+            needs = "Rescue Pull / Foster"
+        elif has_foster_priority:
+            badge = f"SJ Foster: {foster_priority[:24]}"
+            urgency_type = f"SJ ACS Foster Priority ({foster_priority})"
+            needs = "Urgent Foster / Adopt"
+        else:
+            badge = f"Long-Stay ({days_in}d)"
+            urgency_type = f"Long-Stay Kennel Dog ({days_in} days)"
+            needs = "Foster or Adopt"
+
+        kennel = clean_space(str(attrs.get("KENNELNAME") or ""))
+        note_parts = [p for p in [f"{days_in} days in shelter" if days_in else "", f"Kennel {kennel}" if kennel else "", animal_status] if p]
 
         results.append({
             "id": f"sj-acs-{aid.lower()}",
@@ -532,33 +719,18 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
             "state": "CA",
             "size": size,
             "age": age,
-            "urgency_type": "Long-Stay Kennel Dog (45d+)" if stay_days >= 45 else "Special Needs / Urgent Flag",
-            "deadline_or_urgency": f"Long-Stay ({stay_days}d)" if stay_days >= 45 else "SJ ACS Flagged",
-            "needs_type": "Foster or Adopt",
-            "transport_note": f"Kennel {attrs.get('KENNELNAME', '')}".strip(),
+            "urgency_type": urgency_type,
+            "deadline_or_urgency": badge,
+            "needs_type": needs,
+            "transport_note": " · ".join(note_parts),
             "photo_url": photo_url,
             "listing_url": direct_url,
             "updated_at": now_iso,
             "last_checked": now_iso,
         })
 
-    print(f"  San Jose ArcGIS flagged/long-stay dogs saved: {len(results)}")
+    print(f"  San Jose ArcGIS strict urgent/priority dogs saved: {len(results)}")
     return results
-
-
-# ---------------------------------------------------------------------------
-# DIAGNOSTIC CHECK: LA Animal Services New Hope Alert Links
-# ---------------------------------------------------------------------------
-def inspect_laas_newhope_links(page) -> None:
-    try:
-        page.goto("https://www.laanimalservices.com/our-partners", wait_until="domcontentloaded", timeout=25000)
-        links = page.eval_on_selector_all(
-            "a[href]",
-            "els => els.filter(e => /dog/i.test(e.innerText || '') && /alert|newhope|24pet|shelter|pdf/i.test(e.href || '')).map(e => ({text: e.innerText.trim(), href: e.href}))",
-        )
-        print(f"[Info] LAAS New Hope dog alert links currently live: {links[:8]}")
-    except Exception as exc:
-        print(f"[Info] LAAS check skipped: {exc}")
 
 
 def main():
@@ -568,16 +740,16 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(user_agent=USER_AGENT, viewport={"width": 1280, "height": 1800})
+        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         page = context.new_page()
 
-        # Tier 1: 100% Urgent / At-Risk Municipal Boards
         all_dogs.extend(scrape_stanislaus_red(page, now_iso))
         all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
         all_dogs.extend(
             scrape_24petconnect_board(
                 page=page,
                 now_iso=now_iso,
-                step_label="[3/7]",
+                step_label="[3/8]",
                 url="https://24petconnect.com/KernCountyRescue?at=DOG",
                 shelter_name="Kern County Animal Services (Greatest Risk)",
                 city="Bakersfield",
@@ -592,7 +764,7 @@ def main():
             scrape_24petconnect_board(
                 page=page,
                 now_iso=now_iso,
-                step_label="[4/7]",
+                step_label="[4/8]",
                 url="https://www.contracosta.ca.gov/7887/Transfer-Preferred-Dogs",
                 shelter_name="Contra Costa Animal Services - Martinez",
                 city="Martinez",
@@ -603,13 +775,11 @@ def main():
                 default_urgency="Transfer Preferred / Rescue Priority",
             )
         )
-
-        # Tier 2: Structured Urgent-Flag County Boards
         all_dogs.extend(
             scrape_24petconnect_board(
                 page=page,
                 now_iso=now_iso,
-                step_label="[5/7]",
+                step_label="[5/8]",
                 url="https://animalcare.sbcounty.gov/pets/",
                 shelter_name="San Bernardino County - Devore Shelter",
                 city="San Bernardino",
@@ -624,7 +794,7 @@ def main():
             scrape_24petconnect_board(
                 page=page,
                 now_iso=now_iso,
-                step_label="[6/7]",
+                step_label="[6/8]",
                 url="https://24petconnect.com/RVSDRescue?at=DOG",
                 shelter_name="Riverside County Animal Services (Rescue Only)",
                 city="Jurupa Valley",
@@ -640,7 +810,7 @@ def main():
             scrape_24petconnect_board(
                 page=page,
                 now_iso=now_iso,
-                step_label="[6b/7]",
+                step_label="[6b/8]",
                 url="https://24petconnect.com/RVSDPublic?at=DOG",
                 shelter_name="Riverside County Animal Services (Red List)",
                 city="Jurupa Valley",
@@ -652,14 +822,12 @@ def main():
                 default_urgency="Red List / Exit Deadline",
             )
         )
+        all_dogs.extend(scrape_laas_newhope_alerts(page, now_iso))
 
-        inspect_laas_newhope_links(page)
         browser.close()
 
-    # Tier 2 API: San Jose ArcGIS MapServer
     all_dogs.extend(fetch_sanjose_arcgis(now_iso))
 
-    # Deduplicate by shelter + animal_id
     seen = set()
     unique_dogs = []
     for dog in all_dogs:
@@ -668,14 +836,13 @@ def main():
             seen.add(key)
             unique_dogs.append(dog)
 
-    # Sort highest-urgency deadlines first
     def sort_rank(d: dict) -> tuple:
         badge = (d.get("deadline_or_urgency") or "").upper()
-        if "FINAL CALL" in badge or "DEADLINE" in badge:
+        if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME")):
             tier = 0
-        elif "URGENT" in badge or "RESCUE" in badge or "RED" in badge:
+        elif any(k in badge for k in ("URGENT", "RESCUE", "RED", "ALERT", "PRIORITY")):
             tier = 1
-        elif "GREATEST RISK" in badge or "TRANSFER" in badge:
+        elif any(k in badge for k in ("GREATEST RISK", "TRANSFER")):
             tier = 2
         else:
             tier = 3
