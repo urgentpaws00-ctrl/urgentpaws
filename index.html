@@ -364,6 +364,62 @@
   }
 </style>
 
+<style>
+  .up-action-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .up-action-row a[href^="http"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px 16px !important;
+    border-radius: 9999px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center;
+    box-sizing: border-box;
+    margin: 0 !important;
+  }
+
+  .up-share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #18181b;
+    background: #ffffff;
+    border: 1px solid #d4d4d8;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .up-share-btn:hover {
+    background: #f4f4f5;
+    border-color: #a1a1aa;
+  }
+
+  .up-share-btn.copied {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+  }
+</style>
+
 <script>
   (function () {
     let dogsCache = [];
@@ -424,13 +480,11 @@
     }
 
     function findCardContainers() {
-      // 1. Try common card selectors first
       const byClass = document.querySelectorAll(
         ".dog-card, .pet-card, .listing-card, .card, [data-dog-id], main article, #dogs-grid > div, #dog-grid > div, #listings > div, .grid > div"
       );
       if (byClass.length > 0) return Array.from(byClass);
 
-      // 2. Fallback: find containers wrapping external shelter links (excluding header/footer/nav)
       const containers = new Set();
       document.querySelectorAll("a[href^='http']").forEach((link) => {
         if (link.closest("header, nav, footer")) return;
@@ -446,7 +500,6 @@
       const cards = findCardContainers();
       cards.forEach((card) => {
         if (card.querySelector(".up-share-btn")) return;
-        // Skip wrapper containers that hold multiple cards
         if (card.querySelectorAll("img").length > 2) return;
 
         const text = card.innerText || "";
@@ -469,10 +522,13 @@
           shareDog(matchedDog, text, btn);
         });
 
-        // Insert right next to the existing shelter/view link if there is one
         const existingLink = card.querySelector("a[href^='http']");
         if (existingLink && existingLink.parentElement) {
-          existingLink.parentElement.appendChild(btn);
+          const row = document.createElement("div");
+          row.className = "up-action-row";
+          existingLink.parentElement.insertBefore(row, existingLink);
+          row.appendChild(existingLink);
+          row.appendChild(btn);
         } else {
           card.appendChild(btn);
         }
@@ -484,5 +540,6 @@
     window.addEventListener("load", attachShareButtons);
     setTimeout(attachShareButtons, 800);
   })();
-</script></body>
+</script>
+</body>
 </html>
