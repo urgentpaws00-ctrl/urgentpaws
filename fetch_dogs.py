@@ -7,12 +7,12 @@ import urllib.parse
 import urllib.request
 
 RESCUEGROUPS_API_KEY = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
-MAX_AGE_DAYS = 21  # Drop RescueGroups listings not updated within this many days
+MAX_AGE_DAYS = 21
 
 USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
 
 URGENT_KEYWORDS = re.compile(
-    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|medical|space|overcrowded)\b",
+    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|needs foster immediately|medical urgency)\b",
     re.IGNORECASE,
 )
 
@@ -25,13 +25,6 @@ RESCUE_EXCLUDE_HINTS = re.compile(
     r"\b(rescue|sanctuary|foster network|foundation|league)\b",
     re.IGNORECASE,
 )
-
-HIGH_INTAKE_CA_AREAS = {
-    "fresno", "bakersfield", "kern", "riverside", "san bernardino",
-    "devore", "lancaster", "palmdale", "downey", "carson", "baldwin park",
-    "stockton", "modesto", "stanislaus", "sacramento", "oakland", "madera",
-    "merced", "visalia", "tulare", "san jose", "contra costa", "hayward"
-}
 
 URL_IN_TEXT = re.compile(r"https?://[^\s<>\"')]+", re.IGNORECASE)
 
@@ -47,44 +40,59 @@ def parse_iso_date(date_str: str) -> datetime | None:
         return None
 
 
-def normalize_url(raw: str) -> str:
+def is_direct_dog_url(raw: str) -> str:
+    """Validates that a URL is a deep link to a specific animal page, never a shelter homepage."""
     val = (raw or "").strip().rstrip(".,;)")
-    if not val:
+    if not val or val.startswith("/"):
         return ""
     if not val.startswith(("http://", "https://")):
         val = "https://" + val
+
+    parsed = urllib.parse.urlparse(val)
+    host = (parsed.netloc or "").lower()
+    path = (parsed.path or "").strip("/")
+
+    if "." not in host or "urgentpaws" in host:
+        return ""
+    if "rescuegroups.org/animals/detail" in val.lower():
+        return ""
+    if any(skip in host for skip in ("facebook.com", "instagram.com", "youtube.com", "tiktok.com", "google.com")):
+        return ""
+    # Reject bare shelter homepages (must have a subpage path or query string)
+    if not path and not parsed.query:
+        return ""
+
     return val
 
 
-def resolve_listing_url(attrs: dict, org_attrs: dict, desc: str, shelter_name: str, animal_id: str, dog_name: str) -> str:
+def resolve_direct_dog_url(attrs: dict, desc: str) -> str:
+    # 1. Direct animal URL from RescueGroups attributes
     for candidate in (attrs.get("url"), attrs.get("adoptionUrl")):
-        clean = normalize_url(candidate)
-        if clean and "rescuegroups.org/animals/detail" not in clean:
-            return clean
-
-    for match in URL_IN_TEXT.findall(desc or ""):
-        clean = normalize_url(match)
-        if clean and not any(skip in clean.lower() for skip in ("facebook.com", "instagram.com", "youtube.com")):
-            return clean
-
-    for candidate in (org_attrs.get("adoptionUrl"), org_attrs.get("url")):
-        clean = normalize_url(candidate)
+        clean = is_direct_dog_url(candidate)
         if clean:
             return clean
 
-    query = " ".join(part for part in (shelter_name, animal_id, dog_name) if part)
-    return f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
+    # 2. Direct animal deep-link embedded in description (e.g., 24Petconnect, Petango, Adopt-a-Pet, shelter animal page)
+    for match in URL_IN_TEXT.findall(desc or ""):
+        clean = is_direct_dog_url(match)
+        if clean:
+            return clean
+
+    # No direct dog URL available — skip rather than sending users to a generic homepage
+    return ""
 
 
-def detect_urgency_type(text: str) -> str:
+def detect_urgency_type(text: str, kill_date: str = "") -> str:
     lower = text.lower()
+    if kill_date:
+        return f"Deadline ({kill_date[:10]})"
     if "medical" in lower or "injured" in lower or "sick" in lower:
-        return "Medical"
+        return "Medical Urgent"
     if "behavior" in lower or "handling" in lower or "rescue only" in lower:
         return "Behavior / Rescue Only"
     if "space" in lower or "capacity" in lower or "overcrowded" in lower:
-        return "Space / Deadline"
-    return "Shelter Capacity / Urgent"
+        return "Space / Capacity Deadline"
+    return "Urgent / Deadline"
 
 
 def fetch_url(url: str) -> str:
@@ -169,7 +177,6 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         attrs = animal.get("attributes", {})
         rels = animal.get("relationships", {})
 
-        # Enforce strict freshness check on updatedDate / createdDate
         updated_dt = parse_iso_date(attrs.get("updatedDate") or attrs.get("createdDate") or "")
         if updated_dt and updated_dt < cutoff_utc:
             continue
@@ -186,20 +193,25 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
 
         name = (attrs.get("name") or "").strip()
         desc = (attrs.get("descriptionText") or attrs.get("descriptionHtml") or "").strip()
+        kill_date = (attrs.get("killDate") or "").strip()
+        kill_reason = (attrs.get("killReason") or "").strip()
         rescue_id = (attrs.get("rescueId") or animal.get("id") or "").strip()
+
+        # STRICT URGENCY CHECK: Must explicitly have a killDate/killReason or urgent keywords in the dog's listing
+        dog_text = f"{name} {desc} {kill_reason}"
+        if not (kill_date or kill_reason or URGENT_KEYWORDS.search(dog_text)):
+            continue
+
+        # STRICT DIRECT URL CHECK: Must link directly to the dog's profile, not a shelter homepage
+        listing_url = resolve_direct_dog_url(attrs=attrs, desc=desc)
+        if not listing_url:
+            continue
 
         loc_data = (rels.get("locations", {}).get("data") or [{}])[0]
         loc_attrs = locations_by_id.get(loc_data.get("id"), {})
         city = (loc_attrs.get("city") or org_attrs.get("city") or "").strip()
         county = (loc_attrs.get("county") or "").strip()
         state = (loc_attrs.get("state") or org_attrs.get("state") or "CA").strip()
-
-        combined_text = f"{name} {desc} {shelter_name} {city} {county}"
-        is_urgent_text = bool(URGENT_KEYWORDS.search(combined_text))
-        is_high_intake_area = any(area in combined_text.lower() for area in HIGH_INTAKE_CA_AREAS)
-
-        if not (is_urgent_text or is_high_intake_area):
-            continue
 
         pic_list = rels.get("pictures", {}).get("data") or []
         photo_url = ""
@@ -212,17 +224,7 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
                 or ""
             )
 
-        listing_url = resolve_listing_url(
-            attrs=attrs,
-            org_attrs=org_attrs,
-            desc=desc,
-            shelter_name=shelter_name,
-            animal_id=rescue_id,
-            dog_name=name,
-        )
-
-        urgency_label = "Urgent / Deadline" if is_urgent_text else "Municipal Shelter"
-        needs = "Rescue Pull / Foster" if "rescue only" in combined_text.lower() else "Foster or Adopt"
+        needs = "Rescue Pull / Foster" if "rescue only" in dog_text.lower() else "Foster or Adopt"
         updated_iso = updated_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if updated_dt else now_iso
 
         results.append({
@@ -236,8 +238,8 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             "state": state,
             "size": (attrs.get("sizeGroup") or "").strip(),
             "age": (attrs.get("ageGroup") or "").strip(),
-            "urgency_type": detect_urgency_type(combined_text),
-            "deadline_or_urgency": urgency_label,
+            "urgency_type": detect_urgency_type(dog_text, kill_date),
+            "deadline_or_urgency": f"Deadline {kill_date[:10]}" if kill_date else "Urgent / Deadline",
             "needs_type": needs,
             "transport_note": "",
             "photo_url": photo_url,
@@ -246,38 +248,59 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"RescueGroups fresh shelters returned: {len(results)}")
+    print(f"RescueGroups verified urgent direct-link dogs: {len(results)}")
     return results
 
 
 def scrape_oakland_animal_services() -> list[dict]:
-    url = "https://www.oaklandanimalservices.org/adopt/dogs/"
+    """Scrapes OAS dog links and checks each dog's individual profile page so ONLY urgent dogs are included."""
+    base_url = "https://www.oaklandanimalservices.org/adopt/dogs/"
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
-        page = fetch_url(url)
+        index_page = fetch_url(base_url)
     except Exception as exc:
-        print(f"OAS scrape error: {exc}")
+        print(f"OAS index scrape error: {exc}")
         return []
 
-    results = []
-    card_pattern = re.compile(
-        r'<a[^>]+href="(https://www\.oaklandanimalservices\.org/adopt/animal/\?animalId=(\d+))"[^>]*>(.*?)</a>',
-        re.IGNORECASE | re.DOTALL,
+    link_pattern = re.compile(
+        r'href="([^"]*?/adopt/animal/\?animalId=(\d+))"',
+        re.IGNORECASE,
     )
 
     seen_ids = set()
-    for match in card_pattern.finditer(page):
-        listing_url, animal_id, inner_html = match.groups()
+    candidates = []
+    for match in link_pattern.finditer(index_page):
+        raw_href, animal_id = match.groups()
         if animal_id in seen_ids:
             continue
         seen_ids.add(animal_id)
+        listing_url = urllib.parse.urljoin(base_url, html.unescape(raw_href))
+        candidates.append((animal_id, listing_url))
 
-        img_match = re.search(r'<img[^>]+src="([^"]+)"', inner_html, re.IGNORECASE)
-        photo_url = html.unescape(img_match.group(1)) if img_match else ""
+    results = []
+    for animal_id, listing_url in candidates:
+        try:
+            detail_html = fetch_url(listing_url)
+        except Exception:
+            continue
 
-        clean_text = re.sub(r"<[^>]+>", " ", inner_html)
-        clean_text = re.sub(r"\s+", " ", html.unescape(clean_text)).strip()
-        name = clean_text.split(" ")[0] if clean_text else f"OAS #{animal_id}"
+        # Strip scripts/styles and HTML tags to inspect the dog's actual profile bio
+        cleaned_html = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", detail_html, flags=re.IGNORECASE | re.DOTALL)
+        plain_text = re.sub(r"<[^>]+>", " ", cleaned_html)
+        plain_text = re.sub(r"\s+", " ", html.unescape(plain_text)).strip()
+
+        # Skip dogs whose profile does NOT explicitly state an urgent/deadline/medical/rescue-only plea
+        if not URGENT_KEYWORDS.search(plain_text):
+            continue
+
+        title_match = re.search(r"<h1[^>]*>(.*?)</h1>", detail_html, re.IGNORECASE | re.DOTALL)
+        raw_name = re.sub(r"<[^>]+>", "", title_match.group(1)).strip() if title_match else ""
+        name = html.unescape(raw_name).split("|")[0].strip() or f"OAS #{animal_id}"
+
+        og_img = re.search(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"', detail_html, re.IGNORECASE)
+        photo_url = html.unescape(og_img.group(1)) if og_img else ""
+
+        needs = "Rescue Pull / Foster" if "rescue only" in plain_text.lower() else "Foster or Adopt"
 
         results.append({
             "id": f"oas-{animal_id}",
@@ -290,9 +313,9 @@ def scrape_oakland_animal_services() -> list[dict]:
             "state": "CA",
             "size": "",
             "age": "",
-            "urgency_type": "High-Intake Municipal Shelter",
-            "deadline_or_urgency": "Urgent / Capacity",
-            "needs_type": "Foster or Adopt",
+            "urgency_type": detect_urgency_type(plain_text),
+            "deadline_or_urgency": "Urgent / Deadline",
+            "needs_type": needs,
             "transport_note": "",
             "photo_url": photo_url,
             "listing_url": listing_url,
@@ -300,7 +323,7 @@ def scrape_oakland_animal_services() -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"Oakland Animal Services scraped: {len(results)}")
+    print(f"Oakland Animal Services verified urgent dogs: {len(results)}")
     return results
 
 
@@ -312,16 +335,16 @@ def main():
     seen = set()
     unique_dogs = []
     for dog in dogs:
-        key = dog.get("id") or dog.get("listing_url")
+        key = dog.get("listing_url") or dog.get("id")
         if key and key not in seen:
             seen.add(key)
             unique_dogs.append(dog)
 
-    # Sort urgent deadlines first, then most recently updated first
     unique_dogs.sort(
         key=lambda d: (
-            0 if "Urgent" in d.get("deadline_or_urgency", "") else 1,
             -(parse_iso_date(d.get("updated_at") or "").timestamp() if parse_iso_date(d.get("updated_at") or "") else 0),
+            d.get("county", ""),
+            d.get("name", ""),
         )
     )
 
@@ -329,7 +352,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
-    print(f"Total fresh municipal shelter dogs saved: {len(unique_dogs)}")
+    print(f"Total verified urgent direct-link shelter dogs saved: {len(unique_dogs)}")
 
 
 if __name__ == "__main__":
