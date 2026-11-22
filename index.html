@@ -368,14 +368,13 @@
   (function () {
     let dogsCache = [];
 
-    // Load dogs.json so shared text includes exact shelter & deadline details
     fetch("dogs.json?v=" + Date.now())
       .then((r) => r.json())
       .then((data) => {
         dogsCache = Array.isArray(data) ? data : [];
         attachShareButtons();
       })
-      .catch(() => {});
+      .catch(() => attachShareButtons());
 
     async function shareDog(dog, cardText, btn) {
       const name = dog?.name || "Urgent Shelter Dog";
@@ -384,13 +383,12 @@
       const deadline = dog?.deadline_or_urgency ? ` — ${dog.deadline_or_urgency}` : "";
       const shareUrl = dog?.id
         ? `${window.location.origin}/?dog=${encodeURIComponent(dog.id)}`
-        : window.location.origin;
+        : window.location.href;
 
       const shareText = dog
         ? `URGENT: ${name}${aid} at ${shelter}${deadline}. View live status & shelter link:`
-        : `${cardText.slice(0, 140)}... View live status at:`;
+        : `${cardText.replace(/\s+/g, " ").trim().slice(0, 120)}... View live status at:`;
 
-      // 1. Mobile native share sheet (iMessage, Instagram, WhatsApp, AirDrop)
       if (navigator.share) {
         try {
           await navigator.share({
@@ -400,11 +398,10 @@
           });
           return;
         } catch (err) {
-          if (err && err.name === "AbortError") return; // User closed share sheet
+          if (err && err.name === "AbortError") return;
         }
       }
 
-      // 2. Desktop / fallback clipboard copy
       const fullCopy = `${shareText} ${shareUrl}`;
       try {
         await navigator.clipboard.writeText(fullCopy);
@@ -426,11 +423,31 @@
       }, 1800);
     }
 
+    function findCardContainers() {
+      // 1. Try common card selectors first
+      const byClass = document.querySelectorAll(
+        ".dog-card, .pet-card, .listing-card, .card, [data-dog-id], main article, #dogs-grid > div, #dog-grid > div, #listings > div, .grid > div"
+      );
+      if (byClass.length > 0) return Array.from(byClass);
+
+      // 2. Fallback: find containers wrapping external shelter links (excluding header/footer/nav)
+      const containers = new Set();
+      document.querySelectorAll("a[href^='http']").forEach((link) => {
+        if (link.closest("header, nav, footer")) return;
+        const box = link.closest("article, li, div");
+        if (box && box.querySelector("img")) {
+          containers.add(box);
+        }
+      });
+      return Array.from(containers);
+    }
+
     function attachShareButtons() {
-      // Matches common card containers in your grid
-      const cards = document.querySelectorAll(".dog-card, .card, [data-dog-id]");
+      const cards = findCardContainers();
       cards.forEach((card) => {
         if (card.querySelector(".up-share-btn")) return;
+        // Skip wrapper containers that hold multiple cards
+        if (card.querySelectorAll("img").length > 2) return;
 
         const text = card.innerText || "";
         const dogId = card.getAttribute("data-dog-id");
@@ -452,17 +469,20 @@
           shareDog(matchedDog, text, btn);
         });
 
-        // Place next to existing action links/buttons if present, otherwise at bottom of card
-        const actionRow = card.querySelector(".card-actions, .actions, .card-footer");
-        (actionRow || card).appendChild(btn);
+        // Insert right next to the existing shelter/view link if there is one
+        const existingLink = card.querySelector("a[href^='http']");
+        if (existingLink && existingLink.parentElement) {
+          existingLink.parentElement.appendChild(btn);
+        } else {
+          card.appendChild(btn);
+        }
       });
     }
 
-    // Re-attach whenever filters or search re-render the dog cards
     const observer = new MutationObserver(() => attachShareButtons());
     observer.observe(document.body, { childList: true, subtree: true });
-    document.addEventListener("DOMContentLoaded", attachShareButtons);
+    window.addEventListener("load", attachShareButtons);
+    setTimeout(attachShareButtons, 800);
   })();
-</script>
-</body>
+</script></body>
 </html>
