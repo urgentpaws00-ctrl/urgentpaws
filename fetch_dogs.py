@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import re
@@ -6,15 +7,28 @@ import urllib.request
 
 RESCUEGROUPS_API_KEY = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
 
+USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
+
 URGENT_KEYWORDS = re.compile(
-    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|medical|space)\b",
+    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|medical|space|overcrowded)\b",
+    re.IGNORECASE,
+)
+
+SHELTER_NAME_HINTS = re.compile(
+    r"\b(animal services|animal control|county|municipal|city of|shelter|department of animal|acc)\b",
+    re.IGNORECASE,
+)
+
+RESCUE_EXCLUDE_HINTS = re.compile(
+    r"\b(rescue|sanctuary|foster network|foundation|league)\b",
     re.IGNORECASE,
 )
 
 HIGH_INTAKE_CA_AREAS = {
     "fresno", "bakersfield", "kern", "riverside", "san bernardino",
     "devore", "lancaster", "palmdale", "downey", "carson", "baldwin park",
-    "stockton", "modesto", "stanislaus", "sacramento", "oakland", "madera", "merced"
+    "stockton", "modesto", "stanislaus", "sacramento", "oakland", "madera",
+    "merced", "visalia", "tulare", "san jose", "contra costa", "hayward"
 }
 
 
@@ -26,10 +40,17 @@ def detect_urgency_type(text: str) -> str:
         return "Behavior / Rescue Only"
     if "space" in lower or "capacity" in lower or "overcrowded" in lower:
         return "Space / Deadline"
-    return "Euthanasia Risk / Urgent"
+    return "Shelter Capacity / Urgent"
 
 
-def fetch_rescuegroups_ca() -> list[dict]:
+def fetch_url(url: str) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=25) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
+def fetch_rescuegroups_shelters_ca() -> list[dict]:
+    """Pulls California dogs ONLY from municipal/county shelters on RescueGroups (excludes private rescues)."""
     if not RESCUEGROUPS_API_KEY:
         print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
         return []
@@ -42,6 +63,11 @@ def fetch_rescuegroups_ca() -> list[dict]:
                     "fieldName": "locations.state",
                     "operation": "equals",
                     "criteria": "CA"
+                },
+                {
+                    "fieldName": "orgs.type",
+                    "operation": "equals",
+                    "criteria": "Shelter"
                 }
             ]
         }
@@ -53,7 +79,7 @@ def fetch_rescuegroups_ca() -> list[dict]:
         headers={
             "Content-Type": "application/vnd.api+json",
             "Authorization": RESCUEGROUPS_API_KEY,
-            "User-Agent": "UrgentPawsCA/1.0"
+            "User-Agent": USER_AGENT,
         },
         method="POST",
     )
@@ -88,13 +114,20 @@ def fetch_rescuegroups_ca() -> list[dict]:
         attrs = animal.get("attributes", {})
         rels = animal.get("relationships", {})
 
+        org_data = (rels.get("orgs", {}).get("data") or [{}])[0]
+        org_attrs = orgs_by_id.get(org_data.get("id"), {})
+        shelter_name = (org_attrs.get("name") or "").strip()
+        org_type = (org_attrs.get("type") or "").strip().lower()
+
+        # Double-check it is an actual shelter and not a private rescue
+        if org_type and org_type != "shelter":
+            continue
+        if RESCUE_EXCLUDE_HINTS.search(shelter_name) and not SHELTER_NAME_HINTS.search(shelter_name):
+            continue
+
         name = (attrs.get("name") or "").strip()
         desc = (attrs.get("descriptionText") or attrs.get("descriptionHtml") or "").strip()
         rescue_id = (attrs.get("rescueId") or animal.get("id") or "").strip()
-
-        org_data = (rels.get("orgs", {}).get("data") or [{}])[0]
-        org_attrs = orgs_by_id.get(org_data.get("id"), {})
-        shelter_name = (org_attrs.get("name") or "California Shelter / Rescue").strip()
 
         loc_data = (rels.get("locations", {}).get("data") or [{}])[0]
         loc_attrs = locations_by_id.get(loc_data.get("id"), {})
@@ -126,15 +159,15 @@ def fetch_rescuegroups_ca() -> list[dict]:
             or f"https://www.rescuegroups.org/animals/detail?AnimalID={animal.get('id')}"
         )
 
-        urgency_label = "Urgent / Deadline" if is_urgent_text else "High-Intake Shelter"
+        urgency_label = "Urgent / Deadline" if is_urgent_text else "Municipal Shelter"
         needs = "Rescue Pull / Foster" if "rescue only" in combined_text.lower() else "Foster or Adopt"
 
         results.append({
-            "id": f"rg-{animal.get('id')}",
+            "id": f"rg-shelter-{animal.get('id')}",
             "animal_id": rescue_id,
             "name": name or "Unnamed Dog",
             "breed": (attrs.get("breedString") or "").strip(),
-            "shelter": shelter_name,
+            "shelter": shelter_name or "California Municipal Shelter",
             "city": city,
             "county": county,
             "state": state,
@@ -149,19 +182,69 @@ def fetch_rescuegroups_ca() -> list[dict]:
             "last_checked": now_iso,
         })
 
+    print(f"RescueGroups shelters returned: {len(results)}")
     return results
 
 
-def fetch_ca_shelter_scrapers() -> list[dict]:
-    scraped = []
-    # Modular hook for direct CA high-intake shelter feeds
-    return scraped
+def scrape_oakland_animal_services() -> list[dict]:
+    """Scrapes adoptable/urgent dogs directly from Oakland Animal Services (municipal shelter)."""
+    url = "https://www.oaklandanimalservices.org/adopt/dogs/"
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        page = fetch_url(url)
+    except Exception as exc:
+        print(f"OAS scrape error: {exc}")
+        return []
+
+    results = []
+    # Match animal profile links and surrounding card metadata on OAS
+    card_pattern = re.compile(
+        r'<a[^>]+href="(https://www\.oaklandanimalservices\.org/adopt/animal/\?animalId=(\d+))"[^>]*>(.*?)</a>',
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    seen_ids = set()
+    for match in card_pattern.finditer(page):
+        listing_url, animal_id, inner_html = match.groups()
+        if animal_id in seen_ids:
+            continue
+        seen_ids.add(animal_id)
+
+        img_match = re.search(r'<img[^>]+src="([^"]+)"', inner_html, re.IGNORECASE)
+        photo_url = html.unescape(img_match.group(1)) if img_match else ""
+
+        clean_text = re.sub(r"<[^>]+>", " ", inner_html)
+        clean_text = re.sub(r"\s+", " ", html.unescape(clean_text)).strip()
+        name = clean_text.split(" ")[0] if clean_text else f"OAS #{animal_id}"
+
+        results.append({
+            "id": f"oas-{animal_id}",
+            "animal_id": f"A{animal_id}",
+            "name": name,
+            "breed": "",
+            "shelter": "Oakland Animal Services",
+            "city": "Oakland",
+            "county": "Alameda",
+            "state": "CA",
+            "size": "",
+            "age": "",
+            "urgency_type": "High-Intake Municipal Shelter",
+            "deadline_or_urgency": "Urgent / Capacity",
+            "needs_type": "Foster or Adopt",
+            "transport_note": "",
+            "photo_url": photo_url,
+            "listing_url": listing_url,
+            "last_checked": now_iso,
+        })
+
+    print(f"Oakland Animal Services scraped: {len(results)}")
+    return results
 
 
 def main():
     dogs = []
-    dogs.extend(fetch_rescuegroups_ca())
-    dogs.extend(fetch_ca_shelter_scrapers())
+    dogs.extend(scrape_oakland_animal_services())
+    dogs.extend(fetch_rescuegroups_shelters_ca())
 
     seen = set()
     unique_dogs = []
@@ -183,7 +266,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
-    print(f"Saved {len(unique_dogs)} California dogs to dogs.json")
+    print(f"Total municipal shelter dogs saved: {len(unique_dogs)}")
 
 
 if __name__ == "__main__":
