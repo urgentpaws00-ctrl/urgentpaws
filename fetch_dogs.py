@@ -6,15 +6,16 @@ import urllib.parse
 import urllib.request
 
 RESCUEGROUPS_API_KEY = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
-MAX_AGE_DAYS = 21
+MAX_AGE_DAYS = 30
 
 USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
 
 URGENT_KEYWORDS = re.compile(
-    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|medical|overcrowded|space)\b",
+    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|medical|overcrowded|space|long[- ]stay)\b",
     re.IGNORECASE,
 )
 
+# Includes municipal shelters and county-contracted humane societies/SPCAs (e.g., San Diego Humane, Marin Humane)
 SHELTER_NAME_HINTS = re.compile(
     r"\b(animal services|animal control|animal care|county|municipal|city of|shelter|department of animal|acc|seaaca|laas|oc animal|humane society|spca)\b",
     re.IGNORECASE,
@@ -63,7 +64,6 @@ def is_deep_dog_link(url: str) -> bool:
 
 
 def resolve_listing_url(attrs: dict, org_attrs: dict, desc: str) -> tuple[str, bool]:
-    """Returns (url, is_direct_dog_page)."""
     for cand in (attrs.get("url"), attrs.get("adoptionUrl")):
         url = clean_valid_url(cand)
         if url and is_deep_dog_link(url):
@@ -108,12 +108,8 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
     locations_by_id = {}
     pics_by_id = {}
 
-    # Fetch the 500 most recently updated CA dogs (2 pages x 250)
-    for page_num in (1, 2):
-        url = (
-            f"https://api.rescuegroups.org/v5/public/animals/search/available/dogs"
-            f"?include=orgs,locations,pictures&sort=-animals.updatedDate&limit=250&page={page_num}"
-        )
+    for page_num in range(1, 5):
+        url = f"https://api.rescuegroups.org/v5/public/animals/search/available/dogs?include=orgs,locations,pictures&limit=250&page={page_num}"
         payload = {
             "data": {
                 "filters": [
@@ -145,7 +141,9 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             break
 
         batch = body.get("data", [])
+        print(f"Page {page_num}: fetched {len(batch)} dogs")
         raw_animals.extend(batch)
+
         for item in body.get("included", []):
             t = item.get("type")
             i = item.get("id")
@@ -160,7 +158,7 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         if len(batch) < 250:
             break
 
-    print(f"Fetched {len(raw_animals)} newest CA dogs from RescueGroups")
+    print(f"Total CA dogs scanned: {len(raw_animals)} | Total orgs included: {len(orgs_by_id)}")
 
     now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     results = []
@@ -168,6 +166,7 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
     non_shelter_count = 0
     non_urgent_count = 0
     no_url_count = 0
+    matched_shelters = set()
 
     for animal in raw_animals:
         attrs = animal.get("attributes", {})
@@ -188,6 +187,8 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         if not is_shelter or is_rescue:
             non_shelter_count += 1
             continue
+
+        matched_shelters.add(shelter_name)
 
         name = (attrs.get("name") or "").strip()
         desc = (attrs.get("descriptionText") or attrs.get("descriptionHtml") or "").strip()
@@ -246,8 +247,9 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             "last_checked": now_iso,
         })
 
+    print(f"Matched shelters: {sorted(matched_shelters)}")
     print(
-        f"Saved: {len(results)} | Dropped stale (>21d): {stale_count} | "
+        f"Saved: {len(results)} | Dropped stale (>30d): {stale_count} | "
         f"Dropped non-shelter: {non_shelter_count} | Dropped non-urgent: {non_urgent_count} | "
         f"Dropped no URL: {no_url_count}"
     )
