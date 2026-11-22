@@ -1,4 +1,3 @@
-import html
 import json
 import os
 import re
@@ -12,12 +11,12 @@ MAX_AGE_DAYS = 21
 USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
 
 URGENT_KEYWORDS = re.compile(
-    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|needs foster immediately|medical urgency|space)\b",
+    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|medical urgency|overcrowded|space)\b",
     re.IGNORECASE,
 )
 
 SHELTER_NAME_HINTS = re.compile(
-    r"\b(animal services|animal control|county|municipal|city of|shelter|department of animal|acc)\b",
+    r"\b(animal services|animal control|county|municipal|city of|shelter|department of animal|acc|humane society)\b",
     re.IGNORECASE,
 )
 
@@ -41,7 +40,7 @@ def parse_iso_date(date_str: str) -> datetime | None:
 
 
 def is_direct_dog_url(raw: str) -> str:
-    """Validates that a URL is a deep link to a specific animal/adoption page, never a bare shelter homepage."""
+    """Validates that a URL is a deep link to a specific animal page, never a bare shelter homepage."""
     val = (raw or "").strip().rstrip(".,;)")
     if not val or val.startswith("/"):
         return ""
@@ -91,21 +90,11 @@ def detect_urgency_type(text: str, kill_date: str = "") -> str:
     return "Urgent / Deadline"
 
 
-def fetch_rescuegroups_shelters_ca() -> list[dict]:
-    if not RESCUEGROUPS_API_KEY:
-        print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
-        return []
-
-    now_utc = datetime.now(timezone.utc)
-    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
-    cutoff_api_str = cutoff_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-
+def query_rescuegroups(keyword: str) -> dict:
     url = (
         "https://api.rescuegroups.org/v5/public/animals/search/available/dogs"
         "?include=orgs,locations,pictures&sort=-animals.updatedDate&limit=250"
     )
-
-    # Filter at the API level for CA dogs with urgent/deadline/euthanasia/rescue-only pleas
     payload = {
         "data": {
             "filters": [
@@ -115,78 +104,52 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
                     "criteria": "CA"
                 },
                 {
-                    "fieldName": "animals.updatedDate",
-                    "operation": "greaterthan",
-                    "criteria": cutoff_api_str
-                },
-                {
                     "fieldName": "animals.descriptionText",
                     "operation": "contains",
-                    "criteria": "urgent"
+                    "criteria": keyword
                 }
-            ],
-            "filterProcessing": "1 AND 2 AND 3"
+            ]
         }
     }
 
-    # Also run a second query for dogs with an explicit killDate or "euthanasia" / "rescue only" plea
-    payload_deadlines = {
-        "data": {
-            "filters": [
-                {
-                    "fieldName": "locations.state",
-                    "operation": "equals",
-                    "criteria": "CA"
-                },
-                {
-                    "fieldName": "animals.updatedDate",
-                    "operation": "greaterthan",
-                    "criteria": cutoff_api_str
-                },
-                {
-                    "fieldName": "animals.killDate",
-                    "operation": "notblank",
-                    "criteria": ""
-                },
-                {
-                    "fieldName": "animals.descriptionText",
-                    "operation": "contains",
-                    "criteria": "euthanasia"
-                },
-                {
-                    "fieldName": "animals.descriptionText",
-                    "operation": "contains",
-                    "criteria": "rescue only"
-                }
-            ],
-            "filterProcessing": "1 AND 2 AND (3 OR 4 OR 5)"
-        }
-    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": RESCUEGROUPS_API_KEY,
+            "User-Agent": USER_AGENT,
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:
+        print(f"RescueGroups API error for '{keyword}': {exc}")
+        return {}
+
+
+def fetch_rescuegroups_shelters_ca() -> list[dict]:
+    if not RESCUEGROUPS_API_KEY:
+        print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
+        return []
+
+    now_utc = datetime.now(timezone.utc)
+    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
 
     raw_animals = []
     orgs_by_id = {}
     locations_by_id = {}
     pics_by_id = {}
 
-    for query_payload in (payload, payload_deadlines):
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(query_payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/vnd.api+json",
-                "Authorization": RESCUEGROUPS_API_KEY,
-                "User-Agent": USER_AGENT,
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                body = json.loads(resp.read().decode("utf-8"))
-        except Exception as exc:
-            print(f"RescueGroups API error: {exc}")
-            continue
+    for keyword in ("urgent", "euthanasia", "deadline"):
+        body = query_rescuegroups(keyword)
+        batch = body.get("data", [])
+        print(f"API keyword '{keyword}' returned: {len(batch)} dogs")
+        raw_animals.extend(batch)
 
-        raw_animals.extend(body.get("data", []))
         for item in body.get("included", []):
             item_type = item.get("type")
             item_id = item.get("id")
@@ -198,10 +161,9 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             elif item_type == "pictures":
                 pics_by_id[item_id] = attrs
 
-    print(f"Raw urgent CA dogs fetched from API: {len(raw_animals)}")
-
     now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     results = []
+    skipped_stale = 0
     skipped_non_shelter = 0
     skipped_no_direct_url = 0
 
@@ -211,6 +173,7 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
 
         updated_dt = parse_iso_date(attrs.get("updatedDate") or attrs.get("createdDate") or "")
         if updated_dt and updated_dt < cutoff_utc:
+            skipped_stale += 1
             continue
 
         org_data = (rels.get("orgs", {}).get("data") or [{}])[0]
@@ -282,8 +245,8 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         })
 
     print(
-        f"Kept: {len(results)} | Skipped non-shelter: {skipped_non_shelter} | "
-        f"Skipped missing direct dog URL: {skipped_no_direct_url}"
+        f"Kept: {len(results)} | Skipped stale (>21d): {skipped_stale} | "
+        f"Skipped non-shelter: {skipped_non_shelter} | Skipped missing direct URL: {skipped_no_direct_url}"
     )
     return results
 
