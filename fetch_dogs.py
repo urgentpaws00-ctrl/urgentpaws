@@ -245,26 +245,137 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/
+# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Relay Fallback)
 # ---------------------------------------------------------------------------
+def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) -> dict | None:
+    if NON_DOG_PATTERN.search(txt):
+        return None
+
+    id_match = re.search(r"animalid=(\d+)", href, re.IGNORECASE) or re.search(r"(\d{6,9})", href)
+    aid = id_match.group(1) if id_match else re.sub(r"\W+", "", (heading or "oas"))[:12]
+
+    date_match = re.search(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b", txt)
+    is_priority = bool(re.search(r"\bPRIORITY\b", txt, re.IGNORECASE))
+    is_out_of_time = bool(re.search(r"OUT OF TIME", txt, re.IGNORECASE))
+
+    if is_out_of_time:
+        badge = "OUT OF TIME"
+        urgency_type = "OAS Out of Time (Immediate Exit)"
+    elif date_match:
+        badge = f"DEADLINE {date_match.group(1)}"
+        urgency_type = f"OAS Exit Deadline ({date_match.group(1)})"
+    elif is_priority:
+        badge = "OAS PRIORITY"
+        urgency_type = "OAS Priority Urgent Dog"
+    else:
+        badge = "OAS Rescue Needed"
+        urgency_type = "OAS Rescue Needed / At Risk"
+
+    lines = [
+        clean_space(ln)
+        for ln in txt.splitlines()
+        if clean_space(ln)
+        and not re.match(r"^(more info\.{0,3}|priority|\d{1,2}/\d{1,2}/\d{2,4})$", clean_space(ln), re.IGNORECASE)
+    ]
+
+    name = clean_space(heading or "")
+    if not name or re.match(r"^(priority|\d{1,2}/\d{1,2}/\d{2,4})$", name, re.IGNORECASE):
+        name = lines[0] if lines else f"OAS #{aid}"
+
+    meta_line = " ".join(ln for ln in lines if ln != name)
+    age_match = re.search(r"\b(Puppy|Young|Adult|Senior)\b", meta_line, re.IGNORECASE)
+    weight_match = re.search(r"\b(\d+\s*lbs?)\b", meta_line, re.IGNORECASE)
+    breed_match = re.search(r"\b(?:Male|Female),\s*(.+)$", meta_line, re.IGNORECASE)
+
+    return {
+        "id": f"oas-{aid}",
+        "animal_id": aid,
+        "name": name,
+        "breed": clean_space(breed_match.group(1)).rstrip(".") if breed_match else "",
+        "shelter": "Oakland Animal Services",
+        "city": "Oakland",
+        "county": "Alameda",
+        "state": "CA",
+        "size": weight_match.group(1) if weight_match else "",
+        "age": age_match.group(1).title() if age_match else "",
+        "urgency_type": urgency_type,
+        "deadline_or_urgency": badge,
+        "needs_type": "Rescue Pull, Foster, or Adopt",
+        "transport_note": meta_line[:140],
+        "photo_url": img or "",
+        "listing_url": href,
+        "updated_at": now_iso,
+        "last_checked": now_iso,
+    }
+
+
+def fetch_oas_via_relay(target_url: str, now_iso: str) -> list[dict]:
+    relay_url = f"https://r.jina.ai/{target_url}"
+    print("  OAS direct request blocked (403); trying reader relay fallback...")
+    try:
+        req = urllib.request.Request(
+            relay_url,
+            headers={
+                "User-Agent": USER_AGENT,
+                "X-Return-Format": "markdown",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=35) as resp:
+            md = resp.read().decode("utf-8", errors="replace")
+    except Exception as exc:
+        print(f"  OAS relay error: {exc}")
+        return []
+
+    results = []
+    seen_hrefs = set()
+
+    # Match markdown links pointing to individual OAS animal pages
+    for m in re.finditer(r"\[([^\]]*)\]\((https?://[^\s)]+animalId=\d+[^\s)]*)\)", md, re.IGNORECASE):
+        href = m.group(2).strip()
+        if href in seen_hrefs:
+            continue
+        seen_hrefs.add(href)
+
+        start = max(0, m.start() - 450)
+        end = min(len(md), m.end() + 200)
+        chunk = md[start:end]
+
+        img_matches = re.findall(r"!\[[^\]]*\]\((https?://[^\s)]+)\)", chunk)
+        img = img_matches[-1] if img_matches else ""
+
+        # Strip markdown syntax to recover plain card lines
+        plain = re.sub(r"!\[[^\]]*\]\([^\)]+\)", "", chunk)
+        plain = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", plain)
+        plain = re.sub(r"[#*_`>]+", " ", plain)
+
+        heading_match = re.search(r"###?\s*([^\n\r]+)", chunk)
+        heading = clean_space(re.sub(r"[#*_`]+", "", heading_match.group(1))) if heading_match else ""
+
+        dog = parse_oas_card(href, plain, img, heading, now_iso)
+        if dog:
+            results.append(dog)
+
+    print(f"  OAS relay dogs saved: {len(results)}")
+    return results
+
+
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
     url = "https://www.oaklandanimalservices.org/rescue-needed/"
     print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
 
     status = None
-    for attempt in range(2):
+    try:
+        resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
+        status = resp.status if resp else None
+        if status == 403:
+            return fetch_oas_via_relay(url, now_iso)
         try:
-            resp = page.goto(url, wait_until="networkidle", timeout=45000)
-            status = resp.status if resp else None
-            try:
-                page.wait_for_selector("a[href*='animalId=']", timeout=12000)
-            except Exception:
-                page.wait_for_timeout(4000)
-            break
-        except Exception as exc:
-            print(f"  OAS attempt {attempt + 1} load error: {exc}")
-            if attempt == 1:
-                return []
+            page.wait_for_selector("a[href*='animalId=']", timeout=10000)
+        except Exception:
+            page.wait_for_timeout(3000)
+    except Exception as exc:
+        print(f"  OAS direct load error: {exc}")
+        return fetch_oas_via_relay(url, now_iso)
 
     raw_cards = []
     seen_hrefs = set()
@@ -311,77 +422,13 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
             raw_cards.append(c)
 
     if not raw_cards:
-        try:
-            title = page.title()
-            body_preview = clean_space(page.inner_text("body"))[:220]
-            print(f"  OAS diagnostic -> status={status} | title='{title}' | preview='{body_preview}'")
-        except Exception:
-            pass
-        return []
+        return fetch_oas_via_relay(url, now_iso)
 
     results = []
     for c in raw_cards:
-        href = c["href"]
-        txt = c["text"]
-        if NON_DOG_PATTERN.search(txt):
-            continue
-
-        id_match = re.search(r"animalid=(\d+)", href, re.IGNORECASE) or re.search(r"(\d{6,9})", href)
-        aid = id_match.group(1) if id_match else re.sub(r"\W+", "", (c.get("heading") or "oas"))[:12]
-
-        date_match = re.search(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b", txt)
-        is_priority = bool(re.search(r"\bPRIORITY\b", txt, re.IGNORECASE))
-        is_out_of_time = bool(re.search(r"OUT OF TIME", txt, re.IGNORECASE))
-
-        if is_out_of_time:
-            badge = "OUT OF TIME"
-            urgency_type = "OAS Out of Time (Immediate Exit)"
-        elif date_match:
-            badge = f"DEADLINE {date_match.group(1)}"
-            urgency_type = f"OAS Exit Deadline ({date_match.group(1)})"
-        elif is_priority:
-            badge = "OAS PRIORITY"
-            urgency_type = "OAS Priority Urgent Dog"
-        else:
-            badge = "OAS Rescue Needed"
-            urgency_type = "OAS Rescue Needed / At Risk"
-
-        lines = [
-            clean_space(ln)
-            for ln in txt.splitlines()
-            if clean_space(ln)
-            and not re.match(r"^(more info\.{0,3}|priority|\d{1,2}/\d{1,2}/\d{2,4})$", clean_space(ln), re.IGNORECASE)
-        ]
-
-        name = clean_space(c.get("heading") or "")
-        if not name or re.match(r"^(priority|\d{1,2}/\d{1,2}/\d{2,4})$", name, re.IGNORECASE):
-            name = lines[0] if lines else f"OAS #{aid}"
-
-        meta_line = " ".join(ln for ln in lines if ln != name)
-        age_match = re.search(r"\b(Puppy|Young|Adult|Senior)\b", meta_line, re.IGNORECASE)
-        weight_match = re.search(r"\b(\d+\s*lbs?)\b", meta_line, re.IGNORECASE)
-        breed_match = re.search(r"\b(?:Male|Female),\s*(.+)$", meta_line, re.IGNORECASE)
-
-        results.append({
-            "id": f"oas-{aid}",
-            "animal_id": aid,
-            "name": name,
-            "breed": clean_space(breed_match.group(1)).rstrip(".") if breed_match else "",
-            "shelter": "Oakland Animal Services",
-            "city": "Oakland",
-            "county": "Alameda",
-            "state": "CA",
-            "size": weight_match.group(1) if weight_match else "",
-            "age": age_match.group(1).title() if age_match else "",
-            "urgency_type": urgency_type,
-            "deadline_or_urgency": badge,
-            "needs_type": "Rescue Pull, Foster, or Adopt",
-            "transport_note": meta_line[:140],
-            "photo_url": c.get("img") or "",
-            "listing_url": href,
-            "updated_at": now_iso,
-            "last_checked": now_iso,
-        })
+        dog = parse_oas_card(c["href"], c["text"], c.get("img") or "", c.get("heading") or "", now_iso)
+        if dog:
+            results.append(dog)
 
     print(f"  OAS /rescue-needed/ dogs saved: {len(results)}")
     return results
