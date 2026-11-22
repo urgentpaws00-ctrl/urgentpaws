@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -77,6 +78,17 @@ def is_active_flag(val) -> bool:
     return True
 
 
+def load_previous_dogs() -> list[dict]:
+    if not os.path.exists("dogs.json"):
+        return []
+    try:
+        with open("dogs.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
 def find_petconnect_cards_across_frames(page) -> list[dict]:
     all_cards = []
     seen_keys = set()
@@ -133,7 +145,7 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 1. STANISLAUS COUNTY — RED STATUS & FINAL CALL
+# 1. STANISLAUS COUNTY - RED STATUS & FINAL CALL
 # ---------------------------------------------------------------------------
 def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
     url = "https://www.stanislausanimalservices.com/atrisk/adopt-dogs.shtm?color=red&sort=orderByIntakeDate"
@@ -233,20 +245,26 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES — /rescue-needed/ (Direct Card & Ribbon Scraper)
+# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/
 # ---------------------------------------------------------------------------
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
     url = "https://www.oaklandanimalservices.org/rescue-needed/"
     print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
 
     status = None
-    try:
-        resp = page.goto(url, wait_until="domcontentloaded", timeout=45000)
-        status = resp.status if resp else None
-        page.wait_for_timeout(4500)
-    except Exception as exc:
-        print(f"  OAS load error: {exc}")
-        return []
+    for attempt in range(2):
+        try:
+            resp = page.goto(url, wait_until="networkidle", timeout=45000)
+            status = resp.status if resp else None
+            try:
+                page.wait_for_selector("a[href*='animalId=']", timeout=12000)
+            except Exception:
+                page.wait_for_timeout(4000)
+            break
+        except Exception as exc:
+            print(f"  OAS attempt {attempt + 1} load error: {exc}")
+            if attempt == 1:
+                return []
 
     raw_cards = []
     seen_hrefs = set()
@@ -296,8 +314,7 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
         try:
             title = page.title()
             body_preview = clean_space(page.inner_text("body"))[:220]
-            iframe_urls = [f.url for f in page.frames if f.url and f.url != url]
-            print(f"  OAS diagnostic -> status={status} | title='{title}' | iframes={iframe_urls} | preview='{body_preview}'")
+            print(f"  OAS diagnostic -> status={status} | title='{title}' | preview='{body_preview}'")
         except Exception:
             pass
         return []
@@ -439,7 +456,6 @@ def scrape_24petconnect_board(
         location = extract_field(txt, ("Located at", "Location")) or shelter_name
         photo_url = c.get("img") or ""
 
-        # Normalize broken board-scoped KernCountyRescue links to valid DetailsMain/KERN/{ID} URLs
         if portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
             code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
             href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
@@ -522,7 +538,7 @@ def scrape_24petconnect_board(
 
 
 # ---------------------------------------------------------------------------
-# 7. LA ANIMAL SERVICES (6 CITY SHELTERS) — NEW HOPE ALERT BOARDS
+# 7. LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
 # ---------------------------------------------------------------------------
 def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
     print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...")
@@ -625,7 +641,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 8. SAN JOSE ACS — ARCGIS REST JSON API (Staff-Flagged Rescue Priority Only)
+# 8. SAN JOSE ACS - ARCGIS REST JSON API (Staff-Flagged Rescue Priority Only)
 # ---------------------------------------------------------------------------
 def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
     print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...")
@@ -646,16 +662,6 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         return []
 
     features = data.get("features", [])
-
-    rescue_statuses = sorted({str(f["attributes"].get("RESCUESTATUS") or "").strip() for f in features if f["attributes"].get("RESCUESTATUS")})
-    rescue_priorities = sorted({str(f["attributes"].get("RESCUEPRIORITY") or "").strip() for f in features if f["attributes"].get("RESCUEPRIORITY")})
-    foster_priorities = sorted({str(f["attributes"].get("FOSTERPRIORITY") or "").strip() for f in features if f["attributes"].get("FOSTERPRIORITY")})
-    animal_statuses = sorted({str(f["attributes"].get("ANIMALSTATUS") or "").strip() for f in features if f["attributes"].get("ANIMALSTATUS")})
-    print(
-        f"  SJ ACS values -> RESCUESTATUS: {rescue_statuses} | RESCUEPRIORITY: {rescue_priorities} | "
-        f"FOSTERPRIORITY: {foster_priorities} | ANIMALSTATUS: {animal_statuses}"
-    )
-
     results = []
     for feat in features:
         attrs = feat.get("attributes", {})
@@ -719,7 +725,7 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
             "urgency_type": urgency_type,
             "deadline_or_urgency": badge,
             "needs_type": needs,
-            "transport_note": " · ".join(note_parts),
+            "transport_note": " | ".join(note_parts),
             "photo_url": photo_url,
             "listing_url": direct_url,
             "updated_at": now_iso,
@@ -732,6 +738,7 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
 
 def main():
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    previous_dogs = load_previous_dogs()
     all_dogs = []
 
     with sync_playwright() as p:
@@ -824,6 +831,13 @@ def main():
         browser.close()
 
     all_dogs.extend(fetch_sanjose_arcgis(now_iso))
+
+    # Preserve previous county records if a shelter site temporarily returned 0 on this run
+    active_counties = {d.get("county") for d in all_dogs if d.get("county")}
+    for prev in previous_dogs:
+        c = prev.get("county")
+        if c and c not in active_counties:
+            all_dogs.append(prev)
 
     seen = set()
     unique_dogs = []
