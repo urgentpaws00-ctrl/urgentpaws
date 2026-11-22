@@ -339,5 +339,130 @@
 
     loadDogs();
   </script>
+  <style>
+  .up-share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .up-share-btn:hover { background: #e5e7eb; }
+  .up-share-btn.copied {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #ffffff;
+  }
+</style>
+
+<script>
+  (function () {
+    let dogsCache = [];
+
+    // Load dogs.json so shared text includes exact shelter & deadline details
+    fetch("dogs.json?v=" + Date.now())
+      .then((r) => r.json())
+      .then((data) => {
+        dogsCache = Array.isArray(data) ? data : [];
+        attachShareButtons();
+      })
+      .catch(() => {});
+
+    async function shareDog(dog, cardText, btn) {
+      const name = dog?.name || "Urgent Shelter Dog";
+      const aid = dog?.animal_id ? ` (#${dog.animal_id})` : "";
+      const shelter = dog?.shelter || "California Shelter";
+      const deadline = dog?.deadline_or_urgency ? ` — ${dog.deadline_or_urgency}` : "";
+      const shareUrl = dog?.id
+        ? `${window.location.origin}/?dog=${encodeURIComponent(dog.id)}`
+        : window.location.origin;
+
+      const shareText = dog
+        ? `URGENT: ${name}${aid} at ${shelter}${deadline}. View live status & shelter link:`
+        : `${cardText.slice(0, 140)}... View live status at:`;
+
+      // 1. Mobile native share sheet (iMessage, Instagram, WhatsApp, AirDrop)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${name} — UrgentPaws`,
+            text: shareText,
+            url: shareUrl,
+          });
+          return;
+        } catch (err) {
+          if (err && err.name === "AbortError") return; // User closed share sheet
+        }
+      }
+
+      // 2. Desktop / fallback clipboard copy
+      const fullCopy = `${shareText} ${shareUrl}`;
+      try {
+        await navigator.clipboard.writeText(fullCopy);
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = fullCopy;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+
+      const orig = btn.textContent;
+      btn.textContent = "Copied Link!";
+      btn.classList.add("copied");
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove("copied");
+      }, 1800);
+    }
+
+    function attachShareButtons() {
+      // Matches common card containers in your grid
+      const cards = document.querySelectorAll(".dog-card, .card, [data-dog-id]");
+      cards.forEach((card) => {
+        if (card.querySelector(".up-share-btn")) return;
+
+        const text = card.innerText || "";
+        const dogId = card.getAttribute("data-dog-id");
+        const matchedDog =
+          dogsCache.find((d) => d.id === dogId) ||
+          dogsCache.find(
+            (d) =>
+              (d.animal_id && text.includes(d.animal_id)) ||
+              (d.name && d.shelter && text.includes(d.name) && text.includes(d.shelter))
+          );
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "up-share-btn";
+        btn.textContent = "Share Dog";
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          shareDog(matchedDog, text, btn);
+        });
+
+        // Place next to existing action links/buttons if present, otherwise at bottom of card
+        const actionRow = card.querySelector(".card-actions, .actions, .card-footer");
+        (actionRow || card).appendChild(btn);
+      });
+    }
+
+    // Re-attach whenever filters or search re-render the dog cards
+    const observer = new MutationObserver(() => attachShareButtons());
+    observer.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("DOMContentLoaded", attachShareButtons);
+  })();
+</script>
 </body>
 </html>
