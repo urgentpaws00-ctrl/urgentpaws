@@ -365,12 +365,20 @@
 </style>
 
 <style>
+  @media (max-width: 768px) {
+    .up-card-body {
+      padding: 14px 16px 18px 16px !important;
+      box-sizing: border-box !important;
+    }
+  }
+
   .up-action-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 14px;
+    margin-bottom: 2px;
   }
 
   .up-action-row a[href^="http"] {
@@ -524,12 +532,19 @@
 
         const existingLink = card.querySelector("a[href^='http']");
         if (existingLink && existingLink.parentElement) {
+          if (existingLink.parentElement !== card) {
+            existingLink.parentElement.classList.add("up-card-body");
+          } else {
+            card.classList.add("up-card-body");
+          }
+
           const row = document.createElement("div");
           row.className = "up-action-row";
           existingLink.parentElement.insertBefore(row, existingLink);
           row.appendChild(existingLink);
           row.appendChild(btn);
         } else {
+          card.classList.add("up-card-body");
           card.appendChild(btn);
         }
       });
