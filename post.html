@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>UrgentPaws — Instagram Post Helper</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+      margin: 0;
+      padding: 20px 16px 48px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    .sub { color: #9ca3af; font-size: 14px; margin: 0 0 18px; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    select, input {
+      background: #1f2937;
+      color: #f9fafb;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-box {
+      position: relative;
+      background: #18181b;
+      aspect-ratio: 4 / 5;
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-box img {
+      width: 100%;
+      height: 66%;
+      object-fit: cover;
+      display: block;
+    }
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #dc2626;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .card-meta {
+      padding: 12px 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card-meta h2 { font-size: 18px; margin: 0 0 4px; }
+    .card-meta p { font-size: 13px; color: #d1d5db; margin: 0; line-height: 1.4; }
+    .footer-tag { color: #fbbf24; font-size: 12px; font-weight: 600; margin-top: 8px; }
+    .caption-box {
+      width: 100%;
+      height: 120px;
+      background: #111827;
+      color: #e5e7eb;
+      border: none;
+      border-top: 1px solid #374151;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      resize: vertical;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #18202c;
+      border-top: 1px solid #374151;
+    }
+    button, .btn-link {
+      flex: 1;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-copy { background: #2563eb; color: #fff; }
+    .btn-copy.copied { background: #16a34a; }
+    .btn-dl { background: #f59e0b; color: #111827; }
+    .btn-raw { background: #374151; color: #f9fafb; flex: 0.7; }
+    .note { font-size: 12px; color: #9ca3af; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>UrgentPaws Instagram Post Helper</h1>
+    <p class="sub">Unlisted helper page • Pulls live from <code>dogs.json</code></p>
+
+    <div class="controls">
+      <select id="countyFilter"><option value="">All Counties</option></select>
+      <input type="text" id="searchInput" placeholder="Search name, ID, or shelter...">
+    </div>
+
+    <div class="grid" id="dogGrid">Loading dogs.json...</div>
+    <p class="note">Tip: If a shelter's external image server blocks canvas export, use "Raw Photo" to save the original image directly.</p>
+  </div>
+
+  <script>
+    let allDogs = [];
+
+    function buildCaption(d) {
+      const name = d.name || "Urgent Dog";
+      const aid = d.animal_id ? `(#${d.animal_id})` : "";
+      const badge = (d.deadline_or_urgency || "URGENT").toUpperCase();
+      const shelter = d.shelter || "California Shelter";
+      const loc = [d.city, d.county ? `${d.county} County` : "", "CA"].filter(Boolean).join(", ");
+      const specs = [d.breed, d.age, d.size].filter(Boolean).join(" • ");
+      const countyTag = d.county ? `#${d.county.replace(/[^a-zA-Z0-9]/g, "")}County` : "";
+
+      return [
+        `🚨 ${badge}: ${name} ${aid}`.trim(),
+        `📍 ${shelter} (${loc})`,
+        specs ? `🐶 ${specs}` : "",
+        d.transport_note ? `ℹ️ ${d.transport_note}` : "",
+        "",
+        "Can you foster, adopt, or tag a 501(c)(3) rescue? Direct shelter link and live status at urgentpaws.org (link in bio).",
+        "",
+        `#UrgentPaws #CaliforniaDogs #ShelterDogs ${countyTag} #FosterSavesLives #RescueDog #AdoptDontShop`.replace(/\s+/g, " ")
+      ].filter((line, idx, arr) => !(line === "" && arr[idx - 1] === "")).join("\n");
+    }
+
+    async function downloadCard(dog) {
+      const W = 1080, H = 1350, PHOTO_H = 880;
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#18181b";
+      ctx.fillRect(0, 0, W, H);
+
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = (dog.photo_url || "").replace(/^http:\/\//i, "https://");
+        });
+
+        const scale = Math.max(W / img.width, PHOTO_H / img.height);
+        const nw = img.width * scale;
+        const nh = img.height * scale;
+        ctx.drawImage(img, (W - nw) / 2, (PHOTO_H - nh) / 2, nw, nh);
+      } catch (e) {
+        alert("This shelter's image server blocks direct card export. Click 'Raw Photo' to save the photo, and 'Copy Caption' for the text.");
+        return;
+      }
+
+      // Bottom background
+      ctx.fillStyle = "#18181b";
+      ctx.fillRect(0, PHOTO_H, W, H - PHOTO_H);
+
+      // Urgency pill
+      const badge = (dog.deadline_or_urgency || "URGENT").toUpperCase().slice(0, 34);
+      ctx.font = "bold 32px -apple-system, sans-serif";
+      const bw = ctx.measureText(badge).width + 48;
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.roundRect(40, 40, bw, 64, 14);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(badge, 64, 83);
+
+      // Dog name & details
+      const title = dog.animal_id ? `${dog.name || "Urgent Dog"} (${dog.animal_id})` : (dog.name || "Urgent Dog");
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 52px -apple-system, sans-serif";
+      ctx.fillText(title.slice(0, 30), 48, PHOTO_H + 80);
+
+      ctx.fillStyle = "#d4d4d8";
+      ctx.font = "32px -apple-system, sans-serif";
+      const shelterLine = `${dog.shelter || ""} • ${dog.city || ""}, CA`.replace(/^ • |, CA$/g, "");
+      const specsLine = [dog.breed, dog.age, dog.size].filter(Boolean).join(" | ");
+      ctx.fillText(shelterLine.slice(0, 52), 48, PHOTO_H + 140);
+      ctx.fillText(specsLine.slice(0, 52), 48, PHOTO_H + 190);
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = "bold 28px -apple-system, sans-serif";
+      ctx.fillText("Foster, Adopt, or Rescue Pull → urgentpaws.org", 48, H - 56);
+
+      const link = document.createElement("a");
+      const safeName = (dog.name || "dog").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      link.download = `urgentpaws-${safeName}.jpg`;
+      link.href = canvas.toDataURL("image/jpeg", 0.92);
+      link.click();
+    }
+
+    function render() {
+      const county = document.getElementById("countyFilter").value;
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      const grid = document.getElementById("dogGrid");
+
+      const filtered = allDogs.filter(d => {
+        if (county && d.county !== county) return false;
+        if (q) {
+          const hay = `${d.name} ${d.animal_id} ${d.shelter} ${d.breed}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      grid.innerHTML = "";
+      filtered.forEach((d, i) => {
+        const caption = buildCaption(d);
+        const photoSrc = (d.photo_url || "").replace(/^http:\/\//i, "https://");
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="preview-box">
+            <span class="badge">${d.deadline_or_urgency || "Urgent"}</span>
+            <img src="${photoSrc}" alt="${d.name || "Dog"}" loading="lazy">
+            <div class="card-meta">
+              <div>
+                <h2>${d.name || "Urgent Dog"} ${d.animal_id ? `(${d.animal_id})` : ""}</h2>
+                <p>${d.shelter || ""} • ${d.city || ""}<br>${[d.breed, d.age, d.size].filter(Boolean).join(" | ")}</p>
+              </div>
+              <div class="footer-tag">urgentpaws.org</div>
+            </div>
+          </div>
+          <textarea class="caption-box" id="cap-${i}">${caption}</textarea>
+          <div class="actions">
+            <button class="btn-copy" data-idx="${i}">Copy Caption</button>
+            <button class="btn-dl" data-idx="${i}">Save 4:5 Card</button>
+            <a class="btn-link btn-raw" href="${photoSrc}" target="_blank" rel="noopener">Raw Photo</a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      grid.querySelectorAll(".btn-copy").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const ta = document.getElementById(`cap-${btn.dataset.idx}`);
+          await navigator.clipboard.writeText(ta.value);
+          btn.textContent = "Copied!";
+          btn.classList.add("copied");
+          setTimeout(() => { btn.textContent = "Copy Caption"; btn.classList.remove("copied"); }, 1800);
+        });
+      });
+
+      grid.querySelectorAll(".btn-dl").forEach(btn => {
+        btn.addEventListener("click", () => downloadCard(filtered[btn.dataset.idx]));
+      });
+    }
+
+    fetch("dogs.json?v=" + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        allDogs = data;
+        const counties = [...new Set(data.map(d => d.county).filter(Boolean))].sort();
+        const sel = document.getElementById("countyFilter");
+        counties.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = `${c} County`;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener("change", render);
+        document.getElementById("searchInput").addEventListener("input", render);
+        render();
+      })
+      .catch(() => {
+        document.getElementById("dogGrid").textContent = "Could not load dogs.json.";
+      });
+  </script>
+</body>
+</html>
