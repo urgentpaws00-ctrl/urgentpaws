@@ -1,275 +1,364 @@
+import html
 import json
-import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import urllib.parse
 import urllib.request
 
-RESCUEGROUPS_API_KEY = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
-MAX_AGE_DAYS = 30
-
-USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+)
 
 URGENT_KEYWORDS = re.compile(
-    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|medical|overcrowded|space|long[- ]stay)\b",
+    r"\b(urgent|euthanasia|euth|deadline|at risk|code red|rescue only|last call|plea|critical|time[- ]sensitive|medical|overcrowded|space|long[- ]stay|emergency|foster needed immediately)\b",
     re.IGNORECASE,
 )
 
-# Includes municipal shelters and county-contracted humane societies/SPCAs (e.g., San Diego Humane, Marin Humane)
-SHELTER_NAME_HINTS = re.compile(
-    r"\b(animal services|animal control|animal care|county|municipal|city of|shelter|department of animal|acc|seaaca|laas|oc animal|humane society|spca)\b",
-    re.IGNORECASE,
-)
+# High-intake California municipal shelters on 24Petconnect
+PETCONNECT_SHELTERS = [
+    {"code": "LACO", "name": "LA County Animal Care & Control", "city": "Downey", "county": "Los Angeles"},
+    {"code": "LACO1", "name": "LA County ACC - Downey", "city": "Downey", "county": "Los Angeles"},
+    {"code": "LACO2", "name": "LA County ACC - Carson/Gardena", "city": "Gardena", "county": "Los Angeles"},
+    {"code": "LACO3", "name": "LA County ACC - Baldwin Park", "city": "Baldwin Park", "county": "Los Angeles"},
+    {"code": "LACO4", "name": "LA County ACC - Lancaster", "city": "Lancaster", "county": "Los Angeles"},
+    {"code": "LACO5", "name": "LA County ACC - Palmdale", "city": "Palmdale", "county": "Los Angeles"},
+    {"code": "LACO6", "name": "LA County ACC - Castaic", "city": "Castaic", "county": "Los Angeles"},
+    {"code": "RVSD", "name": "Riverside County Dept of Animal Services", "city": "Jurupa Valley", "county": "Riverside"},
+    {"code": "RVSD1", "name": "Riverside County - Coachella Valley", "city": "Thousand Palms", "county": "Riverside"},
+    {"code": "SBCO", "name": "San Bernardino County - Devore", "city": "San Bernardino", "county": "San Bernardino"},
+    {"code": "SBCO1", "name": "San Bernardino County - Big Bear", "city": "Big Bear", "county": "San Bernardino"},
+    {"code": "KERN", "name": "Kern County Animal Services", "city": "Bakersfield", "county": "Kern"},
+    {"code": "STKN", "name": "Stockton Animal Services", "city": "Stockton", "county": "San Joaquin"},
+]
 
-RESCUE_EXCLUDE_HINTS = re.compile(
-    r"\b(rescue|sanctuary|foster network|foundation|league|paws|hearts)\b",
-    re.IGNORECASE,
-)
-
-URL_IN_TEXT = re.compile(r"https?://[^\s<>\"')]+", re.IGNORECASE)
-
-
-def parse_iso_date(date_str: str) -> datetime | None:
-    if not date_str:
-        return None
-    try:
-        cleaned = date_str.replace("Z", "+00:00")
-        dt = datetime.fromisoformat(cleaned)
-        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
-
-
-def clean_valid_url(raw: str) -> str:
-    val = (raw or "").strip().rstrip(".,;)")
-    if not val or val.startswith("/"):
-        return ""
-    if not val.startswith(("http://", "https://")):
-        val = "https://" + val
-
-    parsed = urllib.parse.urlparse(val)
-    host = (parsed.netloc or "").lower()
-    if "." not in host or "urgentpaws" in host:
-        return ""
-    if "rescuegroups.org/animals/detail" in val.lower():
-        return ""
-    if any(skip in host for skip in ("facebook.com", "instagram.com", "youtube.com", "tiktok.com", "google.com")):
-        return ""
-    return val
+BAY_AREA_SHELTERLUV_PAGES = [
+    {
+        "page_url": "https://www.oaklandanimalservices.org/adopt/dogs/",
+        "shelter": "Oakland Animal Services",
+        "city": "Oakland",
+        "county": "Alameda",
+        "fallback_gid": "1653",
+    },
+    {
+        "page_url": "https://www.sfanimalcare.org/adoptable-animals/dogs/",
+        "shelter": "SF Animal Care & Control",
+        "city": "San Francisco",
+        "county": "San Francisco",
+        "fallback_gid": "1889",
+    },
+]
 
 
-def is_deep_dog_link(url: str) -> bool:
-    parsed = urllib.parse.urlparse(url)
-    return bool((parsed.path or "").strip("/") or parsed.query)
+def http_get(url: str, timeout: int = 25) -> str:
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
 
 
-def resolve_listing_url(attrs: dict, org_attrs: dict, desc: str) -> tuple[str, bool]:
-    for cand in (attrs.get("url"), attrs.get("adoptionUrl")):
-        url = clean_valid_url(cand)
-        if url and is_deep_dog_link(url):
-            return url, True
-
-    for match in URL_IN_TEXT.findall(desc or ""):
-        url = clean_valid_url(match)
-        if url and is_deep_dog_link(url):
-            return url, True
-
-    for cand in (org_attrs.get("adoptionUrl"), org_attrs.get("url")):
-        url = clean_valid_url(cand)
-        if url:
-            return url, False
-
-    return "", False
+def http_post_json(url: str, payload: dict, timeout: int = 25) -> dict:
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "User-Agent": USER_AGENT,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", errors="replace"))
 
 
-def detect_urgency_type(text: str, kill_date: str = "") -> str:
+def detect_urgency_type(text: str, days_in_shelter: int = 0) -> str:
     lower = text.lower()
-    if kill_date:
-        return f"Deadline ({kill_date[:10]})"
     if "medical" in lower or "injured" in lower or "sick" in lower:
         return "Medical Urgent"
     if "behavior" in lower or "handling" in lower or "rescue only" in lower:
         return "Behavior / Rescue Only"
-    if "space" in lower or "capacity" in lower or "overcrowded" in lower:
-        return "Space / Capacity Deadline"
-    return "Urgent / Deadline"
+    if "space" in lower or "capacity" in lower or "overcrowded" in lower or "deadline" in lower or "euth" in lower:
+        return "Space / Deadline"
+    if days_in_shelter >= 30:
+        return f"Long-Stay At Risk ({days_in_shelter}d)"
+    return "High-Intake Shelter"
 
 
-def fetch_rescuegroups_shelters_ca() -> list[dict]:
-    if not RESCUEGROUPS_API_KEY:
-        print("ERROR: RESCUEGROUPS_API_KEY secret is empty.")
-        return []
-
-    now_utc = datetime.now(timezone.utc)
-    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
-
-    raw_animals = []
-    orgs_by_id = {}
-    locations_by_id = {}
-    pics_by_id = {}
-
-    for page_num in range(1, 5):
-        url = f"https://api.rescuegroups.org/v5/public/animals/search/available/dogs?include=orgs,locations,pictures&limit=250&page={page_num}"
-        payload = {
-            "data": {
-                "filters": [
-                    {
-                        "fieldName": "locations.state",
-                        "operation": "equals",
-                        "criteria": "CA"
-                    }
-                ]
-            }
-        }
-
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Content-Type": "application/vnd.api+json",
-                "Authorization": RESCUEGROUPS_API_KEY,
-                "User-Agent": USER_AGENT,
-            },
-            method="POST",
-        )
-
+def days_since(date_str: str) -> int:
+    if not date_str:
+        return 0
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ"):
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                body = json.loads(resp.read().decode("utf-8"))
-        except Exception as exc:
-            print(f"RescueGroups API page {page_num} error: {exc}")
-            break
+            dt = datetime.strptime(date_str[:19], fmt).replace(tzinfo=timezone.utc)
+            return max(0, (datetime.now(timezone.utc) - dt).days)
+        except ValueError:
+            continue
+    return 0
 
-        batch = body.get("data", [])
-        print(f"Page {page_num}: fetched {len(batch)} dogs")
-        raw_animals.extend(batch)
 
-        for item in body.get("included", []):
-            t = item.get("type")
-            i = item.get("id")
-            a = item.get("attributes", {})
-            if t == "orgs":
-                orgs_by_id[i] = a
-            elif t == "locations":
-                locations_by_id[i] = a
-            elif t == "pictures":
-                pics_by_id[i] = a
-
-        if len(batch) < 250:
-            break
-
-    print(f"Total CA dogs scanned: {len(raw_animals)} | Total orgs included: {len(orgs_by_id)}")
-
-    now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+# ---------------------------------------------------------------------------
+# PIPELINE 1: 24Petconnect (CA Municipal & County High-Intake Shelters)
+# ---------------------------------------------------------------------------
+def fetch_24petconnect_shelters() -> list[dict]:
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     results = []
-    stale_count = 0
-    non_shelter_count = 0
-    non_urgent_count = 0
-    no_url_count = 0
-    matched_shelters = set()
 
-    for animal in raw_animals:
-        attrs = animal.get("attributes", {})
-        rels = animal.get("relationships", {})
-
-        updated_dt = parse_iso_date(attrs.get("updatedDate") or attrs.get("createdDate") or "")
-        if updated_dt and updated_dt < cutoff_utc:
-            stale_count += 1
+    for shelter in PETCONNECT_SHELTERS:
+        code = shelter["code"]
+        search_url = f"https://24petconnect.com/{code}AdoptablePets?at=DOG"
+        try:
+            page_html = http_get(search_url)
+        except Exception:
             continue
 
-        org_data = (rels.get("orgs", {}).get("data") or [{}])[0]
-        org_attrs = orgs_by_id.get(org_data.get("id"), {})
-        shelter_name = (org_attrs.get("name") or "").strip()
-        org_type = (org_attrs.get("type") or "").strip().lower()
+        # Extract animal IDs and basic card details from 24Petconnect listing cards
+        card_matches = re.findall(
+            r'DetailsMain/' + re.escape(code) + r'/([A-Z0-9-]+)',
+            page_html,
+            re.IGNORECASE,
+        )
+        seen_ids = set()
+        for animal_id in card_matches:
+            animal_id = animal_id.upper()
+            if animal_id in seen_ids:
+                continue
+            seen_ids.add(animal_id)
 
-        is_shelter = (org_type == "shelter") or bool(SHELTER_NAME_HINTS.search(shelter_name))
-        is_rescue = bool(RESCUE_EXCLUDE_HINTS.search(shelter_name)) and not bool(SHELTER_NAME_HINTS.search(shelter_name))
-        if not is_shelter or is_rescue:
-            non_shelter_count += 1
+            detail_url = f"https://24petconnect.com/DetailsMain/{code}/{animal_id}"
+            # Grab surrounding HTML snippet around this animal ID to inspect name, photo, and urgent notes
+            idx = page_html.upper().find(f"DETAILSMAIN/{code}/{animal_id}")
+            snippet = page_html[max(0, idx - 600): idx + 1200] if idx != -1 else ""
+            plain = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", snippet))).strip()
+
+            img_match = re.search(r'<img[^>]+src="([^"]+)"', snippet, re.IGNORECASE)
+            photo_url = urllib.parse.urljoin("https://24petconnect.com/", html.unescape(img_match.group(1))) if img_match else ""
+
+            # Extract dog name if present in alt text or heading
+            name_match = re.search(r'alt="([^"]+)"', snippet, re.IGNORECASE)
+            raw_name = html.unescape(name_match.group(1)).strip() if name_match else ""
+            name = raw_name if raw_name and len(raw_name) < 35 and "logo" not in raw_name.lower() else f"Dog #{animal_id}"
+
+            is_urgent = bool(URGENT_KEYWORDS.search(plain))
+            needs = "Rescue Pull / Foster" if "rescue only" in plain.lower() else "Foster or Adopt"
+
+            results.append({
+                "id": f"24pc-{code.lower()}-{animal_id}",
+                "animal_id": animal_id,
+                "name": name,
+                "breed": "",
+                "shelter": shelter["name"],
+                "city": shelter["city"],
+                "county": shelter["county"],
+                "state": "CA",
+                "size": "",
+                "age": "",
+                "urgency_type": detect_urgency_type(plain),
+                "deadline_or_urgency": "Urgent / Deadline" if is_urgent else "High-Intake County Shelter",
+                "needs_type": needs,
+                "transport_note": "",
+                "photo_url": photo_url,
+                "listing_url": detail_url,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
+
+    print(f"[1/3] 24Petconnect county shelter dogs scraped: {len(results)}")
+    return results
+
+
+# ---------------------------------------------------------------------------
+# PIPELINE 2: Bay Area Municipal Shelters via Shelterluv JSON Feeds
+# ---------------------------------------------------------------------------
+def fetch_bay_area_shelterluv() -> list[dict]:
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    results = []
+
+    for cfg in BAY_AREA_SHELTERLUV_PAGES:
+        gid = cfg["fallback_gid"]
+        try:
+            page_html = http_get(cfg["page_url"])
+            gid_match = re.search(r'gid["\s:=]+(\d{3,6})', page_html)
+            if gid_match:
+                gid = gid_match.group(1)
+        except Exception:
+            pass
+
+        api_url = f"https://www.shelterluv.com/api/v3/available-animals/{gid}"
+        try:
+            data = json.loads(http_get(api_url))
+        except Exception as exc:
+            print(f"Shelterluv feed error for {cfg['shelter']} (gid={gid}): {exc}")
             continue
 
-        matched_shelters.add(shelter_name)
+        animals = data.get("animals", []) if isinstance(data, dict) else []
+        for a in animals:
+            species = (a.get("species") or a.get("type") or "").lower()
+            if species and "dog" not in species:
+                continue
 
-        name = (attrs.get("name") or "").strip()
-        desc = (attrs.get("descriptionText") or attrs.get("descriptionHtml") or "").strip()
-        kill_date = (attrs.get("killDate") or "").strip()
-        kill_reason = (attrs.get("killReason") or "").strip()
-        rescue_id = (attrs.get("rescueId") or animal.get("id") or "").strip()
+            nid = str(a.get("nid") or a.get("id") or "").strip()
+            internal_id = str(a.get("internal_id") or nid).strip()
+            name = (a.get("name") or "").strip() or f"Dog #{internal_id}"
+            breed = (a.get("breed") or "").strip()
+            age = (a.get("age_group") or a.get("age") or "").strip()
+            size = (a.get("size") or "").strip()
+            desc = (a.get("description") or "").strip()
+            photo_url = (a.get("cover_photo") or a.get("photo") or "").strip()
 
-        dog_text = f"{name} {desc} {kill_reason}"
-        if not (kill_date or kill_reason or URGENT_KEYWORDS.search(dog_text)):
-            non_urgent_count += 1
-            continue
+            intake_raw = str(a.get("intake_date") or a.get("updated_at") or "")
+            stay_days = days_since(intake_raw)
+            combined = f"{name} {desc}"
+            is_urgent = bool(URGENT_KEYWORDS.search(combined)) or stay_days >= 30
 
-        listing_url, is_direct = resolve_listing_url(attrs=attrs, org_attrs=org_attrs, desc=desc)
-        if not listing_url:
-            no_url_count += 1
-            continue
+            # Only include urgent, medical, rescue-only, or 30+ day long-stay dogs from Bay Area municipal shelters
+            if not is_urgent:
+                continue
 
-        loc_data = (rels.get("locations", {}).get("data") or [{}])[0]
-        loc_attrs = locations_by_id.get(loc_data.get("id"), {})
-        city = (loc_attrs.get("city") or org_attrs.get("city") or "").strip()
-        county = (loc_attrs.get("county") or "").strip()
-        state = (loc_attrs.get("state") or org_attrs.get("state") or "CA").strip()
+            direct_url = (a.get("public_url") or a.get("url") or "").strip()
+            if not direct_url:
+                if "oakland" in cfg["page_url"] and nid:
+                    direct_url = f"https://www.oaklandanimalservices.org/adopt/animal/?animalId={nid}"
+                elif nid:
+                    direct_url = f"https://www.shelterluv.com/embedjs/animal/{nid}"
+                else:
+                    direct_url = cfg["page_url"]
 
-        pic_list = rels.get("pictures", {}).get("data") or []
-        photo_url = ""
-        if pic_list:
-            pic_attrs = pics_by_id.get(pic_list[0].get("id"), {})
-            photo_url = (
-                pic_attrs.get("large", {}).get("url")
-                or pic_attrs.get("original", {}).get("url")
-                or pic_attrs.get("small", {}).get("url")
-                or ""
-            )
+            needs = "Rescue Pull / Foster" if "rescue only" in combined.lower() else "Foster or Adopt"
 
-        needs = "Rescue Pull / Foster" if "rescue only" in dog_text.lower() else "Foster or Adopt"
-        updated_iso = updated_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if updated_dt else now_iso
+            results.append({
+                "id": f"sl-{gid}-{nid or internal_id}",
+                "animal_id": internal_id,
+                "name": name,
+                "breed": breed,
+                "shelter": cfg["shelter"],
+                "city": cfg["city"],
+                "county": cfg["county"],
+                "state": "CA",
+                "size": size,
+                "age": age,
+                "urgency_type": detect_urgency_type(combined, stay_days),
+                "deadline_or_urgency": "Urgent / Deadline" if URGENT_KEYWORDS.search(combined) else f"Long-Stay ({stay_days}d)",
+                "needs_type": needs,
+                "transport_note": "",
+                "photo_url": photo_url,
+                "listing_url": direct_url,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
 
-        results.append({
-            "id": f"rg-shelter-{animal.get('id')}",
-            "animal_id": rescue_id,
-            "name": name or "Unnamed Dog",
-            "breed": (attrs.get("breedString") or "").strip(),
-            "shelter": shelter_name,
-            "city": city,
-            "county": county,
-            "state": state,
-            "size": (attrs.get("sizeGroup") or "").strip(),
-            "age": (attrs.get("ageGroup") or "").strip(),
-            "urgency_type": detect_urgency_type(dog_text, kill_date),
-            "deadline_or_urgency": f"Deadline {kill_date[:10]}" if kill_date else "Urgent / Deadline",
-            "needs_type": needs,
-            "transport_note": "" if is_direct else f"Use ID {rescue_id} on shelter portal",
-            "photo_url": photo_url,
-            "listing_url": listing_url,
-            "updated_at": updated_iso,
-            "last_checked": now_iso,
-        })
+    print(f"[2/3] Bay Area Shelterluv urgent/long-stay dogs: {len(results)}")
+    return results
 
-    print(f"Matched shelters: {sorted(matched_shelters)}")
-    print(
-        f"Saved: {len(results)} | Dropped stale (>30d): {stale_count} | "
-        f"Dropped non-shelter: {non_shelter_count} | Dropped non-urgent: {non_urgent_count} | "
-        f"Dropped no URL: {no_url_count}"
-    )
+
+# ---------------------------------------------------------------------------
+# PIPELINE 3: Dedicated Shelter Urgent / Plea Pages (Fresno & Sacramento)
+# ---------------------------------------------------------------------------
+def fetch_dedicated_urgent_pages() -> list[dict]:
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    results = []
+
+    # Fresno Animal Center (public Petango / shelter urgent & adoptable dogs)
+    fresno_url = "https://www.fresno.gov/mayor/animal-center/"
+    try:
+        page_html = http_get(fresno_url)
+        petango_links = re.findall(
+            r'href="(https?://[^"]*petango\.com/Adopt/Dog-Details\.aspx\?id=(\d+)[^"]*)"',
+            page_html,
+            re.IGNORECASE,
+        )
+        seen = set()
+        for link, pid in petango_links:
+            if pid in seen:
+                continue
+            seen.add(pid)
+            results.append({
+                "id": f"fresno-{pid}",
+                "animal_id": f"A{pid}",
+                "name": f"Fresno Dog #{pid}",
+                "breed": "",
+                "shelter": "Fresno Animal Center",
+                "city": "Fresno",
+                "county": "Fresno",
+                "state": "CA",
+                "size": "",
+                "age": "",
+                "urgency_type": "High-Intake Municipal Shelter",
+                "deadline_or_urgency": "Urgent / Capacity",
+                "needs_type": "Foster or Adopt",
+                "transport_note": "",
+                "photo_url": "",
+                "listing_url": html.unescape(link),
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
+    except Exception as exc:
+        print(f"Fresno check skipped: {exc}")
+
+    # Sacramento County Bradshaw Animal Shelter
+    sac_url = "https://animalcare.saccounty.gov/Adopt/Pages/ViewAllAdoptableAnimals.aspx"
+    try:
+        page_html = http_get(sac_url)
+        sac_links = re.findall(
+            r'href="([^"]*AnimalDetail[^"]*id=([A-Z0-9]+)[^"]*)"',
+            page_html,
+            re.IGNORECASE,
+        )
+        seen = set()
+        for raw_link, aid in sac_links:
+            if aid in seen:
+                continue
+            seen.add(aid)
+            full_url = urllib.parse.urljoin(sac_url, html.unescape(raw_link))
+            results.append({
+                "id": f"saccounty-{aid}",
+                "animal_id": aid,
+                "name": f"Bradshaw Dog #{aid}",
+                "breed": "",
+                "shelter": "Sacramento County Bradshaw Shelter",
+                "city": "Sacramento",
+                "county": "Sacramento",
+                "state": "CA",
+                "size": "",
+                "age": "",
+                "urgency_type": "High-Intake County Shelter",
+                "deadline_or_urgency": "Municipal Shelter",
+                "needs_type": "Foster or Adopt",
+                "transport_note": "",
+                "photo_url": "",
+                "listing_url": full_url,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
+    except Exception as exc:
+        print(f"Sacramento check skipped: {exc}")
+
+    print(f"[3/3] Dedicated urgent pages scraped: {len(results)}")
     return results
 
 
 def main():
-    dogs = fetch_rescuegroups_shelters_ca()
+    dogs = []
+    dogs.extend(fetch_24petconnect_shelters())
+    dogs.extend(fetch_bay_area_shelterluv())
+    dogs.extend(fetch_dedicated_urgent_pages())
 
     seen = set()
     unique_dogs = []
     for dog in dogs:
-        key = dog.get("id")
+        key = dog.get("listing_url") or dog.get("id")
         if key and key not in seen:
             seen.add(key)
             unique_dogs.append(dog)
 
     unique_dogs.sort(
         key=lambda d: (
-            -(parse_iso_date(d.get("updated_at") or "").timestamp() if parse_iso_date(d.get("updated_at") or "") else 0),
+            0 if "Urgent" in d.get("deadline_or_urgency", "") or "Deadline" in d.get("deadline_or_urgency", "") else 1,
             d.get("county", ""),
             d.get("name", ""),
         )
@@ -279,7 +368,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
-    print(f"Total urgent shelter dogs written to dogs.json: {len(unique_dogs)}")
+    print(f"Total direct-shelter dogs saved to dogs.json: {len(unique_dogs)}")
 
 
 if __name__ == "__main__":
