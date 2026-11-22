@@ -623,7 +623,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 8. SAN JOSE ACS — ARCGIS REST JSON API (Strict Schema Filtering)
+# 8. SAN JOSE ACS — ARCGIS REST JSON API (Staff-Flagged Rescue Priority Only)
 # ---------------------------------------------------------------------------
 def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
     print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...")
@@ -671,10 +671,9 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         has_rescue_priority = is_active_flag(rescue_priority)
         has_rescue_status = is_active_flag(rescue_status)
         has_foster_priority = is_active_flag(foster_priority)
-        is_stray_hold = bool(re.search(r"\b(stray|hold|quarantine|bite|court|custody)\b", animal_status, re.IGNORECASE))
 
-       if not (has_rescue_priority or has_rescue_status or has_foster_priority):
-    continue
+        if not (has_rescue_priority or has_rescue_status or has_foster_priority):
+            continue
 
         aid = clean_space(str(attrs.get("ANIMALID") or attrs.get("OBJECTID") or ""))
         name = clean_space(str(attrs.get("PETNAME") or f"San Jose {aid}"))
@@ -689,21 +688,17 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         direct_url = clean_space(str(attrs.get("WEBLINK") or "")) or pet_compass_url
 
         if has_rescue_priority:
-            badge = f"SJ Rescue: {rescue_priority[:24]}"
-            urgency_type = f"SJ ACS Rescue Priority ({rescue_priority})"
+            badge = rescue_priority[:28]
+            urgency_type = f"SJ ACS {rescue_priority}"
             needs = "Rescue Pull / Foster"
         elif has_rescue_status:
             badge = f"SJ Rescue: {rescue_status[:24]}"
             urgency_type = f"SJ ACS Rescue Needed ({rescue_status})"
             needs = "Rescue Pull / Foster"
-        elif has_foster_priority:
+        else:
             badge = f"SJ Foster: {foster_priority[:24]}"
             urgency_type = f"SJ ACS Foster Priority ({foster_priority})"
             needs = "Urgent Foster / Adopt"
-        else:
-            badge = f"Long-Stay ({days_in}d)"
-            urgency_type = f"Long-Stay Kennel Dog ({days_in} days)"
-            needs = "Foster or Adopt"
 
         kennel = clean_space(str(attrs.get("KENNELNAME") or ""))
         note_parts = [p for p in [f"{days_in} days in shelter" if days_in else "", f"Kennel {kennel}" if kennel else "", animal_status] if p]
@@ -838,8 +833,8 @@ def main():
 
     def sort_rank(d: dict) -> tuple:
         badge = (d.get("deadline_or_urgency") or "").upper()
-       if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME", "NEEDS RESCUE FINAL")):
-    tier = 0
+        if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME", "NEEDS RESCUE FINAL")):
+            tier = 0
         elif any(k in badge for k in ("URGENT", "RESCUE", "RED", "ALERT", "PRIORITY")):
             tier = 1
         elif any(k in badge for k in ("GREATEST RISK", "TRANSFER")):
