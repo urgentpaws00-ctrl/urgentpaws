@@ -673,8 +673,8 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         has_foster_priority = is_active_flag(foster_priority)
         is_stray_hold = bool(re.search(r"\b(stray|hold|quarantine|bite|court|custody)\b", animal_status, re.IGNORECASE))
 
-        if not (has_rescue_priority or has_rescue_status or has_foster_priority or (days_in >= 45 and not is_stray_hold)):
-            continue
+       if not (has_rescue_priority or has_rescue_status or has_foster_priority):
+    continue
 
         aid = clean_space(str(attrs.get("ANIMALID") or attrs.get("OBJECTID") or ""))
         name = clean_space(str(attrs.get("PETNAME") or f"San Jose {aid}"))
@@ -765,7 +765,7 @@ def main():
                 page=page,
                 now_iso=now_iso,
                 step_label="[4/8]",
-                url="https://www.contracosta.ca.gov/7887/Transfer-Preferred-Dogs",
+                url="https://24petconnect.com/CCASDTransferPreferredPets?at=DOG&sb=days_MaxMin",
                 shelter_name="Contra Costa Animal Services - Martinez",
                 city="Martinez",
                 county="Contra Costa",
@@ -838,8 +838,8 @@ def main():
 
     def sort_rank(d: dict) -> tuple:
         badge = (d.get("deadline_or_urgency") or "").upper()
-        if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME")):
-            tier = 0
+       if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME", "NEEDS RESCUE FINAL")):
+    tier = 0
         elif any(k in badge for k in ("URGENT", "RESCUE", "RED", "ALERT", "PRIORITY")):
             tier = 1
         elif any(k in badge for k in ("GREATEST RISK", "TRANSFER")):
