@@ -2,10 +2,12 @@ import html
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+import urllib.parse
 import urllib.request
 
 RESCUEGROUPS_API_KEY = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
+MAX_AGE_DAYS = 21  # Drop RescueGroups listings not updated within this many days
 
 USER_AGENT = "Mozilla/5.0 (compatible; UrgentPawsCA/1.0; +https://urgentpaws.org)"
 
@@ -31,6 +33,48 @@ HIGH_INTAKE_CA_AREAS = {
     "merced", "visalia", "tulare", "san jose", "contra costa", "hayward"
 }
 
+URL_IN_TEXT = re.compile(r"https?://[^\s<>\"')]+", re.IGNORECASE)
+
+
+def parse_iso_date(date_str: str) -> datetime | None:
+    if not date_str:
+        return None
+    try:
+        cleaned = date_str.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(cleaned)
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def normalize_url(raw: str) -> str:
+    val = (raw or "").strip().rstrip(".,;)")
+    if not val:
+        return ""
+    if not val.startswith(("http://", "https://")):
+        val = "https://" + val
+    return val
+
+
+def resolve_listing_url(attrs: dict, org_attrs: dict, desc: str, shelter_name: str, animal_id: str, dog_name: str) -> str:
+    for candidate in (attrs.get("url"), attrs.get("adoptionUrl")):
+        clean = normalize_url(candidate)
+        if clean and "rescuegroups.org/animals/detail" not in clean:
+            return clean
+
+    for match in URL_IN_TEXT.findall(desc or ""):
+        clean = normalize_url(match)
+        if clean and not any(skip in clean.lower() for skip in ("facebook.com", "instagram.com", "youtube.com")):
+            return clean
+
+    for candidate in (org_attrs.get("adoptionUrl"), org_attrs.get("url")):
+        clean = normalize_url(candidate)
+        if clean:
+            return clean
+
+    query = " ".join(part for part in (shelter_name, animal_id, dog_name) if part)
+    return f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
+
 
 def detect_urgency_type(text: str) -> str:
     lower = text.lower()
@@ -50,12 +94,18 @@ def fetch_url(url: str) -> str:
 
 
 def fetch_rescuegroups_shelters_ca() -> list[dict]:
-    """Pulls California dogs ONLY from municipal/county shelters on RescueGroups (excludes private rescues)."""
     if not RESCUEGROUPS_API_KEY:
         print("Skipping RescueGroups: RESCUEGROUPS_API_KEY not set.")
         return []
 
-    url = "https://api.rescuegroups.org/v5/public/animals/search/available/dogs?include=orgs,locations,pictures&limit=250"
+    now_utc = datetime.now(timezone.utc)
+    cutoff_utc = now_utc - timedelta(days=MAX_AGE_DAYS)
+    cutoff_api_str = cutoff_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    url = (
+        "https://api.rescuegroups.org/v5/public/animals/search/available/dogs"
+        "?include=orgs,locations,pictures&sort=-animals.updatedDate&limit=250"
+    )
     payload = {
         "data": {
             "filters": [
@@ -68,6 +118,11 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
                     "fieldName": "orgs.type",
                     "operation": "equals",
                     "criteria": "Shelter"
+                },
+                {
+                    "fieldName": "animals.updatedDate",
+                    "operation": "greaterthan",
+                    "criteria": cutoff_api_str
                 }
             ]
         }
@@ -107,19 +162,23 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
         elif item_type == "pictures":
             pics_by_id[item_id] = attrs
 
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
     results = []
 
     for animal in body.get("data", []):
         attrs = animal.get("attributes", {})
         rels = animal.get("relationships", {})
 
+        # Enforce strict freshness check on updatedDate / createdDate
+        updated_dt = parse_iso_date(attrs.get("updatedDate") or attrs.get("createdDate") or "")
+        if updated_dt and updated_dt < cutoff_utc:
+            continue
+
         org_data = (rels.get("orgs", {}).get("data") or [{}])[0]
         org_attrs = orgs_by_id.get(org_data.get("id"), {})
         shelter_name = (org_attrs.get("name") or "").strip()
         org_type = (org_attrs.get("type") or "").strip().lower()
 
-        # Double-check it is an actual shelter and not a private rescue
         if org_type and org_type != "shelter":
             continue
         if RESCUE_EXCLUDE_HINTS.search(shelter_name) and not SHELTER_NAME_HINTS.search(shelter_name):
@@ -153,14 +212,18 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
                 or ""
             )
 
-        listing_url = (
-            attrs.get("url")
-            or org_attrs.get("url")
-            or f"https://www.rescuegroups.org/animals/detail?AnimalID={animal.get('id')}"
+        listing_url = resolve_listing_url(
+            attrs=attrs,
+            org_attrs=org_attrs,
+            desc=desc,
+            shelter_name=shelter_name,
+            animal_id=rescue_id,
+            dog_name=name,
         )
 
         urgency_label = "Urgent / Deadline" if is_urgent_text else "Municipal Shelter"
         needs = "Rescue Pull / Foster" if "rescue only" in combined_text.lower() else "Foster or Adopt"
+        updated_iso = updated_dt.strftime("%Y-%m-%dT%H:%M:%SZ") if updated_dt else now_iso
 
         results.append({
             "id": f"rg-shelter-{animal.get('id')}",
@@ -179,15 +242,15 @@ def fetch_rescuegroups_shelters_ca() -> list[dict]:
             "transport_note": "",
             "photo_url": photo_url,
             "listing_url": listing_url,
+            "updated_at": updated_iso,
             "last_checked": now_iso,
         })
 
-    print(f"RescueGroups shelters returned: {len(results)}")
+    print(f"RescueGroups fresh shelters returned: {len(results)}")
     return results
 
 
 def scrape_oakland_animal_services() -> list[dict]:
-    """Scrapes adoptable/urgent dogs directly from Oakland Animal Services (municipal shelter)."""
     url = "https://www.oaklandanimalservices.org/adopt/dogs/"
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     try:
@@ -197,7 +260,6 @@ def scrape_oakland_animal_services() -> list[dict]:
         return []
 
     results = []
-    # Match animal profile links and surrounding card metadata on OAS
     card_pattern = re.compile(
         r'<a[^>]+href="(https://www\.oaklandanimalservices\.org/adopt/animal/\?animalId=(\d+))"[^>]*>(.*?)</a>',
         re.IGNORECASE | re.DOTALL,
@@ -234,6 +296,7 @@ def scrape_oakland_animal_services() -> list[dict]:
             "transport_note": "",
             "photo_url": photo_url,
             "listing_url": listing_url,
+            "updated_at": now_iso,
             "last_checked": now_iso,
         })
 
@@ -249,16 +312,16 @@ def main():
     seen = set()
     unique_dogs = []
     for dog in dogs:
-        key = dog.get("listing_url") or dog.get("id")
+        key = dog.get("id") or dog.get("listing_url")
         if key and key not in seen:
             seen.add(key)
             unique_dogs.append(dog)
 
+    # Sort urgent deadlines first, then most recently updated first
     unique_dogs.sort(
         key=lambda d: (
             0 if "Urgent" in d.get("deadline_or_urgency", "") else 1,
-            d.get("county", ""),
-            d.get("name", ""),
+            -(parse_iso_date(d.get("updated_at") or "").timestamp() if parse_iso_date(d.get("updated_at") or "") else 0),
         )
     )
 
@@ -266,7 +329,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
-    print(f"Total municipal shelter dogs saved: {len(unique_dogs)}")
+    print(f"Total fresh municipal shelter dogs saved: {len(unique_dogs)}")
 
 
 if __name__ == "__main__":
