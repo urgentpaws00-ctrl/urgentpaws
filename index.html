@@ -99,6 +99,17 @@
       return dog.county ? `${cityState} (${dog.county} Co.)`.replace(/^ \(/, '(') : cityState;
     }
 
+    function formatAge(isoStr) {
+      if (!isoStr) return '';
+      const ts = new Date(isoStr).getTime();
+      if (Number.isNaN(ts)) return '';
+      const diffHrs = Math.max(0, Math.floor((Date.now() - ts) / 3600000));
+      if (diffHrs < 1) return 'Verified just now';
+      if (diffHrs < 24) return `Verified ${diffHrs}h ago`;
+      const days = Math.floor(diffHrs / 24);
+      return `Updated ${days}d ago`;
+    }
+
     async function copyAnimalId(btn, idText) {
       try {
         await navigator.clipboard.writeText(idText);
@@ -180,6 +191,7 @@
         const breed = escapeHtml(d.breed || '');
         const shelter = escapeHtml(d.shelter || 'California Shelter');
         const locStr = escapeHtml(formatLocation(d));
+        const ageLabel = escapeHtml(formatAge(d.updated_at || d.last_checked));
         const deadline = escapeHtml(d.deadline_or_urgency || 'Urgent');
         const isDeadline = deadline.toLowerCase().includes('urgent') || deadline.toLowerCase().includes('deadline');
         const badgeStyle = isDeadline
@@ -225,6 +237,7 @@
 
                 <p class="text-sm font-medium text-neutral-800 mt-2.5">${shelter}</p>
                 ${locStr ? `<p class="text-xs text-neutral-500">${locStr}</p>` : ''}
+                ${ageLabel ? `<p class="text-xs text-neutral-400 mt-0.5">${ageLabel}</p>` : ''}
 
                 <div class="flex flex-wrap gap-1.5 mt-3">
                   ${urgencyType ? `<span class="rounded-md bg-amber-50 border border-amber-200 text-amber-900 px-2 py-0.5 text-xs font-medium">${urgencyType}</span>` : ''}
