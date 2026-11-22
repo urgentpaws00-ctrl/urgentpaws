@@ -1,0 +1,38 @@
+name: Refresh CA Urgent Dogs Feed
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Run RescueGroups + CA Shelter Sync
+        env:
+          RESCUEGROUPS_API_KEY: ${{ secrets.RESCUEGROUPS_API_KEY }}
+        run: python3 fetch_dogs.py
+
+      - name: Commit updated dogs.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dogs.json
+          if git diff --staged --quiet; then
+            echo "No changes to dogs.json"
+          else
+            git commit -m "chore: refresh CA urgent dogs feed"
+            git push
+          fi
