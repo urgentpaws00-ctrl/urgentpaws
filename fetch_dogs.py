@@ -530,7 +530,12 @@ def scrape_24petconnect_board(
         location = extract_field(txt, ("Located at", "Location")) or shelter_name
         photo_url = c.get("img") or ""
 
-        if portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
+        # Build valid 24Petconnect detail URLs per shelter portal
+        if "CCASDTransferPreferredPets" in url:
+            href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
+        elif "CCASDAvailablePets" in url:
+            href = f"https://24petconnect.com/CCASDAvailablePets/Details/CCST/{animal_id}"
+        elif portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
             code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
             href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
 
@@ -847,10 +852,25 @@ def main():
                 shelter_name="Contra Costa Animal Services - Martinez",
                 city="Martinez",
                 county="Contra Costa",
-                portal_code="CCAS",
+                portal_code="CCST",
                 require_urgent_flag=False,
                 default_badge="Transfer Preferred",
                 default_urgency="Transfer Preferred / Rescue Priority",
+            )
+        )
+        all_dogs.extend(
+            scrape_24petconnect_board(
+                page=page,
+                now_iso=now_iso,
+                step_label="[4b/8]",
+                url="https://24petconnect.com/CCASDAvailablePets?at=Dog&sb=days_MaxMin",
+                shelter_name="Contra Costa Animal Services - Martinez (Urgent)",
+                city="Martinez",
+                county="Contra Costa",
+                portal_code="CCST",
+                require_urgent_flag=True,
+                default_badge="Urgent / At Risk",
+                default_urgency="Urgent Shelter Dog",
             )
         )
         all_dogs.extend(
