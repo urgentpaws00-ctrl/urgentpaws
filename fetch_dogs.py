@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import re
@@ -45,6 +46,89 @@ LAAS_ALERT_BOARDS = [
         "badge": "BLUE MEDICAL ALERT",
         "urgency_type": "LAAS Severe Medical (Blue Alert)",
         "url": "https://petharbor.com/results.asp?WHERE=type_DOG&PAGE=1&searchtype=ALL&friends=1&samaritans=1&nosuccess=0&rows=50&imght=120&imgres=thumb&view=sysadm.v_lact_alert_blue&start=3&SHELTERLIST=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&OrderBy=shelter",
+    },
+]
+
+SHELTER_SEO_CONFIG = [
+    {
+        "slug": "oakland-animal-services",
+        "county": "Alameda",
+        "title": "Oakland Animal Services Urgent Dogs & Exit Deadlines | UrgentPaws",
+        "h1": "Oakland Animal Services (OAS) Urgent Dogs",
+        "meta_desc": "Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.",
+        "address": "1101 29th Ave, Oakland, CA 94601",
+        "contact": "Rescue/Transfer: oastransfers@oaklandca.gov | Foster: oasfoster@oaklandca.gov",
+        "intro": "Dogs currently listed on Oakland Animal Services' Rescue Needed and urgent priority boards. Include the dog's Animal ID when emailing OAS for a rescue pull, foster hold, or adoption inquiry.",
+    },
+    {
+        "slug": "contra-costa-animal-services",
+        "county": "Contra Costa",
+        "title": "Contra Costa Animal Services Urgent & Transfer Preferred Dogs | UrgentPaws",
+        "h1": "Contra Costa County Animal Services Urgent Dogs",
+        "meta_desc": "Live tracker for urgent and Transfer Preferred dogs at Contra Costa Animal Services in Martinez, CA. Updated every 3 hours with Animal IDs and shelter links.",
+        "address": "4800 Imhoff Pl, Martinez, CA 94553",
+        "contact": "Rescue/Transfer: asdrescue@asd.cccounty.us | Phone: (925) 608-8400",
+        "intro": "At-risk and Transfer Preferred dogs at Contra Costa County Animal Services (CCASD) in Martinez needing 501(c)(3) rescue placement, foster homes, or immediate adoption.",
+    },
+    {
+        "slug": "san-jose-animal-care",
+        "county": "Santa Clara",
+        "title": "San Jose Animal Care Center Urgent & Rescue Priority Dogs | UrgentPaws",
+        "h1": "San Jose Animal Care Center (SJACS) Urgent Dogs",
+        "meta_desc": "Live feed of staff-flagged Rescue Priority and Foster Priority dogs at San Jose Animal Care Center. Updated every 3 hours with kennel numbers and Animal IDs.",
+        "address": "2750 Monterey Rd, San Jose, CA 95111",
+        "contact": "Rescue/Transfer: SJACSRescue@sanjoseca.gov | Phone: (408) 794-7297",
+        "intro": "Dogs flagged by San Jose Animal Care & Services staff for urgent rescue transfer or foster placement. Reference the Animal ID and kennel number when contacting SJACS.",
+    },
+    {
+        "slug": "stanislaus-animal-services",
+        "county": "Stanislaus",
+        "title": "Stanislaus Animal Services RED List & Final Call Dogs | UrgentPaws",
+        "h1": "Stanislaus Animal Services (Modesto) RED & Final Call Dogs",
+        "meta_desc": "Live list of RED status and Final Call dogs at Stanislaus Animal Services in Modesto, CA. Updated every 3 hours with Tuesday/Wednesday exit deadlines and IDs.",
+        "address": "3647 Cornucopia Way, Modesto, CA 95358",
+        "contact": "Rescue/Transfer: rescue@stancounty.com | Phone: (209) 558-7387",
+        "intro": "Kennel dogs currently on Stanislaus Animal Services' RED at-risk list and Final Call deadlines in Modesto. Final Call dogs generally require rescue or adopter commitment by Tuesday COB / Wednesday 6:30 AM.",
+    },
+    {
+        "slug": "la-animal-services",
+        "county": "Los Angeles",
+        "title": "LA Animal Services Euthanasia & Urgent Alert Dogs | UrgentPaws",
+        "h1": "LA Animal Services (LAAS) Urgent & Medical Alert Dogs",
+        "meta_desc": "Live tracker across all 6 LA Animal Services shelters (East Valley, West Valley, West LA, South LA, Harbor, North Central) for Euthanasia, Urgent, Orange, and Blue alerts.",
+        "address": "6 City Shelters across Los Angeles, CA (East Valley, West Valley, West LA, South LA, Harbor, North Central)",
+        "contact": "New Hope Rescue Program: ani.newhope@lacity.org | Phone: (888) 452-7381",
+        "intro": "Active dogs on LA Animal Services' New Hope Euthanasia Alert, Urgent Needs, Orange Medical, and Blue Severe Medical boards across all six Los Angeles municipal shelters.",
+    },
+    {
+        "slug": "kern-county-animal-services",
+        "county": "Kern",
+        "title": "Kern County Animal Services Dogs at Greatest Risk | UrgentPaws",
+        "h1": "Kern County Animal Services (Bakersfield) Greatest Risk Dogs",
+        "meta_desc": "Live tracker for dogs at greatest risk of euthanasia at Kern County Animal Services in Bakersfield, CA. Updated every 3 hours with Animal IDs and rescue notes.",
+        "address": "3951 Fruitvale Ave, Bakersfield, CA 93308",
+        "contact": "Rescue/Transfer: rescue@kerncounty.com | Phone: (661) 868-7100",
+        "intro": "Dogs currently listed on Kern County Animal Services' Animals at Greatest Risk board needing immediate 501(c)(3) rescue commitment, foster placement, or adoption.",
+    },
+    {
+        "slug": "devore-animal-shelter",
+        "county": "San Bernardino",
+        "title": "Devore Animal Shelter Urgent & Rescue Only Dogs | UrgentPaws",
+        "h1": "San Bernardino County - Devore Animal Shelter Urgent Dogs",
+        "meta_desc": "Live tracker for urgent and Rescue Only dogs at Devore Animal Shelter in San Bernardino County, CA. Updated every 3 hours with behavioral and medical flags.",
+        "address": "19777 Shelter Way, San Bernardino, CA 92407",
+        "contact": "Rescue/Transfer: sbrescue@dph.sbcounty.gov | Phone: (909) 386-9820",
+        "intro": "Urgent and Rescue Only dogs at San Bernardino County's Devore Animal Shelter requiring immediate rescue transfer, foster commitment, or adoption.",
+    },
+    {
+        "slug": "riverside-county-animal-services",
+        "county": "Riverside",
+        "title": "Riverside County Animal Services Red List & Urgent Dogs | UrgentPaws",
+        "h1": "Riverside County Animal Services (Jurupa Valley) Urgent Dogs",
+        "meta_desc": "Live tracker for 48-hour Rescue Only and 72-hour Red List dogs at Riverside County Department of Animal Services in Jurupa Valley, CA.",
+        "address": "6851 Van Buren Blvd, Jurupa Valley, CA 92509",
+        "contact": "Rescue/Transfer: transfer@rivco.org | Phone: (951) 358-7387",
+        "intro": "At-risk dogs at Riverside County Department of Animal Services (RCDAS) flagged with exit deadlines, medical urgency, or Rescue Only status.",
     },
 ]
 
@@ -380,7 +464,6 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
         except Exception as exc:
             print(f"  OAS relay failed ({host}): {exc}")
 
-    # 1. Extract Shelterluv iframe/script embed URL from the page HTML and load it directly in Playwright
     for blob in fetched_blobs:
         iframe_match = re.search(
             r"""https?://(?:www\.|new\.)?shelterluv\.com/[^"'\s<>\\]+""",
@@ -404,7 +487,6 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
             except Exception as exc:
                 print(f"  OAS Shelterluv embed load error: {exc}")
 
-    # 2. Otherwise parse any animalId links directly from the fetched proxy HTML
     results = []
     seen_hrefs = set()
     for blob in fetched_blobs:
@@ -530,7 +612,6 @@ def scrape_24petconnect_board(
         location = extract_field(txt, ("Located at", "Location")) or shelter_name
         photo_url = c.get("img") or ""
 
-        # Build valid 24Petconnect detail URLs per shelter portal
         if "CCASDTransferPreferredPets" in url:
             href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
         elif "CCASDAvailablePets" in url:
@@ -815,6 +896,195 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
     return results
 
 
+# ---------------------------------------------------------------------------
+# 9. AUTO-GENERATE STATIC SHELTER SEO PAGES & SITEMAP.XML
+# ---------------------------------------------------------------------------
+def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
+    print("Generating static shelter HTML pages and sitemap.xml for SEO...")
+    base_url = "https://www.urgentpaws.org"
+    today_date = now_iso[:10]
+
+    nav_links = [f'<a href="/{cfg["slug"]}">{html.escape(cfg["h1"].replace(" Urgent Dogs", ""))}</a>' for cfg in SHELTER_SEO_CONFIG]
+    nav_html = " &middot; ".join(nav_links)
+
+    for cfg in SHELTER_SEO_CONFIG:
+        slug = cfg["slug"]
+        county = cfg["county"]
+        page_url = f"{base_url}/{slug}"
+        shelter_dogs = [d for d in unique_dogs if (d.get("county") or "").lower() == county.lower()]
+
+        cards_html = []
+        ld_items = []
+
+        for idx, dog in enumerate(shelter_dogs, start=1):
+            d_name = html.escape(dog.get("name") or f"Dog {dog.get('animal_id', '')}")
+            d_id = html.escape(dog.get("animal_id") or "")
+            d_breed = html.escape(dog.get("breed") or "Mixed Breed")
+            d_age = html.escape(dog.get("age") or "")
+            d_size = html.escape(dog.get("size") or "")
+            d_badge = html.escape(dog.get("deadline_or_urgency") or "Urgent")
+            d_shelter = html.escape(dog.get("shelter") or cfg["h1"])
+            d_note = html.escape(dog.get("transport_note") or "")
+            d_url = html.escape(dog.get("listing_url") or base_url)
+            d_photo = html.escape(dog.get("photo_url") or "")
+
+            meta_bits = [bit for bit in [d_breed, d_age, d_size] if bit]
+            meta_str = " &bull; ".join(meta_bits)
+
+            img_tag = (
+                f'<img src="{d_photo}" alt="{d_name} ({d_id}) at {d_shelter}" loading="lazy">'
+                if d_photo
+                else '<div class="no-photo">Photo on Shelter Listing</div>'
+            )
+
+            cards_html.append(
+                f"""<article class="card">
+  {img_tag}
+  <div class="card-body">
+    <span class="badge">{d_badge}</span>
+    <h2>{d_name} <span class="aid">#{d_id}</span></h2>
+    <p class="shelter-loc">{d_shelter}</p>
+    <p class="meta">{meta_str}</p>
+    {f'<p class="note">{d_note}</p>' if d_note else ''}
+    <a class="btn" href="{d_url}" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
+  </div>
+</article>"""
+            )
+
+            ld_items.append({
+                "@type": "ListItem",
+                "position": idx,
+                "name": f"{dog.get('name', 'Urgent Dog')} ({dog.get('animal_id', '')}) - {dog.get('deadline_or_urgency', 'Urgent')}",
+                "url": dog.get("listing_url") or page_url,
+            })
+
+        if not cards_html:
+            cards_section = (
+                '<p class="empty">No dogs are currently listed on this urgent feed, or the shelter board is between updates. '
+                'Check back shortly or browse all California shelters on the <a href="/">UrgentPaws main directory</a>.</p>'
+            )
+        else:
+            cards_section = f'<section class="grid">{"".join(cards_html)}</section>'
+
+        json_ld = json.dumps(
+            {
+                "@context": "https://schema.org",
+                "@type": "CollectionPage",
+                "name": cfg["title"],
+                "description": cfg["meta_desc"],
+                "url": page_url,
+                "dateModified": now_iso,
+                "mainEntity": {
+                    "@type": "ItemList",
+                    "numberOfItems": len(shelter_dogs),
+                    "itemListElement": ld_items,
+                },
+            },
+            ensure_ascii=False,
+        )
+
+        page_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{html.escape(cfg["title"])}</title>
+  <meta name="description" content="{html.escape(cfg["meta_desc"])}">
+  <link rel="canonical" href="{page_url}">
+  <script type="application/ld+json">{json_ld}</script>
+  <style>
+    :root {{ --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #475569; --accent: #dc2626; --border: #e2e8f0; }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }}
+    header {{ background: #0f172a; color: #fff; padding: 1.25rem 1rem; }}
+    .wrap {{ max-width: 1120px; margin: 0 auto; padding: 0 1rem; }}
+    header a {{ color: #93c5fd; text-decoration: none; font-weight: 600; }}
+    h1 {{ margin: 0.5rem 0 0.25rem; font-size: 1.65rem; }}
+    .sub {{ color: #cbd5e1; margin: 0; font-size: 0.95rem; }}
+    .info-box {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; }}
+    .info-box p {{ margin: 0.35rem 0; font-size: 0.95rem; }}
+    .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.15rem; margin: 1.25rem 0 2rem; }}
+    .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }}
+    .card img {{ width: 100%; height: 240px; object-fit: cover; background: #e2e8f0; }}
+    .no-photo {{ height: 240px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: var(--muted); font-size: 0.9rem; }}
+    .card-body {{ padding: 1rem; display: flex; flex-direction: column; flex: 1; }}
+    .badge {{ display: inline-block; align-self: flex-start; background: #fee2e2; color: #991b1b; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px; margin-bottom: 0.5rem; }}
+    .card h2 {{ margin: 0 0 0.25rem; font-size: 1.2rem; }}
+    .aid {{ color: var(--muted); font-weight: 500; font-size: 0.95rem; }}
+    .shelter-loc {{ margin: 0 0 0.25rem; font-size: 0.88rem; color: var(--muted); }}
+    .meta {{ margin: 0 0 0.5rem; font-size: 0.9rem; font-weight: 500; }}
+    .note {{ margin: 0 0 0.85rem; font-size: 0.88rem; color: var(--muted); }}
+    .btn {{ margin-top: auto; display: inline-block; text-align: center; background: #0f172a; color: #fff; text-decoration: none; padding: 0.6rem 0.9rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }}
+    .btn:hover {{ background: #1e293b; }}
+    footer {{ border-top: 1px solid var(--border); padding: 1.5rem 0 2.5rem; font-size: 0.9rem; color: var(--muted); }}
+    footer a {{ color: #1d4ed8; text-decoration: none; }}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a href="/">&larr; All California Urgent Shelter Dogs (UrgentPaws)</a>
+      <h1>{html.escape(cfg["h1"])} ({len(shelter_dogs)})</h1>
+      <p class="sub">Auto-updated every 3 hours &bull; Last checked: {html.escape(now_iso)}</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="info-box">
+      <p>{html.escape(cfg["intro"])}</p>
+      <p><strong>Shelter Address:</strong> {html.escape(cfg["address"])}</p>
+      <p><strong>Contact:</strong> {html.escape(cfg["contact"])}</p>
+    </section>
+    {cards_section}
+  </main>
+  <footer>
+    <div class="wrap">
+      <p><strong>Browse Other California Shelters:</strong> {nav_html}</p>
+      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a></p>
+    </div>
+  </footer>
+</body>
+</html>
+"""
+        with open(f"{slug}.html", "w", encoding="utf-8") as f:
+            f.write(page_html)
+
+    sitemap_urls = [
+        f"""  <url>
+    <loc>{base_url}/</loc>
+    <lastmod>{today_date}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>""",
+        f"""  <url>
+    <loc>{base_url}/about-urgent-paws</loc>
+    <lastmod>{today_date}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>""",
+    ]
+
+    for cfg in SHELTER_SEO_CONFIG:
+        sitemap_urls.append(
+            f"""  <url>
+    <loc>{base_url}/{cfg["slug"]}</loc>
+    <lastmod>{today_date}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>"""
+        )
+
+    sitemap_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "\n".join(sitemap_urls)
+        + "\n</urlset>\n"
+    )
+    with open("sitemap.xml", "w", encoding="utf-8") as f:
+        f.write(sitemap_xml)
+
+    print(f"  Generated {len(SHELTER_SEO_CONFIG)} static shelter pages + sitemap.xml")
+
+
 def main():
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     previous_dogs = load_previous_dogs()
@@ -931,6 +1201,10 @@ def main():
     for prev in previous_dogs:
         c = prev.get("county")
         if c and c not in active_counties:
+            if c == "Contra Costa" and prev.get("animal_id"):
+                aid = prev["animal_id"].upper()
+                prev["id"] = f"24pc-ccst-{aid.lower()}"
+                prev["listing_url"] = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{aid}"
             all_dogs.append(prev)
 
     seen = set()
@@ -959,6 +1233,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
+    generate_static_seo_pages(unique_dogs, now_iso)
     print(f"TOTAL VERIFIED MUNICIPAL URGENT DOGS SAVED: {len(unique_dogs)}")
 
 
