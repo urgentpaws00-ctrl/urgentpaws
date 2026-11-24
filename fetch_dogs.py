@@ -1048,19 +1048,22 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
         with open(f"{slug}.html", "w", encoding="utf-8") as f:
             f.write(page_html)
 
+static_pages = [
+        ("", "hourly", "1.0"),
+        ("/about-urgent-paws", "weekly", "0.6"),
+        ("/for-shelters", "weekly", "0.6"),
+        ("/blog", "weekly", "0.6"),
+        ("/contact-us", "monthly", "0.5"),
+    ]
+
     sitemap_urls = [
         f"""  <url>
-    <loc>{base_url}/</loc>
+    <loc>{base_url}{path or "/"}</loc>
     <lastmod>{today_date}</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>1.0</priority>
-  </url>""",
-        f"""  <url>
-    <loc>{base_url}/about-urgent-paws</loc>
-    <lastmod>{today_date}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>""",
+    <changefreq>{freq}</changefreq>
+    <priority>{prio}</priority>
+  </url>"""
+        for path, freq, prio in static_pages
     ]
 
     for cfg in SHELTER_SEO_CONFIG:
