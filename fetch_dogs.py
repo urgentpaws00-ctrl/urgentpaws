@@ -1045,10 +1045,10 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
 </body>
 </html>
 """
-        with open(f"{slug}.html", "w", encoding="utf-8") as f:
+with open(f"{slug}.html", "w", encoding="utf-8") as f:
             f.write(page_html)
 
-static_pages = [
+    static_pages = [
         ("", "hourly", "1.0"),
         ("/about-urgent-paws", "weekly", "0.6"),
         ("/for-shelters", "weekly", "0.6"),
