@@ -5,6 +5,10 @@ on:
     - cron: '0 */3 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: refresh-dogs-feed
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -37,5 +41,6 @@ jobs:
             echo "No changes to dogs.json or SEO pages"
           else
             git commit -m "chore: refresh CA municipal shelter urgent dogs and SEO pages"
+            git pull --rebase -X ours origin main
             git push
           fi
