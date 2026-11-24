@@ -28,14 +28,14 @@ jobs:
       - name: Scrape Direct CA Municipal Shelters
         run: python fetch_dogs.py
 
-      - name: Commit and push updated dogs.json
+      - name: Commit and push updated feed & SEO pages
         run: |
           git config user.name "urgentpaws-bot"
           git config user.email "actions@github.com"
-          git add dogs.json
+          git add dogs.json sitemap.xml *.html
           if git diff --staged --quiet; then
-            echo "No changes to dogs.json"
+            echo "No changes to dogs.json or SEO pages"
           else
-            git commit -m "chore: refresh CA municipal shelter urgent dogs"
+            git commit -m "chore: refresh CA municipal shelter urgent dogs and SEO pages"
             git push
           fi
