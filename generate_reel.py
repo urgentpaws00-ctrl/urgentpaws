@@ -12,30 +12,20 @@ from playwright.sync_api import sync_playwright
 PT_TZ = ZoneInfo("America/Los_Angeles")
 HISTORY_FILE = "reel_history.json"
 
-WEEKDAY_MAP = {
-    "mon": 0, "monday": 0,
-    "tue": 1, "tues": 1, "tuesday": 1,
-    "wed": 2, "wednesday": 2,
-    "thu": 3, "thur": 3, "thurs": 3, "thursday": 3,
-    "fri": 4, "friday": 4,
-    "sat": 5, "saturday": 5,
-    "sun": 6, "sunday": 6,
-}
-
 
 def parse_deadline_days_away(dog: dict) -> int | None:
-    """Returns days from today (PT) until deadline from either MM/DD(/YYYY) or weekday text."""
-    badge = " ".join(
+    """Returns days from today (PT) until an explicit calendar deadline."""
+    text = " ".join(
         str(dog.get(k) or "")
-        for k in ("deadline_or_urgency", "deadline", "exit_date", "euthanasia_date")
+        for k in ("deadline_or_urgency", "deadline", "exit_date", "euthanasia_date", "transport_note")
     ).strip()
-    if not badge:
+    if not text:
         return None
 
     today_pt = datetime.now(PT_TZ).date()
 
-    # 1. Match explicit MM/DD/YYYY or MM/DD/YY (with or without the word DEADLINE)
-    m = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b", badge)
+    # 1. Match explicit MM/DD/YYYY or MM/DD/YY
+    m = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b", text)
     if m:
         month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
         if year < 100:
@@ -46,7 +36,7 @@ def parse_deadline_days_away(dog: dict) -> int | None:
             pass
 
     # 2. Match ISO YYYY-MM-DD
-    m_iso = re.search(r"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b", badge)
+    m_iso = re.search(r"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b", text)
     if m_iso:
         try:
             d_iso = datetime(int(m_iso.group(1)), int(m_iso.group(2)), int(m_iso.group(3)), tzinfo=PT_TZ).date()
@@ -54,8 +44,8 @@ def parse_deadline_days_away(dog: dict) -> int | None:
         except ValueError:
             pass
 
-    # 3. Match MM/DD without year (e.g. "DEADLINE 11/27")
-    m_short = re.search(r"\bDEADLINE\s+(\d{1,2})/(\d{1,2})\b", badge, re.IGNORECASE)
+    # 3. Match DEADLINE/DUE/EXIT/BY MM/DD without year (e.g. "DEADLINE 11/27")
+    m_short = re.search(r"\b(?:DEADLINE|DUE|EXIT|BY)\s+(\d{1,2})/(\d{1,2})\b", text, re.IGNORECASE)
     if m_short:
         month, day = int(m_short.group(1)), int(m_short.group(2))
         try:
@@ -65,21 +55,6 @@ def parse_deadline_days_away(dog: dict) -> int | None:
             return (candidate - today_pt).days
         except ValueError:
             pass
-
-    # 4. Match weekday names like "Tue/Wed 6:30am" -> use latest weekday mentioned
-    found_days = re.findall(
-        r"\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b",
-        badge,
-        re.IGNORECASE,
-    )
-    if found_days:
-        today_wd = today_pt.weekday()
-        offsets = []
-        for wd_str in found_days:
-            target_wd = WEEKDAY_MAP[wd_str.lower()]
-            diff = (target_wd - today_wd) % 7
-            offsets.append(diff)
-        return max(offsets)
 
     return None
 
@@ -129,14 +104,32 @@ def select_spotlight_dog() -> dict:
 
     hist = load_history()
     recently_featured = set(hist["dog_ids"])
-    last_shelter = hist["shelters"][-1] if hist["shelters"] else ""
+    recent_shelters = list(hist["shelters"])
+
+    # Backfill last shelter from the most recent dog_id if shelters list is empty
+    if not recent_shelters and hist["dog_ids"]:
+        last_id = hist["dog_ids"][-1]
+        for d in dogs:
+            if (d.get("id") or d.get("animal_id")) == last_id:
+                s = (d.get("shelter") or "").strip().lower()
+                if s:
+                    recent_shelters.append(s)
+                break
+
+    last_shelter = recent_shelters[-1] if recent_shelters else ""
+    last_three_shelters = set(recent_shelters[-3:])
 
     valid_dogs = []
+    day_counts: dict[str, int] = {}
     for d in dogs:
         days_away = parse_deadline_days_away(d)
+        key = str(days_away)
+        day_counts[key] = day_counts.get(key, 0) + 1
         if days_away is not None and days_away < 0:
             continue
         valid_dogs.append((d, days_away))
+
+    print(f"Total dogs: {len(dogs)} | Parsed days_away: {day_counts} | Recent shelters: {recent_shelters[-3:]}")
 
     pool = valid_dogs if valid_dogs else [(d, None) for d in dogs]
 
@@ -144,39 +137,48 @@ def select_spotlight_dog() -> dict:
         d, days_away = item
         dog_uid = d.get("id") or d.get("animal_id") or ""
         already_used = 1 if dog_uid in recently_featured else 0
-        shelter_key = (d.get("shelter") or "").strip().lower()
-        same_shelter_as_last = 1 if (last_shelter and shelter_key == last_shelter) else 0
         has_photo = 0 if (d.get("photo_url") or "").startswith("http") else 1
+
+        shelter_key = (d.get("shelter") or "").strip().lower()
+        if last_shelter and shelter_key == last_shelter:
+            shelter_penalty = 2
+        elif shelter_key in last_three_shelters:
+            shelter_penalty = 1
+        else:
+            shelter_penalty = 0
 
         aid = (d.get("animal_id") or "").strip()
         raw_name = (d.get("name") or "").strip()
         has_real_name = 0 if (raw_name and (not aid or aid.lower() not in raw_name.lower())) else 1
 
-        # 0 = Explicit deadline 2 days from today (primary target)
-        # 1 = Explicit deadline 3 days from today (fallback runway)
-        # 2 = Explicit deadline 1 day from today (tomorrow)
-        # 3 = Explicit deadline today (0 days away) or undated imminent alert
-        # 4 = Explicit deadline 4+ days away or general urgent listing
+        # Primary target: explicit deadline 2 days from today
+        is_exact_two_days = 0 if days_away == 2 else 1
+
         if days_away == 2:
             urgency_bucket = 0
             day_tiebreak = 0
-        elif days_away == 3:
+        elif days_away in (1, 3):
             urgency_bucket = 1
-            day_tiebreak = 3
-        elif days_away == 1:
-            urgency_bucket = 2
-            day_tiebreak = 1
+            day_tiebreak = days_away
         elif days_away == 0 or any(
             k in (d.get("deadline_or_urgency") or "").upper()
             for k in ("FINAL CALL", "EUTHANASIA", "OUT OF TIME")
         ):
-            urgency_bucket = 3
+            urgency_bucket = 2
             day_tiebreak = 0
         else:
-            urgency_bucket = 4
+            urgency_bucket = 3
             day_tiebreak = days_away if days_away is not None else 999
 
-        return (already_used, urgency_bucket, same_shelter_as_last, has_photo, has_real_name, day_tiebreak)
+        return (
+            already_used,
+            has_photo,
+            is_exact_two_days,
+            shelter_penalty,
+            urgency_bucket,
+            has_real_name,
+            day_tiebreak,
+        )
 
     pool.sort(key=rank_key)
     chosen = pool[0][0]
@@ -185,6 +187,7 @@ def select_spotlight_dog() -> dict:
         chosen.get("shelter") or "",
     )
     return chosen
+
 
 def clean_shelter_label(shelter: str, city: str) -> str:
     s = re.sub(r"\s+", " ", (shelter or "California Municipal Shelter")).strip()
