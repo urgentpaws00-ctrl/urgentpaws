@@ -13,6 +13,20 @@ PT_TZ = ZoneInfo("America/Los_Angeles")
 HISTORY_FILE = "reel_history.json"
 
 
+def extract_display_name(dog: dict) -> tuple[str, bool]:
+    """Returns (clean_display_name, is_fallback_name) by stripping embedded Animal IDs."""
+    aid = (dog.get("animal_id") or "").strip()
+    raw_name = (dog.get("name") or "").strip()
+    clean_name = (
+        re.sub(rf"#?\s*{re.escape(aid)}\b", "", raw_name, flags=re.IGNORECASE).strip(" -–|:")
+        if aid
+        else raw_name
+    )
+    if clean_name:
+        return clean_name, False
+    return (f"Urgent Dog #{aid}" if aid else "Urgent Shelter Dog"), True
+
+
 def parse_deadline_days_away(dog: dict) -> int | None:
     """Returns days from today (PT) until an explicit calendar deadline."""
     text = " ".join(
@@ -147,9 +161,8 @@ def select_spotlight_dog() -> dict:
         else:
             shelter_penalty = 0
 
-        aid = (d.get("animal_id") or "").strip()
-        raw_name = (d.get("name") or "").strip()
-        has_real_name = 0 if (raw_name and (not aid or aid.lower() not in raw_name.lower())) else 1
+        _, is_fallback_name = extract_display_name(d)
+        has_real_name = 1 if is_fallback_name else 0
 
         # Primary target: explicit deadline 2 days from today
         is_exact_two_days = 0 if days_away == 2 else 1
@@ -199,9 +212,7 @@ def clean_shelter_label(shelter: str, city: str) -> str:
 
 def build_single_dog_html(dog: dict) -> str:
     aid = (dog.get("animal_id") or "").strip()
-    raw_name = (dog.get("name") or "").strip()
-    is_fallback_name = not raw_name or (aid and aid.lower() in raw_name.lower())
-    display_name = f"Urgent Dog #{aid}" if is_fallback_name else raw_name
+    display_name, is_fallback_name = extract_display_name(dog)
 
     shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
     badge = dog.get("deadline_or_urgency") or "URGENT DEADLINE"
@@ -418,12 +429,9 @@ def build_single_dog_html(dog: dict) -> str:
 
 def write_caption(dog: dict) -> None:
     aid = (dog.get("animal_id") or "").strip()
-    raw_name = (dog.get("name") or "").strip()
-    name = (
-        f"Urgent Dog #{aid}"
-        if (not raw_name or (aid and aid.lower() in raw_name.lower()))
-        else f"{raw_name} (#{aid})"
-    )
+    display_name, is_fallback_name = extract_display_name(dog)
+    name = display_name if is_fallback_name else (f"{display_name} (#{aid})" if aid else display_name)
+
     shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
     badge = dog.get("deadline_or_urgency") or "Urgent"
     needs = dog.get("needs_type") or "Rescue, Foster, or Adopter Needed"
@@ -512,7 +520,8 @@ def main() -> None:
     stage_html = build_single_dog_html(dog)
     generate_video(stage_html, out_mp4="latest_reel.mp4")
     write_caption(dog)
-    print(f"Spotlighted {dog.get('name')} ({dog.get('animal_id')}) successfully.")
+    display_name, _ = extract_display_name(dog)
+    print(f"Spotlighted {display_name} ({dog.get('animal_id')}) successfully.")
 
 
 if __name__ == "__main__":
