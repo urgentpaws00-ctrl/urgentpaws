@@ -2,8 +2,8 @@ name: Generate UrgentPaws Reel
 
 on:
   schedule:
-    # Runs every Tuesday and Friday at 9:00 AM PT (16:00 UTC)
-    - cron: "0 16 * * 2,5"
+    # Runs daily at 7:00 AM PST (15:00 UTC)
+    - cron: "0 15 * * *"
   workflow_dispatch:
 
 permissions:
@@ -41,12 +41,13 @@ jobs:
           path: |
             latest_reel.mp4
             reel_caption.txt
+            reel_history.json
 
-      - name: Commit latest_reel.mp4 and reel_caption.txt
+      - name: Commit latest_reel.mp4, reel_caption.txt, and reel_history.json
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add latest_reel.mp4 reel_caption.txt
+          git add latest_reel.mp4 reel_caption.txt reel_history.json
           if ! git diff --cached --quiet; then
             git commit -m "Auto-generate UrgentPaws vertical Reel"
             git push
