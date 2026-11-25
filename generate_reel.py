@@ -2,7 +2,7 @@ import glob
 import html
 import json
 import os
-import shutil
+import re
 import subprocess
 import tempfile
 from datetime import datetime, timezone
@@ -19,24 +19,34 @@ def load_top_urgent_dogs(limit: int = 5) -> list[dict]:
     if not isinstance(dogs, list) or not dogs:
         raise ValueError("dogs.json is empty.")
 
-    # Prefer dogs that have photos so the Reel is visually compelling
     with_photos = [d for d in dogs if (d.get("photo_url") or "").startswith("http")]
     without_photos = [d for d in dogs if not (d.get("photo_url") or "").startswith("http")]
-    ordered = with_photos + without_photos
-    return ordered[:limit]
+    return (with_photos + without_photos)[:limit]
+
+
+def clean_shelter_label(shelter: str, city: str) -> str:
+    s = re.sub(r"\s+", " ", (shelter or "California Municipal Shelter")).strip()
+    # Strip PetHarbor "Success Story..." boilerplate if captured in location cell
+    s = re.sub(r"\(?\s*Success Story.*$", "", s, flags=re.IGNORECASE).strip()
+    if city and city.lower() not in s.lower():
+        s = f"{s} ({city}, CA)"
+    return s
 
 
 def build_reel_stage_html(dogs: list[dict]) -> str:
     cards = []
     for idx, dog in enumerate(dogs, start=1):
-        name = html.escape(dog.get("name") or f"Dog {dog.get('animal_id', '')}")
-        aid = html.escape(dog.get("animal_id") or "")
-        shelter = html.escape(dog.get("shelter") or "California Municipal Shelter")
-        city = html.escape(dog.get("city") or "")
-        badge = html.escape(dog.get("deadline_or_urgency") or "URGENT")
-        needs = html.escape(dog.get("needs_type") or "Rescue / Foster / Adopt")
-        note = html.escape(dog.get("transport_note") or "")
-        photo = html.escape(dog.get("photo_url") or "")
+        aid = (dog.get("animal_id") or "").strip()
+        raw_name = (dog.get("name") or "").strip()
+        # Avoid showing duplicate ID when name is a fallback like "OAS #22731520" or "LAAS A1905992"
+        is_fallback_name = not raw_name or (aid and aid.lower() in raw_name.lower())
+        display_name = f"Urgent Dog #{aid}" if is_fallback_name else raw_name
+
+        shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
+        badge = dog.get("deadline_or_urgency") or "URGENT"
+        needs = dog.get("needs_type") or "Rescue / Foster / Adopt"
+        note = (dog.get("transport_note") or "").strip()
+        photo = (dog.get("photo_url") or "").strip()
         meta = " • ".join(
             html.escape(x)
             for x in [dog.get("breed", ""), dog.get("age", ""), dog.get("size", "")]
@@ -44,7 +54,7 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
         )
 
         img_html = (
-            f'<img src="{photo}" alt="{name}" onerror="this.style.display=\'none\'" />'
+            f'<img src="{html.escape(photo)}" alt="{html.escape(display_name)}" onerror="this.style.display=\'none\'" />'
             if photo
             else '<div class="placeholder">Photo on Official Shelter Listing</div>'
         )
@@ -54,17 +64,17 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
             <article class="card" id="card-{idx}">
               <div class="img-wrap">
                 {img_html}
-                <span class="badge">{badge}</span>
+                <span class="badge">{html.escape(badge)}</span>
               </div>
               <div class="body">
                 <div class="row-top">
-                  <h2>{name}</h2>
-                  <span class="aid">#{aid}</span>
+                  <h2>{html.escape(display_name)}</h2>
+                  {f'<span class="aid">#{html.escape(aid)}</span>' if (aid and not is_fallback_name) else ''}
                 </div>
-                <p class="shelter">{shelter}{f' ({city}, CA)' if city else ''}</p>
+                <p class="shelter">{html.escape(shelter)}</p>
                 {f'<p class="meta">{meta}</p>' if meta else ''}
-                <p class="needs">{needs}</p>
-                {f'<p class="note">{note}</p>' if note else ''}
+                <p class="needs">{html.escape(needs)}</p>
+                {f'<p class="note">{html.escape(note)}</p>' if note else ''}
               </div>
             </article>
             """
@@ -74,72 +84,72 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=540, initial-scale=1" />
+  <meta name="viewport" content="width=1080, initial-scale=1" />
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{
-      width: 540px;
+    html, body {{
+      width: 1080px;
       background: #0f172a;
       color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
     }}
-    /* Keep hook clear of Instagram/TikTok top UI safe zone */
     .hook-banner {{
       position: sticky;
       top: 0;
       z-index: 50;
       background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
       color: #ffffff;
-      padding: 74px 26px 22px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      padding: 150px 52px 44px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
     }}
     .pill {{
       display: inline-block;
       background: rgba(255, 255, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      font-size: 13px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      font-size: 26px;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      padding: 4px 10px;
+      padding: 8px 20px;
       border-radius: 999px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }}
     .hook-banner h1 {{
-      font-size: 27px;
-      line-height: 1.18;
+      font-size: 54px;
+      line-height: 1.16;
       font-weight: 800;
       letter-spacing: -0.02em;
     }}
     .hook-banner p {{
-      margin-top: 8px;
-      font-size: 15px;
+      margin-top: 16px;
+      font-size: 30px;
       color: #fee2e2;
       font-weight: 500;
     }}
     .feed {{
-      padding: 20px 22px 240px;
+      padding: 40px 44px 480px;
       display: flex;
       flex-direction: column;
-      gap: 22px;
+      gap: 44px;
     }}
     .card {{
       background: #ffffff;
-      border-radius: 18px;
+      border-radius: 36px;
       overflow: hidden;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.28);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
     }}
     .img-wrap {{
       position: relative;
       width: 100%;
-      height: 360px;
+      height: 760px;
       background: #1e293b;
     }}
     .img-wrap img {{
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center 20%;
       display: block;
     }}
     .placeholder {{
@@ -149,96 +159,96 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       align-items: center;
       justify-content: center;
       color: #cbd5e1;
-      font-size: 16px;
+      font-size: 32px;
       font-weight: 600;
     }}
     .badge {{
       position: absolute;
-      top: 14px;
-      left: 14px;
+      top: 28px;
+      left: 28px;
       background: #dc2626;
       color: #ffffff;
-      font-size: 14px;
+      font-size: 28px;
       font-weight: 800;
-      padding: 6px 13px;
+      padding: 12px 26px;
       border-radius: 999px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }}
     .body {{
-      padding: 18px 20px 20px;
+      padding: 36px 40px 40px;
     }}
     .row-top {{
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      gap: 10px;
+      gap: 20px;
     }}
     .row-top h2 {{
-      font-size: 25px;
+      font-size: 50px;
       font-weight: 800;
       color: #0f172a;
     }}
     .aid {{
-      font-size: 16px;
+      font-size: 32px;
       font-weight: 700;
       color: #475569;
     }}
     .shelter {{
-      margin-top: 4px;
-      font-size: 16px;
+      margin-top: 10px;
+      font-size: 32px;
       font-weight: 700;
       color: #1e293b;
     }}
     .meta {{
-      margin-top: 6px;
-      font-size: 15px;
+      margin-top: 12px;
+      font-size: 30px;
       color: #475569;
       font-weight: 500;
     }}
     .needs {{
-      margin-top: 10px;
+      margin-top: 20px;
       display: inline-block;
       background: #fef2f2;
       color: #991b1b;
-      font-size: 14px;
+      font-size: 28px;
       font-weight: 700;
-      padding: 5px 10px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 16px;
     }}
     .note {{
-      margin-top: 8px;
-      font-size: 14px;
+      margin-top: 16px;
+      font-size: 28px;
       color: #334155;
       line-height: 1.4;
     }}
     .cta-card {{
       background: #1e293b;
       color: #ffffff;
-      border: 2px solid #334155;
-      border-radius: 18px;
-      padding: 26px 22px;
+      border: 4px solid #334155;
+      border-radius: 36px;
+      padding: 52px 44px;
       text-align: center;
     }}
     .cta-card h3 {{
-      font-size: 23px;
+      font-size: 46px;
       font-weight: 800;
     }}
     .cta-card p {{
-      margin-top: 8px;
-      font-size: 16px;
+      margin-top: 16px;
+      font-size: 32px;
       color: #cbd5e1;
     }}
     .cta-url {{
-      margin-top: 14px;
+      margin-top: 28px;
       display: inline-block;
       background: #dc2626;
       color: #ffffff;
-      font-size: 18px;
+      font-size: 38px;
       font-weight: 800;
-      padding: 10px 20px;
-      border-radius: 10px;
+      padding: 20px 44px;
+      border-radius: 20px;
     }}
   </style>
 </head>
@@ -270,11 +280,12 @@ def write_caption(dogs: list[dict]) -> None:
         "",
     ]
     for d in dogs:
-        name = d.get("name") or "Urgent Dog"
-        aid = d.get("animal_id") or ""
-        shelter = d.get("shelter") or ""
+        aid = (d.get("animal_id") or "").strip()
+        raw_name = (d.get("name") or "").strip()
+        name = f"Urgent Dog #{aid}" if (not raw_name or (aid and aid.lower() in raw_name.lower())) else f"{raw_name} (#{aid})"
+        shelter = clean_shelter_label(d.get("shelter") or "", d.get("city") or "")
         badge = d.get("deadline_or_urgency") or "Urgent"
-        lines.append(f"• {name} (#{aid}) — {shelter} [{badge}]")
+        lines.append(f"• {name} — {shelter} [{badge}]")
 
     lines.extend(
         [
@@ -298,18 +309,16 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(
-                viewport={"width": 540, "height": 960},
-                device_scale_factor=2,
+                viewport={"width": 1080, "height": 1920},
+                device_scale_factor=1,
                 record_video_dir=tmpdir,
                 record_video_size={"width": 1080, "height": 1920},
             )
             page = context.new_page()
             page.goto(f"file://{html_path}", wait_until="networkidle", timeout=30000)
 
-            # Hold 2.5s on the #1 highest-urgency dog so viewers read the hook & first card
             page.wait_for_timeout(2500)
 
-            # Smoothly scroll down through the remaining cards over ~11 seconds
             total_height = page.evaluate("document.body.scrollHeight - window.innerHeight")
             steps = 220
             step_px = max(total_height / steps, 1)
@@ -317,7 +326,6 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
                 page.evaluate(f"window.scrollBy(0, {step_px})")
                 page.wait_for_timeout(50)
 
-            # Hold 2s on the urgentpaws.org CTA card at the bottom
             page.wait_for_timeout(2000)
 
             video_path = page.video.path()
@@ -329,7 +337,6 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
         if not raw_video:
             raise RuntimeError("Playwright did not produce a recorded video file.")
 
-        # Mix in audio.mp3 if present in repo root; otherwise add a silent AAC track
         if os.path.exists("audio.mp3"):
             cmd = [
                 "ffmpeg", "-y",
