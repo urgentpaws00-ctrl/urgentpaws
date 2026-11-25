@@ -1,5 +1,11 @@
-[
-  "stanislaus-a615748",
-  "stanislaus-a508456",
-  "stanislaus-a615564"
-]
+{
+  "dog_ids": [
+    "stanislaus-a615748",
+    "stanislaus-a508456",
+    "stanislaus-a615564",
+    "stanislaus-a575823"
+  ],
+  "shelters": [
+    "stanislaus animal services (modesto)"
+  ]
+}
