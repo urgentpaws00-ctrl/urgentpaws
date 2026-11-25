@@ -6,7 +6,26 @@ import re
 import subprocess
 import tempfile
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright
+
+PT_TZ = ZoneInfo("America/Los_Angeles")
+
+
+def is_expired_deadline(dog: dict) -> bool:
+    badge = dog.get("deadline_or_urgency") or ""
+    m = re.search(r"\bDEADLINE\s+(\d{1,2})/(\d{1,2})/(\d{2,4})\b", badge, re.IGNORECASE)
+    if not m:
+        return False
+    month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    if year < 100:
+        year += 2000
+    try:
+        deadline_date = datetime(year, month, day, tzinfo=PT_TZ).date()
+        today_pt = datetime.now(PT_TZ).date()
+        return deadline_date < today_pt
+    except ValueError:
+        return False
 
 
 def load_top_urgent_dogs(limit: int = 5) -> list[dict]:
@@ -19,14 +38,16 @@ def load_top_urgent_dogs(limit: int = 5) -> list[dict]:
     if not isinstance(dogs, list) or not dogs:
         raise ValueError("dogs.json is empty.")
 
-    with_photos = [d for d in dogs if (d.get("photo_url") or "").startswith("http")]
-    without_photos = [d for d in dogs if not (d.get("photo_url") or "").startswith("http")]
+    active_dogs = [d for d in dogs if not is_expired_deadline(d)]
+    pool = active_dogs if active_dogs else dogs
+
+    with_photos = [d for d in pool if (d.get("photo_url") or "").startswith("http")]
+    without_photos = [d for d in pool if not (d.get("photo_url") or "").startswith("http")]
     return (with_photos + without_photos)[:limit]
 
 
 def clean_shelter_label(shelter: str, city: str) -> str:
     s = re.sub(r"\s+", " ", (shelter or "California Municipal Shelter")).strip()
-    # Strip PetHarbor "Success Story..." boilerplate if captured in location cell
     s = re.sub(r"\(?\s*Success Story.*$", "", s, flags=re.IGNORECASE).strip()
     if city and city.lower() not in s.lower():
         s = f"{s} ({city}, CA)"
@@ -38,7 +59,6 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
     for idx, dog in enumerate(dogs, start=1):
         aid = (dog.get("animal_id") or "").strip()
         raw_name = (dog.get("name") or "").strip()
-        # Avoid showing duplicate ID when name is a fallback like "OAS #22731520" or "LAAS A1905992"
         is_fallback_name = not raw_name or (aid and aid.lower() in raw_name.lower())
         display_name = f"Urgent Dog #{aid}" if is_fallback_name else raw_name
 
@@ -272,7 +292,7 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
 
 
 def write_caption(dogs: list[dict]) -> None:
-    today_str = datetime.now(timezone.utc).strftime("%b %d, %Y")
+    today_str = datetime.now(PT_TZ).strftime("%b %d, %Y")
     lines = [
         f"🚨 URGENT CALIFORNIA SHELTER DOGS ({today_str})",
         "",
@@ -282,7 +302,11 @@ def write_caption(dogs: list[dict]) -> None:
     for d in dogs:
         aid = (d.get("animal_id") or "").strip()
         raw_name = (d.get("name") or "").strip()
-        name = f"Urgent Dog #{aid}" if (not raw_name or (aid and aid.lower() in raw_name.lower())) else f"{raw_name} (#{aid})"
+        name = (
+            f"Urgent Dog #{aid}"
+            if (not raw_name or (aid and aid.lower() in raw_name.lower()))
+            else f"{raw_name} (#{aid})"
+        )
         shelter = clean_shelter_label(d.get("shelter") or "", d.get("city") or "")
         badge = d.get("deadline_or_urgency") or "Urgent"
         lines.append(f"• {name} — {shelter} [{badge}]")
@@ -292,7 +316,7 @@ def write_caption(dogs: list[dict]) -> None:
             "",
             "🔗 View live status & direct shelter contact links at: https://www.urgentpaws.org",
             "",
-            "#UrgentDogs #CaliforniaShelterDogs #AdoptDontShop #ShelterDogs #FosterSavesLives #RescueDogsOfInstagram #BayAreaDogs #SoCalDogs",
+            "#UrgentDogs #CaliforniaShelterDogs #AdoptDontShop #ShelterDogs #FosterSavesLives",
         ]
     )
 
