@@ -12,9 +12,14 @@ from playwright.sync_api import sync_playwright
 PT_TZ = ZoneInfo("America/Los_Angeles")
 HISTORY_FILE = "reel_history.json"
 
+PLACEHOLDER_NAMES = {
+    "laas", "unknown", "unnamed", "no name", "n/a", "na", "none",
+    "dog", "urgent dog", "shelter dog", "available", "stray",
+}
+
 
 def extract_display_name(dog: dict) -> tuple[str, bool]:
-    """Returns (clean_display_name, is_fallback_name) by stripping embedded Animal IDs."""
+    """Returns (clean_display_name, is_fallback_name), ignoring IDs and shelter acronyms."""
     aid = (dog.get("animal_id") or "").strip()
     raw_name = (dog.get("name") or "").strip()
     clean_name = (
@@ -22,7 +27,7 @@ def extract_display_name(dog: dict) -> tuple[str, bool]:
         if aid
         else raw_name
     )
-    if clean_name:
+    if clean_name and clean_name.lower() not in PLACEHOLDER_NAMES and not clean_name.isdigit():
         return clean_name, False
     return (f"Urgent Dog #{aid}" if aid else "Urgent Shelter Dog"), True
 
@@ -202,10 +207,13 @@ def select_spotlight_dog() -> dict:
     return chosen
 
 
-def clean_shelter_label(shelter: str, city: str) -> str:
+def clean_shelter_label(shelter: str, city: str, aid: str = "") -> str:
     s = re.sub(r"\s+", " ", (shelter or "California Municipal Shelter")).strip()
     s = re.sub(r"\(?\s*Success Story.*$", "", s, flags=re.IGNORECASE).strip()
-    if city and city.lower() not in s.lower():
+    if aid:
+        s = re.sub(rf"\s*#?\s*{re.escape(aid)}\b", "", s, flags=re.IGNORECASE).strip()
+    s = re.sub(r"\(\s*\)", "", s).strip()
+    if city and city.lower() not in s.lower() and "(" not in s:
         s = f"{s} ({city}, CA)"
     return s
 
@@ -214,7 +222,7 @@ def build_single_dog_html(dog: dict) -> str:
     aid = (dog.get("animal_id") or "").strip()
     display_name, is_fallback_name = extract_display_name(dog)
 
-    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
+    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "", aid)
     badge = dog.get("deadline_or_urgency") or "URGENT DEADLINE"
     needs = dog.get("needs_type") or "Needs Immediate Rescue, Foster, or Adopter"
     note = (dog.get("transport_note") or "").strip()
@@ -432,7 +440,7 @@ def write_caption(dog: dict) -> None:
     display_name, is_fallback_name = extract_display_name(dog)
     name = display_name if is_fallback_name else (f"{display_name} (#{aid})" if aid else display_name)
 
-    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
+    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "", aid)
     badge = dog.get("deadline_or_urgency") or "Urgent"
     needs = dog.get("needs_type") or "Rescue, Foster, or Adopter Needed"
     is_laas = "los angeles" in (dog.get("county") or "").lower()
