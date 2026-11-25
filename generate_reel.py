@@ -5,7 +5,7 @@ import os
 import re
 import subprocess
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright
 
@@ -28,7 +28,7 @@ def is_expired_deadline(dog: dict) -> bool:
         return False
 
 
-def load_top_urgent_dogs(limit: int = 5) -> list[dict]:
+def load_top_urgent_dogs(limit: int = 3) -> list[dict]:
     if not os.path.exists("dogs.json"):
         raise FileNotFoundError("dogs.json not found. Run fetch_dogs.py first.")
 
@@ -85,6 +85,7 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
               <div class="img-wrap">
                 {img_html}
                 <span class="badge">{html.escape(badge)}</span>
+                <span class="counter">{idx} / {len(dogs)}</span>
               </div>
               <div class="body">
                 <div class="row-top">
@@ -114,41 +115,30 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
     }}
-    .hook-banner {{
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+    /* Compact top bar clear of IG's top UI overlay so Dog #1 fills Frame 1 */
+    .top-bar {{
+      padding: 155px 44px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }}
+    .live-pill {{
+      background: #dc2626;
       color: #ffffff;
-      padding: 150px 52px 44px;
-      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
-    }}
-    .pill {{
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.18);
-      border: 2px solid rgba(255, 255, 255, 0.35);
       font-size: 26px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 8px 20px;
-      border-radius: 999px;
-      margin-bottom: 20px;
-    }}
-    .hook-banner h1 {{
-      font-size: 54px;
-      line-height: 1.16;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 22px;
+      border-radius: 999px;
     }}
-    .hook-banner p {{
-      margin-top: 16px;
-      font-size: 30px;
-      color: #fee2e2;
-      font-weight: 500;
+    .brand-tag {{
+      color: #e2e8f0;
+      font-size: 28px;
+      font-weight: 700;
     }}
     .feed {{
-      padding: 40px 44px 480px;
+      padding: 10px 44px 420px;
       display: flex;
       flex-direction: column;
       gap: 44px;
@@ -157,12 +147,12 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       background: #ffffff;
       border-radius: 36px;
       overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
+      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4);
     }}
     .img-wrap {{
       position: relative;
       width: 100%;
-      height: 760px;
+      height: 920px;
       background: #1e293b;
     }}
     .img-wrap img {{
@@ -188,16 +178,27 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       left: 28px;
       background: #dc2626;
       color: #ffffff;
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 800;
-      padding: 12px 26px;
+      padding: 14px 28px;
       border-radius: 999px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }}
+    .counter {{
+      position: absolute;
+      top: 28px;
+      right: 28px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 700;
+      padding: 12px 22px;
+      border-radius: 999px;
+    }}
     .body {{
-      padding: 36px 40px 40px;
+      padding: 34px 40px 38px;
     }}
     .row-top {{
       display: flex;
@@ -206,7 +207,7 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       gap: 20px;
     }}
     .row-top h2 {{
-      font-size: 50px;
+      font-size: 52px;
       font-weight: 800;
       color: #0f172a;
     }}
@@ -216,19 +217,19 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       color: #475569;
     }}
     .shelter {{
-      margin-top: 10px;
-      font-size: 32px;
+      margin-top: 8px;
+      font-size: 34px;
       font-weight: 700;
       color: #1e293b;
     }}
     .meta {{
-      margin-top: 12px;
+      margin-top: 10px;
       font-size: 30px;
       color: #475569;
       font-weight: 500;
     }}
     .needs {{
-      margin-top: 20px;
+      margin-top: 18px;
       display: inline-block;
       background: #fef2f2;
       color: #991b1b;
@@ -238,7 +239,7 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       border-radius: 16px;
     }}
     .note {{
-      margin-top: 16px;
+      margin-top: 14px;
       font-size: 28px;
       color: #334155;
       line-height: 1.4;
@@ -273,16 +274,15 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
   </style>
 </head>
 <body>
-  <header class="hook-banner">
-    <span class="pill">Live California Shelter Alert</span>
-    <h1>California shelter dogs facing imminent deadlines</h1>
-    <p>Auto-synced every 3 hours from 8 municipal shelters</p>
+  <header class="top-bar">
+    <span class="live-pill">🚨 CA Shelter Deadlines</span>
+    <span class="brand-tag">urgentpaws.org</span>
   </header>
   <main class="feed">
     {''.join(cards)}
     <section class="cta-card">
       <h3>View Full Live List &amp; Official Shelter Links</h3>
-      <p>Filter by Bay Area, Central Valley, or SoCal shelter</p>
+      <p>Updated every 3 hours across 8 CA shelters</p>
       <div class="cta-url">urgentpaws.org</div>
     </section>
   </main>
@@ -293,10 +293,12 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
 
 def write_caption(dogs: list[dict]) -> None:
     today_str = datetime.now(PT_TZ).strftime("%b %d, %Y")
+    has_laas = any("los angeles" in (d.get("county") or "").lower() for d in dogs)
+
     lines = [
-        f"🚨 URGENT CALIFORNIA SHELTER DOGS ({today_str})",
+        f"🚨 CA Shelter Dogs Facing Imminent Deadlines ({today_str})",
         "",
-        "These dogs are currently on municipal urgent / deadline boards and need immediate adopters, fosters, or 501(c)(3) rescue holds:",
+        "Share this to your Story or send to someone in California who can foster, adopt, or tag a 501(c)(3) rescue before time runs out:",
         "",
     ]
     for d in dogs:
@@ -311,12 +313,18 @@ def write_caption(dogs: list[dict]) -> None:
         badge = d.get("deadline_or_urgency") or "Urgent"
         lines.append(f"• {name} — {shelter} [{badge}]")
 
+    hashtags = (
+        "#LAAnimalServices #UrgentDogsLA #AdoptDontShop #ShelterDogs #FosterSavesLives"
+        if has_laas
+        else "#UrgentDogs #CaliforniaShelterDogs #AdoptDontShop #ShelterDogs #FosterSavesLives"
+    )
+
     lines.extend(
         [
             "",
-            "🔗 View live status & direct shelter contact links at: https://www.urgentpaws.org",
+            "🔗 Live status & official shelter links in bio → urgentpaws.org",
             "",
-            "#UrgentDogs #CaliforniaShelterDogs #AdoptDontShop #ShelterDogs #FosterSavesLives",
+            hashtags,
         ]
     )
 
@@ -341,16 +349,19 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
             page = context.new_page()
             page.goto(f"file://{html_path}", wait_until="networkidle", timeout=30000)
 
-            page.wait_for_timeout(2500)
+            # Hold 1.8s on Dog #1 (photo & deadline badge fill the center of Frame 1)
+            page.wait_for_timeout(1800)
 
+            # Smooth scroll through Dogs #2 and #3 over ~6.2s
             total_height = page.evaluate("document.body.scrollHeight - window.innerHeight")
-            steps = 220
+            steps = 155
             step_px = max(total_height / steps, 1)
             for _ in range(steps):
                 page.evaluate(f"window.scrollBy(0, {step_px})")
-                page.wait_for_timeout(50)
+                page.wait_for_timeout(40)
 
-            page.wait_for_timeout(2000)
+            # Hold 1.5s on the urgentpaws.org CTA card
+            page.wait_for_timeout(1500)
 
             video_path = page.video.path()
             context.close()
@@ -389,7 +400,7 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
 
 
 def main() -> None:
-    dogs = load_top_urgent_dogs(limit=5)
+    dogs = load_top_urgent_dogs(limit=3)
     stage_html = build_reel_stage_html(dogs)
     generate_video(stage_html, out_mp4="latest_reel.mp4")
     write_caption(dogs)
