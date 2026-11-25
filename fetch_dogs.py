@@ -22,6 +22,11 @@ RESCUED_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+RESCUE_ONLY_PATTERN = re.compile(
+    r"\b(rescue\s*only|rescue\s*pull\s*only|available\s+to\s+rescue\s+organizations?\s+only|501\s*\(c\)\s*\(3\)\s*only)\b",
+    re.IGNORECASE,
+)
+
 LAAS_ALERT_BOARDS = [
     {
         "label": "LAAS Euthanasia Alert",
@@ -294,6 +299,7 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
                     break
 
         is_final_call = bool(re.search(r"final\s*call", txt, re.IGNORECASE))
+        is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(txt))
         days_match = re.search(r"(\d+)\s*days", txt, re.IGNORECASE)
         days_str = f"{days_match.group(1)} days in shelter" if days_match else ""
         age_match = re.search(r"(\d+\s*Years?(?:\s*\d+\s*Months?)?|\d+\s*Months?)", txt, re.IGNORECASE)
@@ -316,7 +322,7 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
             "age": age,
             "urgency_type": "Final Call (Tue/Wed Deadline)" if is_final_call else "RED Status (At Risk)",
             "deadline_or_urgency": "FINAL CALL" if is_final_call else "RED Status Urgent",
-            "needs_type": "Rescue Pull, Foster, or Adopt",
+            "needs_type": "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt",
             "transport_note": clean_space(f"{days_str}. Must exit by Tue COB / Wed 6:30am if Final Call.") if is_final_call else days_str,
             "photo_url": item.get("img") or "",
             "listing_url": href,
@@ -341,6 +347,7 @@ def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) ->
     date_match = re.search(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b", txt)
     is_priority = bool(re.search(r"\bPRIORITY\b", txt, re.IGNORECASE))
     is_out_of_time = bool(re.search(r"OUT OF TIME", txt, re.IGNORECASE))
+    is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(txt))
 
     if is_out_of_time:
         badge = "OUT OF TIME"
@@ -384,7 +391,7 @@ def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) ->
         "age": age_match.group(1).title() if age_match else "",
         "urgency_type": urgency_type,
         "deadline_or_urgency": badge,
-        "needs_type": "Rescue Pull, Foster, or Adopt",
+        "needs_type": "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt",
         "transport_note": meta_line[:140],
         "photo_url": img or "",
         "listing_url": href,
@@ -623,7 +630,8 @@ def scrape_24petconnect_board(
         urgency_type = default_urgency
         badge = default_badge
         note = reason
-        needs = "Rescue Pull Only" if re.search(r"rescue onl", status + " " + txt, re.IGNORECASE) else "Rescue Pull / Foster / Adopt"
+        is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(status + " " + txt + " " + default_badge))
+        needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt"
 
         if reason:
             if "u-behavior" in reason.lower():
@@ -676,6 +684,9 @@ def scrape_24petconnect_board(
             if not is_at_risk:
                 continue
 
+            if RESCUE_ONLY_PATTERN.search(body):
+                dog["needs_type"] = "Rescue Pull Only"
+
             dl = re.search(r"(\*{0,3}DEADLINE[^\n\r*]{0,50})", body, re.IGNORECASE)
             if dl:
                 dog["deadline_or_urgency"] = clean_space(dl.group(1).replace("*", ""))[:38]
@@ -701,57 +712,88 @@ def scrape_24petconnect_board(
 # 7. LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
 # ---------------------------------------------------------------------------
 def enrich_laas_from_petharbor(dog: dict) -> None:
-    """Fetches a LAAS dog's PetHarbor detail page to fill missing name, age, weight, and shelter branch."""
-    url = dog.get("listing_url") or ""
-    aid = dog.get("animal_id") or ""
-    if "petharbor.com/detail.asp" not in url.lower() or not aid:
+    """Enriches LAAS dog metadata from laanimalservices.com/pet/<id> (with PetHarbor fallback)."""
+    aid = (dog.get("animal_id") or "").strip()
+    if not aid:
         return
 
+    laas_pet_url = f"https://www.laanimalservices.com/pet/{aid.lower()}"
+    petharbor_url = dog.get("listing_url") or ""
+
+    # 1. Try the official laanimalservices.com/pet/<id> page first
+    raw_html = ""
+    plain = ""
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        req = urllib.request.Request(laas_pet_url, headers={"User-Agent": USER_AGENT})
         with urllib.request.urlopen(req, timeout=12) as resp:
             raw_html = resp.read().decode("utf-8", errors="replace")
+        plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", raw_html)))
+    except Exception:
+        plain = ""
+
+    if plain and aid.upper() in plain.upper():
+        dog["listing_url"] = laas_pet_url
+
+        h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", raw_html, re.IGNORECASE | re.DOTALL)
+        if h1_match:
+            parsed_name = clean_space(html.unescape(re.sub(r"<[^>]+>", "", h1_match.group(1))))
+            if parsed_name and parsed_name.upper() != "LAAS":
+                dog["name"] = parsed_name
+
+        if RESCUE_ONLY_PATTERN.search(plain):
+            dog["needs_type"] = "New Hope Rescue Pull Only"
+            if "rescue organizations only" not in (dog.get("transport_note") or "").lower():
+                dog["transport_note"] = f"{dog.get('transport_note', '')} • Rescue Organizations Only".strip(" •")
+
+        m_size = re.search(r"\bSize\s+([^\n]+?)(?=\s+Color\b|\s+Breed\b)", plain, re.IGNORECASE)
+        if m_size and not dog.get("size"):
+            dog["size"] = clean_space(m_size.group(1))
+
+        m_breed = re.search(r"\bBreed\s+([^\n]+?)(?=\s+Lifestage\b|\s+Care Status\b)", plain, re.IGNORECASE)
+        if m_breed and not dog.get("breed"):
+            dog["breed"] = clean_space(m_breed.group(1))
+
+        m_stage = re.search(r"\bLifestage\s+([^\n]+?)(?=\s+Care Status\b|\s+Medical\b)", plain, re.IGNORECASE)
+        if m_stage and not dog.get("age"):
+            dog["age"] = clean_space(m_stage.group(1))
+
+    # 2. Check PetHarbor detail page for exact shelter branch (e.g., West Valley) and any remaining missing fields
+    if "petharbor.com/detail.asp" not in petharbor_url.lower():
+        return
+    try:
+        req = urllib.request.Request(petharbor_url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            ph_html = resp.read().decode("utf-8", errors="replace")
+        ph_plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", ph_html)))
     except Exception:
         return
 
-    plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", raw_html)))
-    if not plain:
-        return
-
-    # 1. Extract real dog name (e.g., "CHARLES - ID#A2264990" or "My name is Charles and I am")
     current_name = (dog.get("name") or "").strip()
-    is_placeholder = (
-        not current_name
-        or current_name.upper().startswith("LAAS")
-        or aid.upper() in current_name.upper()
-    )
-    if is_placeholder:
-        m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", plain, re.IGNORECASE)
-        m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", plain, re.IGNORECASE)
+    if not current_name or current_name.upper().startswith("LAAS") or aid.upper() in current_name.upper():
+        m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", ph_plain, re.IGNORECASE)
+        m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", ph_plain, re.IGNORECASE)
         parsed_name = (m_title.group(1) if m_title else (m_intro.group(1) if m_intro else "")).strip(" -–|:")
         if parsed_name and parsed_name.upper() != "LAAS":
             dog["name"] = parsed_name.title() if parsed_name.isupper() else parsed_name
 
-    # 2. Extract exact LAAS shelter branch (e.g., "Los Angeles Animal Services - West Los Angeles Shelter")
-    m_branch = re.search(r"Los Angeles Animal Services\s*-\s*([A-Za-z ]+?Shelter)\b", plain, re.IGNORECASE)
+    m_branch = re.search(r"Los Angeles Animal Services\s*-\s*([A-Za-z ]+?Shelter)\b", ph_plain, re.IGNORECASE)
     if m_branch:
         branch = clean_space(m_branch.group(1)).replace(" Shelter", "").strip()
         if branch:
             dog["shelter"] = f"LA Animal Services ({branch})"
 
-    # 3. Fill missing age, weight, and breed from detail text
     if not dog.get("age"):
-        m_age = re.search(r"\babout\s+(\d+\s+(?:years?|months?|weeks?)\s+old)\b", plain, re.IGNORECASE)
+        m_age = re.search(r"\babout\s+(\d+\s+(?:years?|months?|weeks?)\s+old)\b", ph_plain, re.IGNORECASE)
         if m_age:
             dog["age"] = clean_space(m_age.group(1))
 
     if not dog.get("size"):
-        m_wt = re.search(r"\bapproximately\s+(\d+)\s+pounds?\b", plain, re.IGNORECASE)
+        m_wt = re.search(r"\bapproximately\s+(\d+)\s+pounds?\b", ph_plain, re.IGNORECASE)
         if m_wt:
             dog["size"] = f"{m_wt.group(1)} lbs"
 
     if not dog.get("breed"):
-        m_breed = re.search(r"\bMy name is\s+[^.]+?\s+and I am (?:a|an)\s+([^.]+)\.", plain, re.IGNORECASE)
+        m_breed = re.search(r"\bMy name is\s+[^.]+?\s+and I am (?:a|an)\s+([^.]+)\.", ph_plain, re.IGNORECASE)
         if m_breed:
             dog["breed"] = clean_space(m_breed.group(1))
 
@@ -841,10 +883,10 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
                 "age": age,
                 "urgency_type": board["urgency_type"],
                 "deadline_or_urgency": board["badge"],
-                "needs_type": "New Hope Rescue Pull / Foster / Adopt",
+                "needs_type": "New Hope Rescue Pull Only" if RESCUE_ONLY_PATTERN.search(txt) else "New Hope Rescue Pull / Foster / Adopt",
                 "transport_note": f"Active on {board['label']}",
                 "photo_url": r.get("img") or "",
-                "listing_url": href or f"https://24petconnect.com/LACT/Details/LACT/{animal_id}",
+                "listing_url": href or f"https://www.laanimalservices.com/pet/{animal_id.lower()}",
                 "updated_at": now_iso,
                 "last_checked": now_iso,
             })
@@ -859,7 +901,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
         if dog.get("name") != before:
             enriched_count += 1
 
-    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from PetHarbor details)")
+    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from official profiles)")
     return results
 
 
@@ -918,14 +960,17 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         photo_url = clean_space(str(attrs.get("PHOTOLINK") or ""))
         direct_url = clean_space(str(attrs.get("WEBLINK") or "")) or pet_compass_url
 
+        combined_flags = f"{rescue_priority} {rescue_status} {animal_status}"
+        is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(combined_flags))
+
         if has_rescue_priority:
             badge = rescue_priority[:28]
             urgency_type = f"SJ ACS {rescue_priority}"
-            needs = "Rescue Pull / Foster"
+            needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt"
         elif has_rescue_status:
             badge = f"SJ Rescue: {rescue_status[:24]}"
             urgency_type = f"SJ ACS Rescue Needed ({rescue_status})"
-            needs = "Rescue Pull / Foster"
+            needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt"
         else:
             badge = f"SJ Foster: {foster_priority[:24]}"
             urgency_type = f"SJ ACS Foster Priority ({foster_priority})"
@@ -960,8 +1005,22 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 9. AUTO-GENERATE STATIC SHELTER SEO PAGES & SITEMAP.XML
+# 9. GLOBAL STANDARDIZATION & STATIC SHELTER SEO PAGES
 # ---------------------------------------------------------------------------
+def normalize_dog_record(dog: dict) -> dict:
+    """Ensures needs_type and metadata formatting are consistent across all 8 shelters."""
+    combined = " ".join(
+        str(dog.get(k) or "")
+        for k in ("needs_type", "urgency_type", "deadline_or_urgency", "transport_note")
+    )
+    is_laas = "los angeles" in (dog.get("county") or "").lower()
+    if RESCUE_ONLY_PATTERN.search(combined):
+        dog["needs_type"] = "New Hope Rescue Pull Only" if is_laas else "Rescue Pull Only"
+    elif not dog.get("needs_type"):
+        dog["needs_type"] = "New Hope Rescue Pull / Foster / Adopt" if is_laas else "Rescue Pull, Foster, or Adopt"
+    return dog
+
+
 def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     print("Generating static shelter HTML pages and sitemap.xml for SEO...")
     base_url = "https://www.urgentpaws.org"
@@ -986,6 +1045,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
             d_age = html.escape(dog.get("age") or "")
             d_size = html.escape(dog.get("size") or "")
             d_badge = html.escape(dog.get("deadline_or_urgency") or "Urgent")
+            d_needs = html.escape(dog.get("needs_type") or "")
             d_shelter = html.escape(dog.get("shelter") or cfg["h1"])
             d_note = html.escape(dog.get("transport_note") or "")
             d_url = html.escape(dog.get("listing_url") or base_url)
@@ -1008,6 +1068,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     <h2>{d_name} <span class="aid">#{d_id}</span></h2>
     <p class="shelter-loc">{d_shelter}</p>
     <p class="meta">{meta_str}</p>
+    {f'<p class="needs">{d_needs}</p>' if d_needs else ''}
     {f'<p class="note">{d_note}</p>' if d_note else ''}
     <a class="btn" href="{d_url}" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
@@ -1075,7 +1136,8 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     .card h2 {{ margin: 0 0 0.25rem; font-size: 1.2rem; }}
     .aid {{ color: var(--muted); font-weight: 500; font-size: 0.95rem; }}
     .shelter-loc {{ margin: 0 0 0.25rem; font-size: 0.88rem; color: var(--muted); }}
-    .meta {{ margin: 0 0 0.5rem; font-size: 0.9rem; font-weight: 500; }}
+    .meta {{ margin: 0 0 0.4rem; font-size: 0.9rem; font-weight: 500; }}
+    .needs {{ margin: 0 0 0.5rem; font-size: 0.82rem; font-weight: 700; color: #b91c1c; }}
     .note {{ margin: 0 0 0.85rem; font-size: 0.88rem; color: var(--muted); }}
     .btn {{ margin-top: auto; display: inline-block; text-align: center; background: #0f172a; color: #fff; text-decoration: none; padding: 0.6rem 0.9rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }}
     .btn:hover {{ background: #1e293b; }}
@@ -1279,7 +1341,7 @@ def main():
         key = f"{dog.get('county')}-{dog.get('animal_id')}".lower()
         if key not in seen:
             seen.add(key)
-            unique_dogs.append(dog)
+            unique_dogs.append(normalize_dog_record(dog))
 
     def sort_rank(d: dict) -> tuple:
         badge = (d.get("deadline_or_urgency") or "").upper()
