@@ -700,6 +700,62 @@ def scrape_24petconnect_board(
 # ---------------------------------------------------------------------------
 # 7. LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
 # ---------------------------------------------------------------------------
+def enrich_laas_from_petharbor(dog: dict) -> None:
+    """Fetches a LAAS dog's PetHarbor detail page to fill missing name, age, weight, and shelter branch."""
+    url = dog.get("listing_url") or ""
+    aid = dog.get("animal_id") or ""
+    if "petharbor.com/detail.asp" not in url.lower() or not aid:
+        return
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            raw_html = resp.read().decode("utf-8", errors="replace")
+    except Exception:
+        return
+
+    plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", raw_html)))
+    if not plain:
+        return
+
+    # 1. Extract real dog name (e.g., "CHARLES - ID#A2264990" or "My name is Charles and I am")
+    current_name = (dog.get("name") or "").strip()
+    is_placeholder = (
+        not current_name
+        or current_name.upper().startswith("LAAS")
+        or aid.upper() in current_name.upper()
+    )
+    if is_placeholder:
+        m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", plain, re.IGNORECASE)
+        m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", plain, re.IGNORECASE)
+        parsed_name = (m_title.group(1) if m_title else (m_intro.group(1) if m_intro else "")).strip(" -–|:")
+        if parsed_name and parsed_name.upper() != "LAAS":
+            dog["name"] = parsed_name.title() if parsed_name.isupper() else parsed_name
+
+    # 2. Extract exact LAAS shelter branch (e.g., "Los Angeles Animal Services - West Los Angeles Shelter")
+    m_branch = re.search(r"Los Angeles Animal Services\s*-\s*([A-Za-z ]+?Shelter)\b", plain, re.IGNORECASE)
+    if m_branch:
+        branch = clean_space(m_branch.group(1)).replace(" Shelter", "").strip()
+        if branch:
+            dog["shelter"] = f"LA Animal Services ({branch})"
+
+    # 3. Fill missing age, weight, and breed from detail text
+    if not dog.get("age"):
+        m_age = re.search(r"\babout\s+(\d+\s+(?:years?|months?|weeks?)\s+old)\b", plain, re.IGNORECASE)
+        if m_age:
+            dog["age"] = clean_space(m_age.group(1))
+
+    if not dog.get("size"):
+        m_wt = re.search(r"\bapproximately\s+(\d+)\s+pounds?\b", plain, re.IGNORECASE)
+        if m_wt:
+            dog["size"] = f"{m_wt.group(1)} lbs"
+
+    if not dog.get("breed"):
+        m_breed = re.search(r"\bMy name is\s+[^.]+?\s+and I am (?:a|an)\s+([^.]+)\.", plain, re.IGNORECASE)
+        if m_breed:
+            dog["breed"] = clean_space(m_breed.group(1))
+
+
 def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
     print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...")
     results = []
@@ -759,7 +815,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
             if cells:
                 name_clean = re.sub(r"\(?\bA\d{6,8}\b\)?", "", cells[0]).strip(" -()")
-                if name_clean and len(name_clean) < 35:
+                if name_clean and len(name_clean) < 35 and name_clean.upper() != "LAAS":
                     name = name_clean
                 for cell in cells[1:]:
                     if any(s in cell.lower() for s in ("east valley", "west valley", "west la", "south la", "harbor", "north central", "chesterfield", "shelter")):
@@ -796,7 +852,14 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
         print(f"  {board['label']}: {board_count} dogs")
 
-    print(f"  LAAS total alert dogs saved: {len(results)}")
+    enriched_count = 0
+    for dog in results:
+        before = dog.get("name")
+        enrich_laas_from_petharbor(dog)
+        if dog.get("name") != before:
+            enriched_count += 1
+
+    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from PetHarbor details)")
     return results
 
 
