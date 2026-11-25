@@ -12,42 +12,108 @@ from playwright.sync_api import sync_playwright
 PT_TZ = ZoneInfo("America/Los_Angeles")
 HISTORY_FILE = "reel_history.json"
 
+WEEKDAY_MAP = {
+    "mon": 0, "monday": 0,
+    "tue": 1, "tues": 1, "tuesday": 1,
+    "wed": 2, "wednesday": 2,
+    "thu": 3, "thur": 3, "thurs": 3, "thursday": 3,
+    "fri": 4, "friday": 4,
+    "sat": 5, "saturday": 5,
+    "sun": 6, "sunday": 6,
+}
+
 
 def parse_deadline_days_away(dog: dict) -> int | None:
-    """Returns days from today (PT) until deadline, or None if no calendar date."""
-    badge = dog.get("deadline_or_urgency") or ""
-    m = re.search(r"\bDEADLINE\s+(\d{1,2})/(\d{1,2})/(\d{2,4})\b", badge, re.IGNORECASE)
-    if not m:
-        return None
-    month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
-    if year < 100:
-        year += 2000
-    try:
-        deadline_date = datetime(year, month, day, tzinfo=PT_TZ).date()
-        today_pt = datetime.now(PT_TZ).date()
-        return (deadline_date - today_pt).days
-    except ValueError:
+    """Returns days from today (PT) until deadline from either MM/DD(/YYYY) or weekday text."""
+    badge = " ".join(
+        str(dog.get(k) or "")
+        for k in ("deadline_or_urgency", "deadline", "exit_date", "euthanasia_date")
+    ).strip()
+    if not badge:
         return None
 
+    today_pt = datetime.now(PT_TZ).date()
 
-def load_featured_ids() -> list[str]:
+    # 1. Match explicit MM/DD/YYYY or MM/DD/YY (with or without the word DEADLINE)
+    m = re.search(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b", badge)
+    if m:
+        month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if year < 100:
+            year += 2000
+        try:
+            return (datetime(year, month, day, tzinfo=PT_TZ).date() - today_pt).days
+        except ValueError:
+            pass
+
+    # 2. Match ISO YYYY-MM-DD
+    m_iso = re.search(r"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b", badge)
+    if m_iso:
+        try:
+            d_iso = datetime(int(m_iso.group(1)), int(m_iso.group(2)), int(m_iso.group(3)), tzinfo=PT_TZ).date()
+            return (d_iso - today_pt).days
+        except ValueError:
+            pass
+
+    # 3. Match MM/DD without year (e.g. "DEADLINE 11/27")
+    m_short = re.search(r"\bDEADLINE\s+(\d{1,2})/(\d{1,2})\b", badge, re.IGNORECASE)
+    if m_short:
+        month, day = int(m_short.group(1)), int(m_short.group(2))
+        try:
+            candidate = datetime(today_pt.year, month, day, tzinfo=PT_TZ).date()
+            if (candidate - today_pt).days < -180:
+                candidate = datetime(today_pt.year + 1, month, day, tzinfo=PT_TZ).date()
+            return (candidate - today_pt).days
+        except ValueError:
+            pass
+
+    # 4. Match weekday names like "Tue/Wed 6:30am" -> use latest weekday mentioned
+    found_days = re.findall(
+        r"\b(mon(?:day)?|tue(?:s|sday)?|wed(?:nesday)?|thu(?:r|rs|rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b",
+        badge,
+        re.IGNORECASE,
+    )
+    if found_days:
+        today_wd = today_pt.weekday()
+        offsets = []
+        for wd_str in found_days:
+            target_wd = WEEKDAY_MAP[wd_str.lower()]
+            diff = (target_wd - today_wd) % 7
+            offsets.append(diff)
+        return max(offsets)
+
+    return None
+
+
+def load_history() -> dict:
     if not os.path.exists(HISTORY_FILE):
-        return []
+        return {"dog_ids": [], "shelters": []}
     try:
         with open(HISTORY_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            return data if isinstance(data, list) else []
+            if isinstance(data, list):
+                return {"dog_ids": data, "shelters": []}
+            if isinstance(data, dict):
+                return {
+                    "dog_ids": data.get("dog_ids", []),
+                    "shelters": data.get("shelters", []),
+                }
     except Exception:
-        return []
+        pass
+    return {"dog_ids": [], "shelters": []}
 
 
-def save_featured_id(dog_id: str) -> None:
-    if not dog_id:
-        return
-    history = [x for x in load_featured_ids() if x != dog_id]
-    history.append(dog_id)
+def save_history(dog_id: str, shelter: str) -> None:
+    hist = load_history()
+    if dog_id:
+        ids = [x for x in hist["dog_ids"] if x != dog_id]
+        ids.append(dog_id)
+        hist["dog_ids"] = ids[-30:]
+    if shelter:
+        s_clean = shelter.strip().lower()
+        shelters = hist["shelters"] + [s_clean]
+        hist["shelters"] = shelters[-10:]
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(history[-30:], f, indent=2)
+        json.dump(hist, f, indent=2)
         f.write("\n")
 
 
@@ -61,7 +127,10 @@ def select_spotlight_dog() -> dict:
     if not isinstance(dogs, list) or not dogs:
         raise ValueError("dogs.json is empty.")
 
-    recently_featured = set(load_featured_ids())
+    hist = load_history()
+    recently_featured = set(hist["dog_ids"])
+    last_shelter = hist["shelters"][-1] if hist["shelters"] else ""
+
     valid_dogs = []
     for d in dogs:
         days_away = parse_deadline_days_away(d)
@@ -75,6 +144,8 @@ def select_spotlight_dog() -> dict:
         d, days_away = item
         dog_uid = d.get("id") or d.get("animal_id") or ""
         already_used = 1 if dog_uid in recently_featured else 0
+        shelter_key = (d.get("shelter") or "").strip().lower()
+        same_shelter_as_last = 1 if (last_shelter and shelter_key == last_shelter) else 0
         has_photo = 0 if (d.get("photo_url") or "").startswith("http") else 1
 
         aid = (d.get("animal_id") or "").strip()
@@ -82,33 +153,38 @@ def select_spotlight_dog() -> dict:
         has_real_name = 0 if (raw_name and (not aid or aid.lower() not in raw_name.lower())) else 1
 
         # 0 = Explicit deadline 2 days from today (primary target)
-        # 1 = Explicit deadline 1 or 3 days from today (fallback runway)
-        # 2 = Explicit deadline today (0 days away)
-        # 3 = Imminent alert without date (FINAL CALL / EUTHANASIA ALERT / OUT OF TIME)
+        # 1 = Explicit deadline 3 days from today (fallback runway)
+        # 2 = Explicit deadline 1 day from today (tomorrow)
+        # 3 = Explicit deadline today (0 days away) or undated imminent alert
         # 4 = Explicit deadline 4+ days away or general urgent listing
         if days_away == 2:
             urgency_bucket = 0
             day_tiebreak = 0
-        elif days_away in (1, 3):
+        elif days_away == 3:
             urgency_bucket = 1
-            day_tiebreak = days_away
-        elif days_away == 0:
+            day_tiebreak = 3
+        elif days_away == 1:
             urgency_bucket = 2
-            day_tiebreak = 0
-        elif any(k in (d.get("deadline_or_urgency") or "").upper() for k in ("FINAL CALL", "EUTHANASIA", "OUT OF TIME")):
+            day_tiebreak = 1
+        elif days_away == 0 or any(
+            k in (d.get("deadline_or_urgency") or "").upper()
+            for k in ("FINAL CALL", "EUTHANASIA", "OUT OF TIME")
+        ):
             urgency_bucket = 3
-            day_tiebreak = 99
+            day_tiebreak = 0
         else:
             urgency_bucket = 4
             day_tiebreak = days_away if days_away is not None else 999
 
-        return (already_used, has_photo, urgency_bucket, has_real_name, day_tiebreak)
+        return (already_used, urgency_bucket, same_shelter_as_last, has_photo, has_real_name, day_tiebreak)
 
     pool.sort(key=rank_key)
     chosen = pool[0][0]
-    save_featured_id(chosen.get("id") or chosen.get("animal_id") or "")
+    save_history(
+        chosen.get("id") or chosen.get("animal_id") or "",
+        chosen.get("shelter") or "",
+    )
     return chosen
-
 
 def clean_shelter_label(shelter: str, city: str) -> str:
     s = re.sub(r"\s+", " ", (shelter or "California Municipal Shelter")).strip()
