@@ -10,25 +10,48 @@ from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright
 
 PT_TZ = ZoneInfo("America/Los_Angeles")
+HISTORY_FILE = "reel_history.json"
 
 
-def is_expired_deadline(dog: dict) -> bool:
+def parse_deadline_days_away(dog: dict) -> int | None:
+    """Returns days from today (PT) until deadline, or None if no calendar date."""
     badge = dog.get("deadline_or_urgency") or ""
     m = re.search(r"\bDEADLINE\s+(\d{1,2})/(\d{1,2})/(\d{2,4})\b", badge, re.IGNORECASE)
     if not m:
-        return False
+        return None
     month, day, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
     if year < 100:
         year += 2000
     try:
         deadline_date = datetime(year, month, day, tzinfo=PT_TZ).date()
         today_pt = datetime.now(PT_TZ).date()
-        return deadline_date < today_pt
+        return (deadline_date - today_pt).days
     except ValueError:
-        return False
+        return None
 
 
-def load_top_urgent_dogs(limit: int = 3) -> list[dict]:
+def load_featured_ids() -> list[str]:
+    if not os.path.exists(HISTORY_FILE):
+        return []
+    try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_featured_id(dog_id: str) -> None:
+    if not dog_id:
+        return
+    history = [x for x in load_featured_ids() if x != dog_id]
+    history.append(dog_id)
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history[-30:], f, indent=2)
+        f.write("\n")
+
+
+def select_spotlight_dog() -> dict:
     if not os.path.exists("dogs.json"):
         raise FileNotFoundError("dogs.json not found. Run fetch_dogs.py first.")
 
@@ -38,12 +61,49 @@ def load_top_urgent_dogs(limit: int = 3) -> list[dict]:
     if not isinstance(dogs, list) or not dogs:
         raise ValueError("dogs.json is empty.")
 
-    active_dogs = [d for d in dogs if not is_expired_deadline(d)]
-    pool = active_dogs if active_dogs else dogs
+    recently_featured = set(load_featured_ids())
+    valid_dogs = []
+    for d in dogs:
+        days_away = parse_deadline_days_away(d)
+        if days_away is not None and days_away < 0:
+            continue
+        valid_dogs.append((d, days_away))
 
-    with_photos = [d for d in pool if (d.get("photo_url") or "").startswith("http")]
-    without_photos = [d for d in pool if not (d.get("photo_url") or "").startswith("http")]
-    return (with_photos + without_photos)[:limit]
+    pool = valid_dogs if valid_dogs else [(d, None) for d in dogs]
+
+    def rank_key(item: tuple[dict, int | None]) -> tuple:
+        d, days_away = item
+        dog_uid = d.get("id") or d.get("animal_id") or ""
+        already_used = 1 if dog_uid in recently_featured else 0
+        has_photo = 0 if (d.get("photo_url") or "").startswith("http") else 1
+
+        aid = (d.get("animal_id") or "").strip()
+        raw_name = (d.get("name") or "").strip()
+        has_real_name = 0 if (raw_name and (not aid or aid.lower() not in raw_name.lower())) else 1
+
+        # 0 = Explicit deadline 1–3 days away (ideal 24–72h social media runway)
+        # 1 = Explicit deadline today (0 days away)
+        # 2 = Imminent alert without date (FINAL CALL / EUTHANASIA ALERT / OUT OF TIME)
+        # 3 = Explicit deadline 4+ days away or general urgent listing
+        if days_away is not None and 1 <= days_away <= 3:
+            urgency_bucket = 0
+            day_tiebreak = days_away
+        elif days_away == 0:
+            urgency_bucket = 1
+            day_tiebreak = 0
+        elif any(k in (d.get("deadline_or_urgency") or "").upper() for k in ("FINAL CALL", "EUTHANASIA", "OUT OF TIME")):
+            urgency_bucket = 2
+            day_tiebreak = 99
+        else:
+            urgency_bucket = 3
+            day_tiebreak = days_away if days_away is not None else 999
+
+        return (already_used, has_photo, urgency_bucket, has_real_name, day_tiebreak)
+
+    pool.sort(key=rank_key)
+    chosen = pool[0][0]
+    save_featured_id(chosen.get("id") or chosen.get("animal_id") or "")
+    return chosen
 
 
 def clean_shelter_label(shelter: str, city: str) -> str:
@@ -54,52 +114,28 @@ def clean_shelter_label(shelter: str, city: str) -> str:
     return s
 
 
-def build_reel_stage_html(dogs: list[dict]) -> str:
-    cards = []
-    for idx, dog in enumerate(dogs, start=1):
-        aid = (dog.get("animal_id") or "").strip()
-        raw_name = (dog.get("name") or "").strip()
-        is_fallback_name = not raw_name or (aid and aid.lower() in raw_name.lower())
-        display_name = f"Urgent Dog #{aid}" if is_fallback_name else raw_name
+def build_single_dog_html(dog: dict) -> str:
+    aid = (dog.get("animal_id") or "").strip()
+    raw_name = (dog.get("name") or "").strip()
+    is_fallback_name = not raw_name or (aid and aid.lower() in raw_name.lower())
+    display_name = f"Urgent Dog #{aid}" if is_fallback_name else raw_name
 
-        shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
-        badge = dog.get("deadline_or_urgency") or "URGENT"
-        needs = dog.get("needs_type") or "Rescue / Foster / Adopt"
-        note = (dog.get("transport_note") or "").strip()
-        photo = (dog.get("photo_url") or "").strip()
-        meta = " • ".join(
-            html.escape(x)
-            for x in [dog.get("breed", ""), dog.get("age", ""), dog.get("size", "")]
-            if x
-        )
+    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
+    badge = dog.get("deadline_or_urgency") or "URGENT DEADLINE"
+    needs = dog.get("needs_type") or "Needs Immediate Rescue, Foster, or Adopter"
+    note = (dog.get("transport_note") or "").strip()
+    photo = (dog.get("photo_url") or "").strip()
+    meta = " • ".join(
+        html.escape(x)
+        for x in [dog.get("breed", ""), dog.get("age", ""), dog.get("size", "")]
+        if x
+    )
 
-        img_html = (
-            f'<img src="{html.escape(photo)}" alt="{html.escape(display_name)}" onerror="this.style.display=\'none\'" />'
-            if photo
-            else '<div class="placeholder">Photo on Official Shelter Listing</div>'
-        )
-
-        cards.append(
-            f"""
-            <article class="card" id="card-{idx}">
-              <div class="img-wrap">
-                {img_html}
-                <span class="badge">{html.escape(badge)}</span>
-                <span class="counter">{idx} / {len(dogs)}</span>
-              </div>
-              <div class="body">
-                <div class="row-top">
-                  <h2>{html.escape(display_name)}</h2>
-                  {f'<span class="aid">#{html.escape(aid)}</span>' if (aid and not is_fallback_name) else ''}
-                </div>
-                <p class="shelter">{html.escape(shelter)}</p>
-                {f'<p class="meta">{meta}</p>' if meta else ''}
-                <p class="needs">{html.escape(needs)}</p>
-                {f'<p class="note">{html.escape(note)}</p>' if note else ''}
-              </div>
-            </article>
-            """
-        )
+    img_html = (
+        f'<img src="{html.escape(photo)}" alt="{html.escape(display_name)}" />'
+        if photo
+        else '<div class="placeholder">Photo on Official Shelter Listing</div>'
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -110,57 +146,44 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     html, body {{
       width: 1080px;
+      height: 1920px;
+      overflow: hidden;
       background: #0f172a;
-      color: #0f172a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow-x: hidden;
-    }}
-    /* Compact top bar clear of IG's top UI overlay so Dog #1 fills Frame 1 */
-    .top-bar {{
-      padding: 155px 44px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }}
-    .live-pill {{
-      background: #dc2626;
       color: #ffffff;
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 10px 22px;
-      border-radius: 999px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }}
-    .brand-tag {{
-      color: #e2e8f0;
-      font-size: 28px;
-      font-weight: 700;
-    }}
-    .feed {{
-      padding: 10px 44px 420px;
+    .stage {{
+      position: relative;
+      width: 1080px;
+      height: 1920px;
       display: flex;
       flex-direction: column;
-      gap: 44px;
+      justify-content: space-between;
     }}
-    .card {{
-      background: #ffffff;
-      border-radius: 36px;
+    .photo-box {{
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1340px;
       overflow: hidden;
-      box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4);
-    }}
-    .img-wrap {{
-      position: relative;
-      width: 100%;
-      height: 920px;
       background: #1e293b;
     }}
-    .img-wrap img {{
+    /* 3-cut visual pattern interrupt over 8.5s:
+       0-2.8s tight face crop -> 2.8-5.6s full portrait -> 5.6-8.5s medium zoom */
+    .photo-box img {{
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center 20%;
-      display: block;
+      animation: multiCutMotion 8.5s linear forwards;
+    }}
+    @keyframes multiCutMotion {{
+      0%    {{ transform: scale(1.18) translateY(2%); }}
+      32.9% {{ transform: scale(1.22) translateY(2%); }}
+      33.0% {{ transform: scale(1.00) translateY(0%); }}
+      65.9% {{ transform: scale(1.04) translateY(0%); }}
+      66.0% {{ transform: scale(1.10) translateY(-1%); }}
+      100%  {{ transform: scale(1.14) translateY(-1%); }}
     }}
     .placeholder {{
       width: 100%;
@@ -169,164 +192,177 @@ def build_reel_stage_html(dogs: list[dict]) -> str:
       align-items: center;
       justify-content: center;
       color: #cbd5e1;
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 600;
     }}
-    .badge {{
-      position: absolute;
-      top: 28px;
-      left: 28px;
+    .top-gradient {{
+      position: relative;
+      z-index: 10;
+      background: linear-gradient(180deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.42) 70%, rgba(15,23,42,0) 100%);
+      padding: 155px 48px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }}
+    .urgent-pill {{
       background: #dc2626;
       color: #ffffff;
       font-size: 30px;
-      font-weight: 800;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       padding: 14px 28px;
       border-radius: 999px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
     }}
-    .counter {{
-      position: absolute;
-      top: 28px;
-      right: 28px;
+    .site-pill {{
       background: rgba(15, 23, 42, 0.78);
-      color: #ffffff;
-      font-size: 26px;
+      border: 2px solid rgba(255,255,255,0.25);
+      color: #f8fafc;
+      font-size: 28px;
       font-weight: 700;
-      padding: 12px 22px;
+      padding: 12px 24px;
       border-radius: 999px;
     }}
-    .body {{
-      padding: 34px 40px 38px;
+    .bottom-card {{
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      background: linear-gradient(180deg, rgba(15,23,42,0) 0%, #0f172a 14%, #0f172a 100%);
+      padding: 95px 52px 175px;
     }}
-    .row-top {{
+    .name-row {{
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 20px;
     }}
-    .row-top h2 {{
-      font-size: 52px;
-      font-weight: 800;
-      color: #0f172a;
+    .name-row h1 {{
+      font-size: 68px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: #ffffff;
     }}
     .aid {{
-      font-size: 32px;
-      font-weight: 700;
-      color: #475569;
+      font-size: 36px;
+      font-weight: 800;
+      color: #94a3b8;
+      flex-shrink: 0;
     }}
     .shelter {{
-      margin-top: 8px;
-      font-size: 34px;
+      margin-top: 14px;
+      font-size: 36px;
       font-weight: 700;
-      color: #1e293b;
+      color: #f8fafc;
     }}
     .meta {{
-      margin-top: 10px;
-      font-size: 30px;
-      color: #475569;
+      margin-top: 12px;
+      font-size: 32px;
+      color: #cbd5e1;
       font-weight: 500;
     }}
-    .needs {{
-      margin-top: 18px;
+    .needs-box {{
+      margin-top: 26px;
       display: inline-block;
-      background: #fef2f2;
-      color: #991b1b;
-      font-size: 28px;
-      font-weight: 700;
-      padding: 10px 20px;
+      background: rgba(220, 38, 38, 0.22);
+      border: 2px solid #ef4444;
+      color: #fecaca;
+      font-size: 30px;
+      font-weight: 800;
+      padding: 12px 24px;
       border-radius: 16px;
     }}
     .note {{
-      margin-top: 14px;
-      font-size: 28px;
-      color: #334155;
+      margin-top: 18px;
+      font-size: 29px;
+      color: #e2e8f0;
       line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }}
-    .cta-card {{
-      background: #1e293b;
-      color: #ffffff;
-      border: 4px solid #334155;
-      border-radius: 36px;
-      padding: 52px 44px;
-      text-align: center;
-    }}
-    .cta-card h3 {{
-      font-size: 46px;
-      font-weight: 800;
-    }}
-    .cta-card p {{
-      margin-top: 16px;
-      font-size: 32px;
-      color: #cbd5e1;
-    }}
-    .cta-url {{
-      margin-top: 28px;
-      display: inline-block;
+    .cta-bar {{
+      margin-top: 34px;
       background: #dc2626;
       color: #ffffff;
-      font-size: 38px;
-      font-weight: 800;
-      padding: 20px 44px;
-      border-radius: 20px;
+      border-radius: 22px;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
+    }}
+    .cta-bar span {{
+      font-size: 30px;
+      font-weight: 700;
+    }}
+    .cta-bar strong {{
+      font-size: 36px;
+      font-weight: 900;
     }}
   </style>
 </head>
 <body>
-  <header class="top-bar">
-    <span class="live-pill">🚨 CA Shelter Deadlines</span>
-    <span class="brand-tag">urgentpaws.org</span>
-  </header>
-  <main class="feed">
-    {''.join(cards)}
-    <section class="cta-card">
-      <h3>View Full Live List &amp; Official Shelter Links</h3>
-      <p>Updated every 3 hours across 8 CA shelters</p>
-      <div class="cta-url">urgentpaws.org</div>
+  <div class="stage">
+    <div class="photo-box">
+      {img_html}
+    </div>
+    <header class="top-gradient">
+      <span class="urgent-pill">🚨 {html.escape(badge)}</span>
+      <span class="site-pill">urgentpaws.org</span>
+    </header>
+    <section class="bottom-card">
+      <div class="name-row">
+        <h1>{html.escape(display_name)}</h1>
+        {f'<span class="aid">#{html.escape(aid)}</span>' if (aid and not is_fallback_name) else ''}
+      </div>
+      <p class="shelter">{html.escape(shelter)}</p>
+      {f'<p class="meta">{meta}</p>' if meta else ''}
+      <div class="needs-box">{html.escape(needs)}</div>
+      {f'<p class="note">{html.escape(note)}</p>' if note else ''}
+      <div class="cta-bar">
+        <span>Official shelter link &amp; live list:</span>
+        <strong>urgentpaws.org</strong>
+      </div>
     </section>
-  </main>
+  </div>
 </body>
 </html>
 """
 
 
-def write_caption(dogs: list[dict]) -> None:
-    today_str = datetime.now(PT_TZ).strftime("%b %d, %Y")
-    has_laas = any("los angeles" in (d.get("county") or "").lower() for d in dogs)
-
-    lines = [
-        f"🚨 CA Shelter Dogs Facing Imminent Deadlines ({today_str})",
-        "",
-        "Share this to your Story or send to someone in California who can foster, adopt, or tag a 501(c)(3) rescue before time runs out:",
-        "",
-    ]
-    for d in dogs:
-        aid = (d.get("animal_id") or "").strip()
-        raw_name = (d.get("name") or "").strip()
-        name = (
-            f"Urgent Dog #{aid}"
-            if (not raw_name or (aid and aid.lower() in raw_name.lower()))
-            else f"{raw_name} (#{aid})"
-        )
-        shelter = clean_shelter_label(d.get("shelter") or "", d.get("city") or "")
-        badge = d.get("deadline_or_urgency") or "Urgent"
-        lines.append(f"• {name} — {shelter} [{badge}]")
+def write_caption(dog: dict) -> None:
+    aid = (dog.get("animal_id") or "").strip()
+    raw_name = (dog.get("name") or "").strip()
+    name = (
+        f"Urgent Dog #{aid}"
+        if (not raw_name or (aid and aid.lower() in raw_name.lower()))
+        else f"{raw_name} (#{aid})"
+    )
+    shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "")
+    badge = dog.get("deadline_or_urgency") or "Urgent"
+    needs = dog.get("needs_type") or "Rescue, Foster, or Adopter Needed"
+    is_laas = "los angeles" in (dog.get("county") or "").lower()
 
     hashtags = (
         "#LAAnimalServices #UrgentDogsLA #AdoptDontShop #ShelterDogs #FosterSavesLives"
-        if has_laas
+        if is_laas
         else "#UrgentDogs #CaliforniaShelterDogs #AdoptDontShop #ShelterDogs #FosterSavesLives"
     )
 
-    lines.extend(
-        [
-            "",
-            "🔗 Live status & official shelter links in bio → urgentpaws.org",
-            "",
-            hashtags,
-        ]
-    )
+    lines = [
+        f"🚨 {badge.upper()}: {name}",
+        f"📍 Shelter: {shelter}",
+        f"🆘 Status: {needs}",
+        "",
+        "Please share this to your Story or send to someone in California who can foster, adopt, or tag a 501(c)(3) rescue before time runs out.",
+        "",
+        "🔗 Direct shelter link & live status in bio → urgentpaws.org",
+        "",
+        hashtags,
+    ]
 
     with open("reel_caption.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -349,19 +385,8 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
             page = context.new_page()
             page.goto(f"file://{html_path}", wait_until="networkidle", timeout=30000)
 
-            # Hold 1.8s on Dog #1 (photo & deadline badge fill the center of Frame 1)
-            page.wait_for_timeout(1800)
-
-            # Smooth scroll through Dogs #2 and #3 over ~6.2s
-            total_height = page.evaluate("document.body.scrollHeight - window.innerHeight")
-            steps = 155
-            step_px = max(total_height / steps, 1)
-            for _ in range(steps):
-                page.evaluate(f"window.scrollBy(0, {step_px})")
-                page.wait_for_timeout(40)
-
-            # Hold 1.5s on the urgentpaws.org CTA card
-            page.wait_for_timeout(1500)
+            # Hold 8.5 seconds on the single spotlighted dog while 3-cut zoom runs
+            page.wait_for_timeout(8500)
 
             video_path = page.video.path()
             context.close()
@@ -400,11 +425,11 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
 
 
 def main() -> None:
-    dogs = load_top_urgent_dogs(limit=3)
-    stage_html = build_reel_stage_html(dogs)
+    dog = select_spotlight_dog()
+    stage_html = build_single_dog_html(dog)
     generate_video(stage_html, out_mp4="latest_reel.mp4")
-    write_caption(dogs)
-    print("Generated reel_caption.txt successfully.")
+    write_caption(dog)
+    print(f"Spotlighted {dog.get('name')} ({dog.get('animal_id')}) successfully.")
 
 
 if __name__ == "__main__":
