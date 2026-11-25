@@ -81,21 +81,25 @@ def select_spotlight_dog() -> dict:
         raw_name = (d.get("name") or "").strip()
         has_real_name = 0 if (raw_name and (not aid or aid.lower() not in raw_name.lower())) else 1
 
-        # 0 = Explicit deadline 1–3 days away (ideal 24–72h social media runway)
-        # 1 = Explicit deadline today (0 days away)
-        # 2 = Imminent alert without date (FINAL CALL / EUTHANASIA ALERT / OUT OF TIME)
-        # 3 = Explicit deadline 4+ days away or general urgent listing
-        if days_away is not None and 1 <= days_away <= 3:
+        # 0 = Explicit deadline 2 days from today (primary target)
+        # 1 = Explicit deadline 1 or 3 days from today (fallback runway)
+        # 2 = Explicit deadline today (0 days away)
+        # 3 = Imminent alert without date (FINAL CALL / EUTHANASIA ALERT / OUT OF TIME)
+        # 4 = Explicit deadline 4+ days away or general urgent listing
+        if days_away == 2:
             urgency_bucket = 0
+            day_tiebreak = 0
+        elif days_away in (1, 3):
+            urgency_bucket = 1
             day_tiebreak = days_away
         elif days_away == 0:
-            urgency_bucket = 1
+            urgency_bucket = 2
             day_tiebreak = 0
         elif any(k in (d.get("deadline_or_urgency") or "").upper() for k in ("FINAL CALL", "EUTHANASIA", "OUT OF TIME")):
-            urgency_bucket = 2
+            urgency_bucket = 3
             day_tiebreak = 99
         else:
-            urgency_bucket = 3
+            urgency_bucket = 4
             day_tiebreak = days_away if days_away is not None else 999
 
         return (already_used, has_photo, urgency_bucket, has_real_name, day_tiebreak)
