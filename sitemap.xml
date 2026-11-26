@@ -78,4 +78,10 @@
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
+  <url>
+    <loc>https://www.urgentpaws.org/sacramento-county-animal-care</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.85</priority>
+  </url>
 </urlset>
