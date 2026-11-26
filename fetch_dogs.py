@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import html
 import json
 import os
@@ -26,6 +27,8 @@ RESCUE_ONLY_PATTERN = re.compile(
     r"\b(rescue\s*only|rescue\s*pull\s*only|available\s+to\s+rescue\s+organizations?\s+only|501\s*\(c\)\s*\(3\)\s*only)\b",
     re.IGNORECASE,
 )
+
+LAAS_WEB_BLOCKED = False
 
 LAAS_ALERT_BOARDS = [
     {
@@ -238,12 +241,12 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
 # ---------------------------------------------------------------------------
 def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
     url = "https://www.stanislausanimalservices.com/atrisk/adopt-dogs.shtm?color=red&sort=orderByIntakeDate"
-    print("[1/8] Scraping Stanislaus County RED / Final Call dogs...")
+    print("[1/8] Scraping Stanislaus County RED / Final Call dogs...", flush=True)
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=40000)
         page.wait_for_timeout(3000)
     except Exception as exc:
-        print(f"  Stanislaus error: {exc}")
+        print(f"  Stanislaus error: {exc}", flush=True)
         return []
 
     raw_cards = page.evaluate(
@@ -330,7 +333,7 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"  Stanislaus RED/Final Call kennel dogs saved: {len(results)}")
+    print(f"  Stanislaus RED/Final Call kennel dogs saved: {len(results)}", flush=True)
     return results
 
 
@@ -449,7 +452,7 @@ def extract_oas_cards_from_page(page) -> list[dict]:
 
 
 def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[dict]:
-    print("  OAS direct request blocked (403); checking public relays for Shelterluv embed...")
+    print("  OAS direct request blocked (403); checking public relays for Shelterluv embed...", flush=True)
     encoded = urllib.parse.quote(target_url, safe="")
     proxy_candidates = [
         f"https://api.codetabs.com/v1/proxy?quest={encoded}",
@@ -463,13 +466,13 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
         host = p_url.split("/")[2]
         try:
             req = urllib.request.Request(p_url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=25) as resp:
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 body = resp.read().decode("utf-8", errors="replace")
                 if body and "403 ERROR" not in body[:400]:
-                    print(f"  OAS relay succeeded via {host} ({len(body)} chars)")
+                    print(f"  OAS relay succeeded via {host} ({len(body)} chars)", flush=True)
                     fetched_blobs.append(body)
         except Exception as exc:
-            print(f"  OAS relay failed ({host}): {exc}")
+            print(f"  OAS relay failed ({host}): {exc}", flush=True)
 
     for blob in fetched_blobs:
         iframe_match = re.search(
@@ -479,7 +482,7 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
         )
         if iframe_match:
             embed_url = iframe_match.group(0).replace("&amp;", "&").replace("\\/", "/")
-            print(f"  Found OAS Shelterluv embed URL: {embed_url}")
+            print(f"  Found OAS Shelterluv embed URL: {embed_url}", flush=True)
             try:
                 page.goto(embed_url, wait_until="networkidle", timeout=35000)
                 page.wait_for_timeout(3500)
@@ -489,10 +492,10 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
                         d for c in raw_cards
                         if (d := parse_oas_card(c["href"], c["text"], c.get("img") or "", c.get("heading") or "", now_iso))
                     ]
-                    print(f"  OAS Shelterluv embed dogs saved: {len(results)}")
+                    print(f"  OAS Shelterluv embed dogs saved: {len(results)}", flush=True)
                     return results
             except Exception as exc:
-                print(f"  OAS Shelterluv embed load error: {exc}")
+                print(f"  OAS Shelterluv embed load error: {exc}", flush=True)
 
     results = []
     seen_hrefs = set()
@@ -512,16 +515,16 @@ def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[d
 
     if not results:
         sample = clean_space(fetched_blobs[0])[:220] if fetched_blobs else "all relays blocked by CloudFront"
-        print(f"  OAS diagnostic -> {sample}")
+        print(f"  OAS diagnostic -> {sample}", flush=True)
     else:
-        print(f"  OAS proxy dogs saved: {len(results)}")
+        print(f"  OAS proxy dogs saved: {len(results)}", flush=True)
 
     return results
 
 
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
     url = "https://www.oaklandanimalservices.org/rescue-needed/"
-    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...")
+    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...", flush=True)
 
     try:
         resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
@@ -533,7 +536,7 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
         except Exception:
             page.wait_for_timeout(3000)
     except Exception as exc:
-        print(f"  OAS direct load error: {exc}")
+        print(f"  OAS direct load error: {exc}", flush=True)
         return fetch_oas_via_proxy_and_embed(page, url, now_iso)
 
     raw_cards = extract_oas_cards_from_page(page)
@@ -546,7 +549,7 @@ def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
         if dog:
             results.append(dog)
 
-    print(f"  OAS /rescue-needed/ dogs saved: {len(results)}")
+    print(f"  OAS /rescue-needed/ dogs saved: {len(results)}", flush=True)
     return results
 
 
@@ -567,16 +570,16 @@ def scrape_24petconnect_board(
     default_badge: str = "Urgent / Rescue Needed",
     default_urgency: str = "At-Risk Shelter Dog",
 ) -> list[dict]:
-    print(f"{step_label} Scraping {shelter_name} ({url})...")
+    print(f"{step_label} Scraping {shelter_name} ({url})...", flush=True)
     try:
         page.goto(url, wait_until="networkidle", timeout=45000)
         page.wait_for_timeout(4500)
     except Exception as exc:
-        print(f"  Load error ({shelter_name}): {exc}")
+        print(f"  Load error ({shelter_name}): {exc}", flush=True)
         return []
 
     raw_cards = find_petconnect_cards_across_frames(page)
-    print(f"  Detected {len(raw_cards)} raw cards on {shelter_name}")
+    print(f"  Detected {len(raw_cards)} raw cards on {shelter_name}", flush=True)
 
     results = []
     seen_ids = set()
@@ -671,8 +674,8 @@ def scrape_24petconnect_board(
         verified = []
         for dog in results[:35]:
             try:
-                page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=20000)
-                page.wait_for_timeout(1200)
+                page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=15000)
+                page.wait_for_timeout(800)
                 body = page.inner_text("body")
             except Exception:
                 continue
@@ -704,77 +707,85 @@ def scrape_24petconnect_board(
             verified.append(dog)
         results = verified
 
-    print(f"  {shelter_name} urgent dogs saved: {len(results)}")
+    print(f"  {shelter_name} urgent dogs saved: {len(results)}", flush=True)
     return results
 
 
 # ---------------------------------------------------------------------------
 # 7. LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
 # ---------------------------------------------------------------------------
-def enrich_laas_from_petharbor(dog: dict) -> None:
-    """Enriches LAAS dog metadata from laanimalservices.com/pet/<id> (with PetHarbor fallback)."""
+def enrich_laas_from_petharbor(dog: dict) -> bool:
+    """Enriches a single LAAS dog in parallel via laanimalservices.com or PetHarbor."""
+    global LAAS_WEB_BLOCKED
     aid = (dog.get("animal_id") or "").strip()
     if not aid:
-        return
+        return False
 
+    before_name = dog.get("name")
     laas_pet_url = f"https://www.laanimalservices.com/pet/{aid.lower()}"
     petharbor_url = dog.get("listing_url") or ""
 
-    # 1. Try the official laanimalservices.com/pet/<id> page first
-    raw_html = ""
-    plain = ""
-    try:
-        req = urllib.request.Request(laas_pet_url, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            raw_html = resp.read().decode("utf-8", errors="replace")
-        plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", raw_html)))
-    except Exception:
-        plain = ""
+    # 1. Try laanimalservices.com/pet/<id> unless flagged as blocked by datacenter firewall
+    if not LAAS_WEB_BLOCKED:
+        try:
+            req = urllib.request.Request(laas_pet_url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                raw_html = resp.read().decode("utf-8", errors="replace")
+            plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", raw_html)))
+            if plain and aid.upper() in plain.upper():
+                dog["listing_url"] = laas_pet_url
 
-    if plain and aid.upper() in plain.upper():
-        dog["listing_url"] = laas_pet_url
+                h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", raw_html, re.IGNORECASE | re.DOTALL)
+                if h1_match:
+                    parsed_name = clean_space(html.unescape(re.sub(r"<[^>]+>", "", h1_match.group(1))))
+                    if parsed_name and parsed_name.upper() != "LAAS":
+                        dog["name"] = parsed_name
 
-        h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", raw_html, re.IGNORECASE | re.DOTALL)
-        if h1_match:
-            parsed_name = clean_space(html.unescape(re.sub(r"<[^>]+>", "", h1_match.group(1))))
-            if parsed_name and parsed_name.upper() != "LAAS":
-                dog["name"] = parsed_name
+                if RESCUE_ONLY_PATTERN.search(plain):
+                    dog["needs_type"] = "New Hope Rescue Pull Only"
+                    if "rescue organizations only" not in (dog.get("transport_note") or "").lower():
+                        dog["transport_note"] = f"{dog.get('transport_note', '')} • Rescue Organizations Only".strip(" •")
 
-        if RESCUE_ONLY_PATTERN.search(plain):
-            dog["needs_type"] = "New Hope Rescue Pull Only"
-            if "rescue organizations only" not in (dog.get("transport_note") or "").lower():
-                dog["transport_note"] = f"{dog.get('transport_note', '')} • Rescue Organizations Only".strip(" •")
+                m_branch = re.search(
+                    r"\b(East Valley|West Valley|West Los Angeles|West LA|South Los Angeles|South LA|Harbor|North Central)\b",
+                    plain,
+                    re.IGNORECASE,
+                )
+                if m_branch:
+                    dog["shelter"] = f"LA Animal Services ({m_branch.group(1).title()})"
 
-        m_size = re.search(r"\bSize\s+([^\n]+?)(?=\s+Color\b|\s+Breed\b)", plain, re.IGNORECASE)
-        if m_size and not dog.get("size"):
-            dog["size"] = clean_space(m_size.group(1))
+                m_size = re.search(r"\bSize\s+([^\n]+?)(?=\s+Color\b|\s+Breed\b)", plain, re.IGNORECASE)
+                if m_size and not dog.get("size"):
+                    dog["size"] = clean_space(m_size.group(1))
 
-        m_breed = re.search(r"\bBreed\s+([^\n]+?)(?=\s+Lifestage\b|\s+Care Status\b)", plain, re.IGNORECASE)
-        if m_breed and not dog.get("breed"):
-            dog["breed"] = clean_space(m_breed.group(1))
+                m_breed = re.search(r"\bBreed\s+([^\n]+?)(?=\s+Lifestage\b|\s+Care Status\b)", plain, re.IGNORECASE)
+                if m_breed and not dog.get("breed"):
+                    dog["breed"] = clean_space(m_breed.group(1))
 
-        m_stage = re.search(r"\bLifestage\s+([^\n]+?)(?=\s+Care Status\b|\s+Medical\b)", plain, re.IGNORECASE)
-        if m_stage and not dog.get("age"):
-            dog["age"] = clean_space(m_stage.group(1))
+                m_stage = re.search(r"\bLifestage\s+([^\n]+?)(?=\s+Care Status\b|\s+Medical\b)", plain, re.IGNORECASE)
+                if m_stage and not dog.get("age"):
+                    dog["age"] = clean_space(m_stage.group(1))
 
-    # 2. Check PetHarbor detail page for exact shelter branch (e.g., West Valley) and any remaining missing fields
+                return dog.get("name") != before_name
+        except Exception:
+            LAAS_WEB_BLOCKED = True
+
+    # 2. Fast PetHarbor detail fallback (always reachable from GitHub Actions)
     if "petharbor.com/detail.asp" not in petharbor_url.lower():
-        return
+        return False
     try:
         req = urllib.request.Request(petharbor_url, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=12) as resp:
+        with urllib.request.urlopen(req, timeout=6) as resp:
             ph_html = resp.read().decode("utf-8", errors="replace")
         ph_plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", ph_html)))
     except Exception:
-        return
+        return False
 
-    current_name = (dog.get("name") or "").strip()
-    if not current_name or current_name.upper().startswith("LAAS") or aid.upper() in current_name.upper():
-        m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", ph_plain, re.IGNORECASE)
-        m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", ph_plain, re.IGNORECASE)
-        parsed_name = (m_title.group(1) if m_title else (m_intro.group(1) if m_intro else "")).strip(" -–|:")
-        if parsed_name and parsed_name.upper() != "LAAS":
-            dog["name"] = parsed_name.title() if parsed_name.isupper() else parsed_name
+    m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", ph_plain, re.IGNORECASE)
+    m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", ph_plain, re.IGNORECASE)
+    parsed_name = (m_title.group(1) if m_title else (m_intro.group(1) if m_intro else "")).strip(" -–|:")
+    if parsed_name and parsed_name.upper() != "LAAS":
+        dog["name"] = parsed_name.title() if parsed_name.isupper() else parsed_name
 
     m_branch = re.search(r"Los Angeles Animal Services\s*-\s*([A-Za-z ]+?Shelter)\b", ph_plain, re.IGNORECASE)
     if m_branch:
@@ -797,9 +808,14 @@ def enrich_laas_from_petharbor(dog: dict) -> None:
         if m_breed:
             dog["breed"] = clean_space(m_breed.group(1))
 
+    if RESCUE_ONLY_PATTERN.search(ph_plain):
+        dog["needs_type"] = "New Hope Rescue Pull Only"
+
+    return dog.get("name") != before_name
+
 
 def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
-    print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...")
+    print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...", flush=True)
     results = []
     seen_ids = set()
 
@@ -808,7 +824,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
             page.goto(board["url"], wait_until="domcontentloaded", timeout=35000)
             page.wait_for_timeout(3000)
         except Exception as exc:
-            print(f"  {board['label']} error: {exc}")
+            print(f"  {board['label']} error: {exc}", flush=True)
             continue
 
         rows = page.evaluate(
@@ -892,16 +908,12 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
             })
             board_count += 1
 
-        print(f"  {board['label']}: {board_count} dogs")
+        print(f"  {board['label']}: {board_count} dogs", flush=True)
 
-    enriched_count = 0
-    for dog in results:
-        before = dog.get("name")
-        enrich_laas_from_petharbor(dog)
-        if dog.get("name") != before:
-            enriched_count += 1
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        enriched_count = sum(1 for changed in pool.map(enrich_laas_from_petharbor, results) if changed)
 
-    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from official profiles)")
+    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from official profiles)", flush=True)
     return results
 
 
@@ -909,7 +921,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 # 8. SAN JOSE ACS - ARCGIS REST JSON API (Staff-Flagged Rescue Priority Only)
 # ---------------------------------------------------------------------------
 def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
-    print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...")
+    print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...", flush=True)
     api_url = (
         "https://geo.sanjoseca.gov/server/rest/services/DPW/DPW_AnimalCareServices/"
         "MapServer/1/query?where=ANIMALTYPE%3D%27Dog%27&outFields=*&returnGeometry=false&f=json"
@@ -923,7 +935,7 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
         with urllib.request.urlopen(req, timeout=25) as resp:
             data = json.loads(resp.read().decode("utf-8", errors="replace"))
     except Exception as exc:
-        print(f"  San Jose ArcGIS API error: {exc}")
+        print(f"  San Jose ArcGIS API error: {exc}", flush=True)
         return []
 
     features = data.get("features", [])
@@ -1000,7 +1012,7 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"  San Jose ArcGIS strict urgent/priority dogs saved: {len(results)}")
+    print(f"  San Jose ArcGIS strict urgent/priority dogs saved: {len(results)}", flush=True)
     return results
 
 
@@ -1022,7 +1034,7 @@ def normalize_dog_record(dog: dict) -> dict:
 
 
 def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
-    print("Generating static shelter HTML pages and sitemap.xml for SEO...")
+    print("Generating static shelter HTML pages and sitemap.xml for SEO...", flush=True)
     base_url = "https://www.urgentpaws.org"
     today_date = now_iso[:10]
 
@@ -1129,7 +1141,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     .info-box p {{ margin: 0.35rem 0; font-size: 0.95rem; }}
     .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.15rem; margin: 1.25rem 0 2rem; }}
     .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }}
-    .card img {{ width: 100%; height: 240px; object-fit: cover; background: #e2e8f0; }}
+    .card img {{ width: 100%; height: 240px; object-fit: cover; object-position: center 20%; background: #e2e8f0; }}
     .no-photo {{ height: 240px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: var(--muted); font-size: 0.9rem; }}
     .card-body {{ padding: 1rem; display: flex; flex-direction: column; flex: 1; }}
     .badge {{ display: inline-block; align-self: flex-start; background: #fee2e2; color: #991b1b; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px; margin-bottom: 0.5rem; }}
@@ -1210,7 +1222,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     with open("sitemap.xml", "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
-    print(f"  Generated {len(SHELTER_SEO_CONFIG)} static shelter pages + sitemap.xml")
+    print(f"  Generated {len(SHELTER_SEO_CONFIG)} static shelter pages + sitemap.xml", flush=True)
 
 
 def main():
@@ -1362,7 +1374,7 @@ def main():
         f.write("\n")
 
     generate_static_seo_pages(unique_dogs, now_iso)
-    print(f"TOTAL VERIFIED MUNICIPAL URGENT DOGS SAVED: {len(unique_dogs)}")
+    print(f"TOTAL VERIFIED MUNICIPAL URGENT DOGS SAVED: {len(unique_dogs)}", flush=True)
 
 
 if __name__ == "__main__":
