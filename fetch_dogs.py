@@ -960,7 +960,7 @@ def sync_static_page_navs() -> None:
             content = f.read()
 
         updated = re.sub(r">\s*Live Feed\s*<", ">Urgent Dogs<", content)
-        updated = re.sub(r">\s*Blog\s*<", ">How to Help<", updated)
+        updated = re.sub(r">\s*Blog\s*<", ">Guide<", updated)
 
         def fix_header_nav(match: re.Match) -> str:
             nav_html = match.group(0)
@@ -1131,7 +1131,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
   <footer>
     <div class="wrap">
       <p><strong>Browse Other Shelters:</strong> {nav_html}</p>
-      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a> &middot; <a href="/blog">How to Help</a></p>
+      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a> &middot; <a href="/blog">Guide</a></p>
     </div>
   </footer>
 </body>
