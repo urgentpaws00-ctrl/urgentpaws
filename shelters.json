@@ -1,0 +1,212 @@
+[
+  {
+    "slug": "oakland-animal-services",
+    "name": "Oakland Animal Services",
+    "short_name": "Oakland (OAS)",
+    "city": "Oakland",
+    "county": "Alameda",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": true,
+    "portal_type": "rescuegroups",
+    "portal_config": {
+      "org_id": "5970"
+    },
+    "title": "Oakland Animal Services Urgent Dogs & Exit Deadlines | UrgentPaws",
+    "h1": "Oakland Animal Services (OAS) Urgent Dogs",
+    "meta_desc": "Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.",
+    "address": "1101 29th Ave, Oakland, CA 94601",
+    "contact": "Rescue/Transfer: oastransfers@oaklandca.gov | Foster: oasfoster@oaklandca.gov",
+    "intro": "Dogs currently listed on Oakland Animal Services' Rescue Needed and urgent priority boards. Include the dog's Animal ID when emailing OAS for a rescue pull, foster hold, or adoption inquiry."
+  },
+  {
+    "slug": "contra-costa-animal-services",
+    "name": "Contra Costa Animal Services",
+    "short_name": "Contra Costa",
+    "city": "Martinez",
+    "county": "Contra Costa",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": false,
+    "portal_type": "24petconnect",
+    "portal_config": {
+      "boards": [
+        {
+          "url": "https://24petconnect.com/CCASDTransferPreferredPets?at=DOG&sb=days_MaxMin",
+          "shelter_name": "Contra Costa Animal Services - Martinez",
+          "portal_code": "CCST",
+          "require_urgent_flag": false,
+          "default_badge": "Transfer Preferred",
+          "default_urgency": "Transfer Preferred / Rescue Priority"
+        },
+        {
+          "url": "https://24petconnect.com/CCASDAvailablePets?at=Dog&sb=days_MaxMin",
+          "shelter_name": "Contra Costa Animal Services - Martinez (Urgent)",
+          "portal_code": "CCST",
+          "require_urgent_flag": true,
+          "default_badge": "Urgent / At Risk",
+          "default_urgency": "Urgent Shelter Dog"
+        }
+      ]
+    },
+    "title": "Contra Costa Animal Services Urgent & Transfer Preferred Dogs | UrgentPaws",
+    "h1": "Contra Costa County Animal Services Urgent Dogs",
+    "meta_desc": "Live tracker for urgent and Transfer Preferred dogs at Contra Costa Animal Services in Martinez, CA. Updated every 3 hours with Animal IDs and shelter links.",
+    "address": "4800 Imhoff Pl, Martinez, CA 94553",
+    "contact": "Rescue/Transfer: asdrescue@asd.cccounty.us | Phone: (925) 608-8400",
+    "intro": "At-risk and Transfer Preferred dogs at Contra Costa County Animal Services (CCASD) in Martinez needing 501(c)(3) rescue placement, foster homes, or immediate adoption."
+  },
+  {
+    "slug": "san-jose-animal-care",
+    "name": "San Jose Animal Care Center",
+    "short_name": "San Jose",
+    "city": "San Jose",
+    "county": "Santa Clara",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": true,
+    "portal_type": "sanjose_arcgis",
+    "portal_config": {},
+    "title": "San Jose Animal Care Center Urgent & Rescue Priority Dogs | UrgentPaws",
+    "h1": "San Jose Animal Care Center (SJACS) Urgent Dogs",
+    "meta_desc": "Live feed of staff-flagged Rescue Priority and Foster Priority dogs at San Jose Animal Care Center. Updated every 3 hours with kennel numbers and Animal IDs.",
+    "address": "2750 Monterey Rd, San Jose, CA 95111",
+    "contact": "Rescue/Transfer: SJACSRescue@sanjoseca.gov | Phone: (408) 794-7297",
+    "intro": "Dogs flagged by San Jose Animal Care & Services staff for urgent rescue transfer or foster placement. Reference the Animal ID and kennel number when contacting SJACS."
+  },
+  {
+    "slug": "stanislaus-animal-services",
+    "name": "Stanislaus Animal Services",
+    "short_name": "Stanislaus",
+    "city": "Modesto",
+    "county": "Stanislaus",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": true,
+    "portal_type": "stanislaus",
+    "portal_config": {
+      "url": "https://www.stanislausanimalservices.com/atrisk/adopt-dogs.shtm?color=red&sort=orderByIntakeDate"
+    },
+    "title": "Stanislaus Animal Services RED List & Final Call Dogs | UrgentPaws",
+    "h1": "Stanislaus Animal Services (Modesto) RED & Final Call Dogs",
+    "meta_desc": "Live list of RED status and Final Call dogs at Stanislaus Animal Services in Modesto, CA. Updated every 3 hours with Tuesday/Wednesday exit deadlines and IDs.",
+    "address": "3647 Cornucopia Way, Modesto, CA 95358",
+    "contact": "Rescue/Transfer: rescue@stancounty.com | Phone: (209) 558-7387",
+    "intro": "Kennel dogs currently on Stanislaus Animal Services' RED at-risk list and Final Call deadlines in Modesto. Final Call dogs generally require rescue or adopter commitment by Tuesday COB / Wednesday 6:30 AM."
+  },
+  {
+    "slug": "la-animal-services",
+    "name": "LA Animal Services",
+    "short_name": "LA Animal Services",
+    "city": "Los Angeles",
+    "county": "Los Angeles",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": false,
+    "portal_type": "laas_petharbor",
+    "portal_config": {},
+    "title": "LA Animal Services Euthanasia & Urgent Alert Dogs | UrgentPaws",
+    "h1": "LA Animal Services (LAAS) Urgent & Medical Alert Dogs",
+    "meta_desc": "Live tracker across all 6 LA Animal Services shelters (East Valley, West Valley, West LA, South LA, Harbor, North Central) for Euthanasia, Urgent, Orange, and Blue alerts.",
+    "address": "6 City Shelters across Los Angeles, CA (East Valley, West Valley, West LA, South LA, Harbor, North Central)",
+    "contact": "New Hope Rescue Program: ani.newhope@lacity.org | Phone: (888) 452-7381",
+    "intro": "Active dogs on LA Animal Services' New Hope Euthanasia Alert, Urgent Needs, Orange Medical, and Blue Severe Medical boards across all six Los Angeles municipal shelters."
+  },
+  {
+    "slug": "kern-county-animal-services",
+    "name": "Kern County Animal Services",
+    "short_name": "Kern County",
+    "city": "Bakersfield",
+    "county": "Kern",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": false,
+    "portal_type": "24petconnect",
+    "portal_config": {
+      "boards": [
+        {
+          "url": "https://24petconnect.com/KernCountyRescue?at=DOG",
+          "shelter_name": "Kern County Animal Services (Greatest Risk)",
+          "portal_code": "KernCountyRescue",
+          "require_urgent_flag": false,
+          "default_badge": "Animals at Greatest Risk",
+          "default_urgency": "Immediate Rescue Commitment Needed"
+        }
+      ]
+    },
+    "title": "Kern County Animal Services Dogs at Greatest Risk | UrgentPaws",
+    "h1": "Kern County Animal Services (Bakersfield) Greatest Risk Dogs",
+    "meta_desc": "Live tracker for dogs at greatest risk of euthanasia at Kern County Animal Services in Bakersfield, CA. Updated every 3 hours with Animal IDs and rescue notes.",
+    "address": "3951 Fruitvale Ave, Bakersfield, CA 93308",
+    "contact": "Rescue/Transfer: rescue@kerncounty.com | Phone: (661) 868-7100",
+    "intro": "Dogs currently listed on Kern County Animal Services' Animals at Greatest Risk board needing immediate 501(c)(3) rescue commitment, foster placement, or adoption."
+  },
+  {
+    "slug": "devore-animal-shelter",
+    "name": "Devore Animal Shelter",
+    "short_name": "Devore",
+    "city": "San Bernardino",
+    "county": "San Bernardino",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": false,
+    "portal_type": "24petconnect",
+    "portal_config": {
+      "boards": [
+        {
+          "url": "https://animalcare.sbcounty.gov/pets/",
+          "shelter_name": "San Bernardino County - Devore Shelter",
+          "portal_code": "SBCO1",
+          "require_urgent_flag": true,
+          "default_badge": "URGENT (Devore)",
+          "default_urgency": "Urgent / Rescue Only"
+        }
+      ]
+    },
+    "title": "Devore Animal Shelter Urgent & Rescue Only Dogs | UrgentPaws",
+    "h1": "San Bernardino County - Devore Animal Shelter Urgent Dogs",
+    "meta_desc": "Live tracker for urgent and Rescue Only dogs at Devore Animal Shelter in San Bernardino County, CA. Updated every 3 hours with behavioral and medical flags.",
+    "address": "19777 Shelter Way, San Bernardino, CA 92407",
+    "contact": "Rescue/Transfer: sbrescue@dph.sbcounty.gov | Phone: (909) 386-9820",
+    "intro": "Urgent and Rescue Only dogs at San Bernardino County's Devore Animal Shelter requiring immediate rescue transfer, foster commitment, or adoption."
+  },
+  {
+    "slug": "riverside-county-animal-services",
+    "name": "Riverside County Animal Services",
+    "short_name": "Riverside",
+    "city": "Jurupa Valley",
+    "county": "Riverside",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": false,
+    "portal_type": "24petconnect",
+    "portal_config": {
+      "boards": [
+        {
+          "url": "https://24petconnect.com/RVSDRescue?at=DOG",
+          "shelter_name": "Riverside County Animal Services (Rescue Only)",
+          "portal_code": "RVSDRescue",
+          "require_urgent_flag": false,
+          "inspect_details_for_deadline": true,
+          "default_badge": "48-Hr Rescue Only",
+          "default_urgency": "Rescue Only / At Risk"
+        },
+        {
+          "url": "https://24petconnect.com/RVSDPublic?at=DOG",
+          "shelter_name": "Riverside County Animal Services (Red List)",
+          "portal_code": "RVSDPublic",
+          "require_urgent_flag": false,
+          "inspect_details_for_deadline": true,
+          "default_badge": "72-Hr Red List",
+          "default_urgency": "Red List / Exit Deadline"
+        }
+      ]
+    },
+    "title": "Riverside County Animal Services Red List & Urgent Dogs | UrgentPaws",
+    "h1": "Riverside County Animal Services (Jurupa Valley) Urgent Dogs",
+    "meta_desc": "Live tracker for 48-hour Rescue Only and 72-hour Red List dogs at Riverside County Department of Animal Services in Jurupa Valley, CA.",
+    "address": "6851 Van Buren Blvd, Jurupa Valley, CA 92509",
+    "contact": "Rescue/Transfer: transfer@rivco.org | Phone: (951) 358-7387",
+    "intro": "At-risk dogs at Riverside County Department of Animal Services (RCDAS) flagged with exit deadlines, medical urgency, or Rescue Only status."
+  }
+]
