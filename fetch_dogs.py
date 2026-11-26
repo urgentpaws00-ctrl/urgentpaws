@@ -338,7 +338,7 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Proxy + Shelterluv)
+# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Google Translate Proxy)
 # ---------------------------------------------------------------------------
 def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) -> dict | None:
     if NON_DOG_PATTERN.search(txt):
@@ -451,106 +451,43 @@ def extract_oas_cards_from_page(page) -> list[dict]:
     return raw_cards
 
 
-def fetch_oas_via_proxy_and_embed(page, target_url: str, now_iso: str) -> list[dict]:
-    print("  OAS direct request blocked (403); checking public relays for Shelterluv embed...", flush=True)
-    encoded = urllib.parse.quote(target_url, safe="")
-    proxy_candidates = [
-        f"https://api.codetabs.com/v1/proxy?quest={encoded}",
-        f"https://corsproxy.io/?{encoded}",
-        f"https://api.allorigins.win/raw?url={encoded}",
-        f"https://r.jina.ai/{target_url}",
-    ]
-
-    fetched_blobs = []
-    for p_url in proxy_candidates:
-        host = p_url.split("/")[2]
-        try:
-            req = urllib.request.Request(p_url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                body = resp.read().decode("utf-8", errors="replace")
-                if body and "403 ERROR" not in body[:400]:
-                    print(f"  OAS relay succeeded via {host} ({len(body)} chars)", flush=True)
-                    fetched_blobs.append(body)
-        except Exception as exc:
-            print(f"  OAS relay failed ({host}): {exc}", flush=True)
-
-    for blob in fetched_blobs:
-        iframe_match = re.search(
-            r"""https?://(?:www\.|new\.)?shelterluv\.com/[^"'\s<>\\]+""",
-            blob,
-            re.IGNORECASE,
-        )
-        if iframe_match:
-            embed_url = iframe_match.group(0).replace("&amp;", "&").replace("\\/", "/")
-            print(f"  Found OAS Shelterluv embed URL: {embed_url}", flush=True)
-            try:
-                page.goto(embed_url, wait_until="networkidle", timeout=35000)
-                page.wait_for_timeout(3500)
-                raw_cards = extract_oas_cards_from_page(page)
-                if raw_cards:
-                    results = [
-                        d for c in raw_cards
-                        if (d := parse_oas_card(c["href"], c["text"], c.get("img") or "", c.get("heading") or "", now_iso))
-                    ]
-                    print(f"  OAS Shelterluv embed dogs saved: {len(results)}", flush=True)
-                    return results
-            except Exception as exc:
-                print(f"  OAS Shelterluv embed load error: {exc}", flush=True)
-
-    results = []
-    seen_hrefs = set()
-    for blob in fetched_blobs:
-        for m in re.finditer(r"https?://[^\s\"'<>)]+animalId=\d+[^\s\"'<>)]*", blob, re.IGNORECASE):
-            href = m.group(0).replace("&amp;", "&").strip()
-            if href in seen_hrefs:
-                continue
-            seen_hrefs.add(href)
-            chunk = blob[max(0, m.start() - 500):min(len(blob), m.end() + 250)]
-            img_m = re.search(r"https?://[^\s\"'<>)]+\.(?:jpg|jpeg|png|webp)", chunk, re.IGNORECASE)
-            img = img_m.group(0) if img_m else ""
-            plain = clean_space(re.sub(r"<[^>]+>", " ", chunk))
-            dog = parse_oas_card(href, plain, img, "", now_iso)
-            if dog:
-                results.append(dog)
-
-    if not results:
-        sample = clean_space(fetched_blobs[0])[:220] if fetched_blobs else "all relays blocked by CloudFront"
-        print(f"  OAS diagnostic -> {sample}", flush=True)
-    else:
-        print(f"  OAS proxy dogs saved: {len(results)}", flush=True)
-
-    return results
-
-
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
-    url = "https://www.oaklandanimalservices.org/rescue-needed/"
+    direct_url = "https://www.oaklandanimalservices.org/rescue-needed/"
+    proxy_url = "https://www-oaklandanimalservices-org.translate.goog/rescue-needed/?_x_tr_sl=es&_x_tr_tl=en&_x_tr_hl=en"
     print("[2/8] Scraping Oakland Animal Services /rescue-needed/...", flush=True)
 
-    try:
-        resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
-        status = resp.status if resp else None
-        if status == 403:
-            return fetch_oas_via_proxy_and_embed(page, url, now_iso)
+    for target in (direct_url, proxy_url):
+        host = target.split("/")[2]
         try:
-            page.wait_for_selector("a[href*='animalId=']", timeout=10000)
-        except Exception:
-            page.wait_for_timeout(3000)
-    except Exception as exc:
-        print(f"  OAS direct load error: {exc}", flush=True)
-        return fetch_oas_via_proxy_and_embed(page, url, now_iso)
+            resp = page.goto(target, wait_until="domcontentloaded", timeout=35000)
+            if resp and resp.status == 403:
+                print(f"  OAS blocked (403) on {host}; trying next endpoint...", flush=True)
+                continue
+            try:
+                page.wait_for_selector("a[href*='animalId=']", timeout=10000)
+            except Exception:
+                page.wait_for_timeout(3000)
 
-    raw_cards = extract_oas_cards_from_page(page)
-    if not raw_cards:
-        return fetch_oas_via_proxy_and_embed(page, url, now_iso)
+            raw_cards = extract_oas_cards_from_page(page)
+            if raw_cards:
+                results = []
+                for c in raw_cards:
+                    id_m = re.search(r"animalId=(\d+)", c["href"], re.IGNORECASE)
+                    clean_href = (
+                        f"https://www.oaklandanimalservices.org/rescue-needed/animal/?animalId={id_m.group(1)}"
+                        if id_m
+                        else direct_url
+                    )
+                    dog = parse_oas_card(clean_href, c["text"], c.get("img") or "", c.get("heading") or "", now_iso)
+                    if dog:
+                        results.append(dog)
+                print(f"  OAS /rescue-needed/ dogs saved via {host}: {len(results)}", flush=True)
+                return results
+        except Exception as exc:
+            print(f"  OAS attempt failed ({host}): {exc}", flush=True)
 
-    results = []
-    for c in raw_cards:
-        dog = parse_oas_card(c["href"], c["text"], c.get("img") or "", c.get("heading") or "", now_iso)
-        if dog:
-            results.append(dog)
-
-    print(f"  OAS /rescue-needed/ dogs saved: {len(results)}", flush=True)
-    return results
+    print("  OAS blocked on all endpoints; preserving previous OAS records.", flush=True)
+    return []
 
 
 # ---------------------------------------------------------------------------
