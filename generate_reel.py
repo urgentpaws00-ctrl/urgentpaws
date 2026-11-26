@@ -233,11 +233,15 @@ def build_single_dog_html(dog: dict) -> str:
         if x
     )
 
-    img_html = (
-        f'<img src="{html.escape(photo)}" alt="{html.escape(display_name)}" />'
-        if photo
-        else '<div class="placeholder">Photo on Official Shelter Listing</div>'
-    )
+    if photo:
+        escaped_photo = html.escape(photo)
+        escaped_name = html.escape(display_name)
+        img_html = (
+            f'<img class="bg-blur" src="{escaped_photo}" alt="" />'
+            f'<div class="fg-frame"><img class="fg-dog" src="{escaped_photo}" alt="{escaped_name}" /></div>'
+        )
+    else:
+        img_html = '<div class="placeholder">Photo on Official Shelter Listing</div>'
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -264,28 +268,51 @@ def build_single_dog_html(dog: dict) -> str:
     }}
     .photo-box {{
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 0;
       width: 1080px;
-      height: 1340px;
+      height: 1380px;
       overflow: hidden;
-      background: #1e293b;
+      background: #0f172a;
     }}
-    /* 3-cut visual pattern interrupt over 8.5s:
-       0-2.8s tight face crop -> 2.8-5.6s full portrait -> 5.6-8.5s medium zoom */
-    .photo-box img {{
+    .photo-box img.bg-blur {{
+      position: absolute;
+      inset: -40px;
+      width: calc(100% + 80px);
+      height: calc(100% + 80px);
+      object-fit: cover;
+      filter: blur(28px) brightness(0.45) saturate(0.9);
+      transform: scale(1.1);
+    }}
+    .fg-frame {{
+      position: absolute;
+      top: 190px;
+      left: 0;
+      width: 1080px;
+      height: 1060px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }}
+    /* 3-cut visual pattern interrupt over 8.5s without cropping off ears/head:
+       0-2.8s full hero portrait -> 2.8-5.6s closer face focus -> 5.6-8.5s steady medium zoom */
+    .photo-box img.fg-dog {{
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      object-position: center 20%;
+      object-fit: contain;
+      object-position: center center;
+      transform-origin: center 28%;
+      filter: brightness(1.08) contrast(1.07) saturate(1.1) drop-shadow(0 16px 36px rgba(0,0,0,0.65));
       animation: multiCutMotion 8.5s linear forwards;
     }}
     @keyframes multiCutMotion {{
-      0%    {{ transform: scale(1.18) translateY(2%); }}
-      32.9% {{ transform: scale(1.22) translateY(2%); }}
-      33.0% {{ transform: scale(1.00) translateY(0%); }}
-      65.9% {{ transform: scale(1.04) translateY(0%); }}
-      66.0% {{ transform: scale(1.10) translateY(-1%); }}
-      100%  {{ transform: scale(1.14) translateY(-1%); }}
+      0%    {{ transform: scale(1.00); }}
+      32.9% {{ transform: scale(1.05); }}
+      33.0% {{ transform: scale(1.09); }}
+      65.9% {{ transform: scale(1.12); }}
+      66.0% {{ transform: scale(1.03); }}
+      100%  {{ transform: scale(1.06); }}
     }}
     .placeholder {{
       width: 100%;
@@ -300,8 +327,8 @@ def build_single_dog_html(dog: dict) -> str:
     .top-gradient {{
       position: relative;
       z-index: 10;
-      background: linear-gradient(180deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.42) 70%, rgba(15,23,42,0) 100%);
-      padding: 155px 48px 60px;
+      background: linear-gradient(180deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.35) 75%, rgba(15,23,42,0) 100%);
+      padding: 120px 48px 40px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -309,11 +336,11 @@ def build_single_dog_html(dog: dict) -> str:
     .urgent-pill {{
       background: #dc2626;
       color: #ffffff;
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 900;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      padding: 14px 28px;
+      padding: 13px 26px;
       border-radius: 999px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.45);
     }}
@@ -321,17 +348,17 @@ def build_single_dog_html(dog: dict) -> str:
       background: rgba(15, 23, 42, 0.78);
       border: 2px solid rgba(255,255,255,0.25);
       color: #f8fafc;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      padding: 12px 24px;
+      padding: 11px 22px;
       border-radius: 999px;
     }}
     .bottom-card {{
       position: relative;
       z-index: 10;
       margin-top: auto;
-      background: linear-gradient(180deg, rgba(15,23,42,0) 0%, #0f172a 14%, #0f172a 100%);
-      padding: 95px 52px 175px;
+      background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,0.94) 11%, #0f172a 18%, #0f172a 100%);
+      padding: 58px 52px 155px;
     }}
     .name-row {{
       display: flex;
@@ -340,68 +367,68 @@ def build_single_dog_html(dog: dict) -> str:
       gap: 20px;
     }}
     .name-row h1 {{
-      font-size: 68px;
+      font-size: 64px;
       font-weight: 900;
-      line-height: 1.08;
+      line-height: 1.06;
       letter-spacing: -0.02em;
       color: #ffffff;
     }}
     .aid {{
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 800;
       color: #94a3b8;
       flex-shrink: 0;
     }}
     .shelter {{
-      margin-top: 14px;
-      font-size: 36px;
+      margin-top: 10px;
+      font-size: 34px;
       font-weight: 700;
       color: #f8fafc;
     }}
     .meta {{
-      margin-top: 12px;
-      font-size: 32px;
+      margin-top: 8px;
+      font-size: 30px;
       color: #cbd5e1;
       font-weight: 500;
     }}
     .needs-box {{
-      margin-top: 26px;
+      margin-top: 18px;
       display: inline-block;
       background: rgba(220, 38, 38, 0.22);
       border: 2px solid #ef4444;
       color: #fecaca;
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 800;
-      padding: 12px 24px;
-      border-radius: 16px;
+      padding: 10px 22px;
+      border-radius: 14px;
     }}
     .note {{
-      margin-top: 18px;
-      font-size: 29px;
+      margin-top: 14px;
+      font-size: 27px;
       color: #e2e8f0;
-      line-height: 1.4;
+      line-height: 1.35;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }}
     .cta-bar {{
-      margin-top: 34px;
+      margin-top: 24px;
       background: #dc2626;
       color: #ffffff;
-      border-radius: 22px;
-      padding: 24px 32px;
+      border-radius: 20px;
+      padding: 20px 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
     }}
     .cta-bar span {{
-      font-size: 30px;
+      font-size: 28px;
       font-weight: 700;
     }}
     .cta-bar strong {{
-      font-size: 36px;
+      font-size: 34px;
       font-weight: 900;
     }}
   </style>
@@ -501,6 +528,7 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
                 "ffmpeg", "-y",
                 "-i", raw_video,
                 "-stream_loop", "-1", "-i", "audio.mp3",
+                "-vf", "unsharp=5:5:0.75:5:5:0.0",
                 "-shortest",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
                 "-c:a", "aac", "-b:a", "128k",
@@ -512,6 +540,7 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
                 "ffmpeg", "-y",
                 "-i", raw_video,
                 "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+                "-vf", "unsharp=5:5:0.75:5:5:0.0",
                 "-shortest",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
                 "-c:a", "aac", "-b:a", "128k",
