@@ -31,7 +31,7 @@
           <nav aria-label="Primary navigation" class="flex items-center gap-3 text-xs font-semibold text-neutral-700">
             <a href="about-urgent-paws" class="hover:text-neutral-950">About</a>
             <a href="for-shelters" class="hover:text-neutral-950">For Shelters</a>
-            <a href="blog" class="hover:text-neutral-950">Blog</a>
+            <a href="blog" class="hover:text-neutral-950">How to Help</a>
             <a href="contact-us" class="hover:text-neutral-950">Contact</a>
           </nav>
           <span id="lastChecked" class="shrink-0 text-xs font-medium text-neutral-600 bg-neutral-100 px-2.5 py-1 rounded-full">
@@ -40,19 +40,19 @@
         </div>
       </div>
 
-      <!-- Quick Role Pills (wraps cleanly on mobile without clipping) -->
+      <!-- Quick Role Pills -->
       <div class="flex flex-wrap gap-1.5 pt-3 pb-1" role="group" aria-label="Filter by action">
         <button type="button" data-role="ALL" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-900 text-white">
           All Urgent
         </button>
-        <button type="button" data-role="Foster" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+        <button type="button" data-role="RESCUE_ONLY" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+          Rescue Only
+        </button>
+        <button type="button" data-role="FOSTER" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
           Foster Needed
         </button>
-        <button type="button" data-role="Adopt" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+        <button type="button" data-role="ADOPT" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
           Adoptable
-        </button>
-        <button type="button" data-role="Rescue" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
-          Rescue Pull
         </button>
       </div>
 
@@ -73,9 +73,10 @@
         <select id="urgencyFilter" aria-label="Filter by urgency" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
           <option value="ALL">All Urgency Types</option>
           <option value="deadline">Urgent / Deadline Only</option>
-          <option value="capacity">Space / Capacity / High-Risk</option>
+          <option value="behavior">Behavior / Kennel Stress</option>
           <option value="medical">Medical Alert</option>
-          <option value="rescue">Behavior / Rescue Only</option>
+          <option value="capacity">Space / Capacity / High-Risk</option>
+          <option value="rescue">Rescue Pull Only</option>
         </select>
       </div>
     </div>
@@ -83,16 +84,16 @@
 
   <main class="max-w-4xl mx-auto px-4 py-5 flex-1 w-full">
     <nav aria-label="California Shelter Urgent Lists" class="mb-4">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
+      <div id="shelterPills" class="flex items-center gap-1.5 overflow-x-auto pb-1.5">
         <span class="text-xs font-semibold text-neutral-500 shrink-0 mr-1">Shelters:</span>
-        <a href="oakland-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Oakland (OAS)</a>
-        <a href="contra-costa-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Contra Costa</a>
-        <a href="san-jose-animal-care" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">San Jose</a>
-        <a href="stanislaus-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Stanislaus</a>
-        <a href="la-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">LA Animal Services</a>
-        <a href="kern-county-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Kern County</a>
-        <a href="devore-animal-shelter" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Devore</a>
-        <a href="riverside-county-animal-services" class="shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Riverside</a>
+        <a href="oakland-animal-services" data-shelter-match="Oakland" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Oakland (OAS)</a>
+        <a href="contra-costa-animal-services" data-shelter-match="Contra Costa" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Contra Costa</a>
+        <a href="san-jose-animal-care" data-shelter-match="San Jose" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">San Jose</a>
+        <a href="stanislaus-animal-services" data-shelter-match="Stanislaus" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Stanislaus</a>
+        <a href="la-animal-services" data-shelter-match="LA Animal Services" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">LA Animal Services</a>
+        <a href="kern-county-animal-services" data-shelter-match="Kern" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Kern County</a>
+        <a href="devore-animal-shelter" data-shelter-match="Devore" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Devore</a>
+        <a href="riverside-county-animal-services" data-shelter-match="Riverside" class="shelter-pill shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition">Riverside</a>
       </div>
     </nav>
 
@@ -135,7 +136,7 @@
           <a href="./" class="hover:text-neutral-900">Home</a>
           <a href="about-urgent-paws" class="hover:text-neutral-900">About</a>
           <a href="for-shelters" class="hover:text-neutral-900">For Shelters</a>
-          <a href="blog" class="hover:text-neutral-900">Blog</a>
+          <a href="blog" class="hover:text-neutral-900">How to Help</a>
           <a href="contact-us" class="hover:text-neutral-900">Contact Us</a>
         </div>
       </div>
@@ -145,6 +146,7 @@
   <script>
     let allDogs = [];
     let selectedRole = 'ALL';
+    let selectedShelter = '';
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -179,23 +181,63 @@
       return `Updated ${days}d ago`;
     }
 
+    function isRescueOnlyDog(dog) {
+      const needs = (dog.needs_type || '').toLowerCase();
+      const blob = `${needs} ${dog.urgency_type || ''} ${dog.deadline_or_urgency || ''}`.toLowerCase();
+      return needs.includes('rescue pull only') || /\brescue\s*only\b/.test(blob);
+    }
+
+    function matchesRole(dog, role) {
+      if (!role || role === 'ALL') return true;
+      const needs = (dog.needs_type || '').toLowerCase();
+      const rescueOnly = isRescueOnlyDog(dog);
+
+      if (role === 'RESCUE_ONLY') {
+        return rescueOnly;
+      }
+      if (role === 'FOSTER') {
+        if (rescueOnly) return false;
+        const fosterBlob = `${needs} ${dog.urgency_type || ''} ${dog.deadline_or_urgency || ''}`.toLowerCase();
+        return /\bfoster\b/.test(fosterBlob);
+      }
+      if (role === 'ADOPT') {
+        if (rescueOnly) return false;
+        return /\badopt\b/.test(needs);
+      }
+      return true;
+    }
+
     function matchesUrgency(dog, filterVal) {
       if (!filterVal || filterVal === 'ALL') return true;
-      const blob = `${dog.deadline_or_urgency || ''} ${dog.urgency_type || ''} ${dog.needs_type || ''} ${dog.transport_note || ''}`.toLowerCase();
+      const blob = `${dog.deadline_or_urgency || ''} ${dog.urgency_type || ''} ${dog.transport_note || ''}`.toLowerCase();
 
       if (filterVal === 'deadline') {
         return /euthanasia|final call|deadline|out of time|needs rescue final|red list/.test(blob);
       }
-      if (filterVal === 'capacity') {
-        return /space|capacity|greatest risk|red status|u-los|long-stay/.test(blob);
+      if (filterVal === 'behavior') {
+        return /\b(u-behavior|behavior|behaviour|fearful|reactive|barrier|kennel stress|escalating stress|handling|selective|guarding)\b/.test(blob);
       }
       if (filterVal === 'medical') {
-        return /medical|orange|blue|parvo|injured|hospice|uri/.test(blob);
+        return /\b(medical|orange|blue|parvo|injured|hospice|uri|u-medical)\b/.test(blob);
+      }
+      if (filterVal === 'capacity') {
+        return /\b(space|capacity|greatest risk|red status|u-los|long-stay)\b/.test(blob);
       }
       if (filterVal === 'rescue') {
-        return /rescue only|u-behavior|transfer|urgent needs|new hope|priority|needs rescue/.test(blob);
+        return isRescueOnlyDog(dog);
       }
       return blob.includes(filterVal.toLowerCase());
+    }
+
+    function syncShelterPillStyles() {
+      document.querySelectorAll('.shelter-pill').forEach(el => {
+        const active = selectedShelter && el.dataset.shelterMatch === selectedShelter;
+        el.className = `shelter-pill shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+          active
+            ? 'border-neutral-900 bg-neutral-900 text-white'
+            : 'border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900'
+        }`;
+      });
     }
 
     async function copyAnimalId(btn, idText) {
@@ -287,7 +329,6 @@
         countySelect.appendChild(opt);
       });
 
-      // Pre-fill search if someone opened a ?dog=<id> shared link
       const sharedDogParam = new URLSearchParams(window.location.search).get('dog');
       if (sharedDogParam) {
         const target = allDogs.find(d => d.id === sharedDogParam);
@@ -303,11 +344,21 @@
       const query = document.getElementById('searchInput').value.trim().toLowerCase();
       const county = document.getElementById('countyFilter').value;
       const urgency = document.getElementById('urgencyFilter').value;
+      const todayIsoLocal = new Date().toLocaleDateString('en-CA');
 
       const filtered = allDogs.filter(d => {
-        const matchesRole =
-          selectedRole === 'ALL' ||
-          (d.needs_type || '').toLowerCase().includes(selectedRole.toLowerCase());
+        const deadlineMatch = `${d.deadline_or_urgency || ''} ${d.urgency_type || ''}`.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/);
+        if (deadlineMatch) {
+          const yr = deadlineMatch[3].length === 2 ? `20${deadlineMatch[3]}` : deadlineMatch[3];
+          const dlIso = `${yr}-${deadlineMatch[1].padStart(2, '0')}-${deadlineMatch[2].padStart(2, '0')}`;
+          if (dlIso < todayIsoLocal) return false;
+        }
+
+        const isRoleMatch = matchesRole(d, selectedRole);
+
+        const matchesShelter =
+          !selectedShelter ||
+          `${d.shelter || ''} ${d.county || ''}`.toLowerCase().includes(selectedShelter.toLowerCase());
 
         const matchesCounty = county === 'ALL' || d.county === county;
         const isUrgencyMatch = matchesUrgency(d, urgency);
@@ -315,11 +366,12 @@
         const searchBlob = `${d.animal_id || ''} ${d.name || ''} ${d.breed || ''} ${d.shelter || ''} ${d.city || ''} ${d.county || ''}`.toLowerCase();
         const matchesQuery = !query || searchBlob.includes(query);
 
-        return matchesRole && matchesCounty && isUrgencyMatch && matchesQuery;
+        return isRoleMatch && matchesShelter && matchesCounty && isUrgencyMatch && matchesQuery;
       });
 
+      const scopeSuffix = selectedShelter ? ` · ${selectedShelter}` : '';
       document.getElementById('countLabel').textContent =
-        `${filtered.length} ${filtered.length === 1 ? 'dog' : 'dogs'} shown`;
+        `${filtered.length} ${filtered.length === 1 ? 'dog' : 'dogs'} shown${scopeSuffix}`;
 
       const grid = document.getElementById('dogGrid');
       if (!filtered.length) {
@@ -420,11 +472,24 @@
       });
     });
 
+    document.querySelectorAll('.shelter-pill').forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+        e.preventDefault();
+        const target = link.dataset.shelterMatch || '';
+        selectedShelter = (selectedShelter === target) ? '' : target;
+        syncShelterPillStyles();
+        render();
+      });
+    });
+
     document.getElementById('searchInput').addEventListener('input', render);
     document.getElementById('countyFilter').addEventListener('change', render);
     document.getElementById('urgencyFilter').addEventListener('change', render);
     document.getElementById('resetBtn').addEventListener('click', () => {
       selectedRole = 'ALL';
+      selectedShelter = '';
+      syncShelterPillStyles();
       document.querySelectorAll('.role-pill').forEach((b, i) => {
         b.className = `role-pill px-3 py-1.5 rounded-full text-xs font-semibold ${
           i === 0 ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
