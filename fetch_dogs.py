@@ -3,6 +3,7 @@ import html
 import json
 import os
 import re
+import sys
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -1164,8 +1165,12 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
 
 def main():
     now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    only_oas = "--only-oas" in sys.argv
     previous_dogs = load_previous_dogs()
     all_dogs = []
+
+    if only_oas:
+        print("Running in --only-oas mode (preserving all other 7 counties from dogs.json)...", flush=True)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -1173,107 +1178,111 @@ def main():
         context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         page = context.new_page()
 
-        all_dogs.extend(scrape_stanislaus_red(page, now_iso))
-        all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[3/8]",
-                url="https://24petconnect.com/KernCountyRescue?at=DOG",
-                shelter_name="Kern County Animal Services (Greatest Risk)",
-                city="Bakersfield",
-                county="Kern",
-                portal_code="KernCountyRescue",
-                require_urgent_flag=False,
-                default_badge="Animals at Greatest Risk",
-                default_urgency="Immediate Rescue Commitment Needed",
+        if only_oas:
+            all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
+        else:
+            all_dogs.extend(scrape_stanislaus_red(page, now_iso))
+            all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[3/8]",
+                    url="https://24petconnect.com/KernCountyRescue?at=DOG",
+                    shelter_name="Kern County Animal Services (Greatest Risk)",
+                    city="Bakersfield",
+                    county="Kern",
+                    portal_code="KernCountyRescue",
+                    require_urgent_flag=False,
+                    default_badge="Animals at Greatest Risk",
+                    default_urgency="Immediate Rescue Commitment Needed",
+                )
             )
-        )
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[4/8]",
-                url="https://24petconnect.com/CCASDTransferPreferredPets?at=DOG&sb=days_MaxMin",
-                shelter_name="Contra Costa Animal Services - Martinez",
-                city="Martinez",
-                county="Contra Costa",
-                portal_code="CCST",
-                require_urgent_flag=False,
-                default_badge="Transfer Preferred",
-                default_urgency="Transfer Preferred / Rescue Priority",
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[4/8]",
+                    url="https://24petconnect.com/CCASDTransferPreferredPets?at=DOG&sb=days_MaxMin",
+                    shelter_name="Contra Costa Animal Services - Martinez",
+                    city="Martinez",
+                    county="Contra Costa",
+                    portal_code="CCST",
+                    require_urgent_flag=False,
+                    default_badge="Transfer Preferred",
+                    default_urgency="Transfer Preferred / Rescue Priority",
+                )
             )
-        )
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[4b/8]",
-                url="https://24petconnect.com/CCASDAvailablePets?at=Dog&sb=days_MaxMin",
-                shelter_name="Contra Costa Animal Services - Martinez (Urgent)",
-                city="Martinez",
-                county="Contra Costa",
-                portal_code="CCST",
-                require_urgent_flag=True,
-                default_badge="Urgent / At Risk",
-                default_urgency="Urgent Shelter Dog",
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[4b/8]",
+                    url="https://24petconnect.com/CCASDAvailablePets?at=Dog&sb=days_MaxMin",
+                    shelter_name="Contra Costa Animal Services - Martinez (Urgent)",
+                    city="Martinez",
+                    county="Contra Costa",
+                    portal_code="CCST",
+                    require_urgent_flag=True,
+                    default_badge="Urgent / At Risk",
+                    default_urgency="Urgent Shelter Dog",
+                )
             )
-        )
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[5/8]",
-                url="https://animalcare.sbcounty.gov/pets/",
-                shelter_name="San Bernardino County - Devore Shelter",
-                city="San Bernardino",
-                county="San Bernardino",
-                portal_code="SBCO1",
-                require_urgent_flag=True,
-                default_badge="URGENT (Devore)",
-                default_urgency="Urgent / Rescue Only",
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[5/8]",
+                    url="https://animalcare.sbcounty.gov/pets/",
+                    shelter_name="San Bernardino County - Devore Shelter",
+                    city="San Bernardino",
+                    county="San Bernardino",
+                    portal_code="SBCO1",
+                    require_urgent_flag=True,
+                    default_badge="URGENT (Devore)",
+                    default_urgency="Urgent / Rescue Only",
+                )
             )
-        )
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[6/8]",
-                url="https://24petconnect.com/RVSDRescue?at=DOG",
-                shelter_name="Riverside County Animal Services (Rescue Only)",
-                city="Jurupa Valley",
-                county="Riverside",
-                portal_code="RVSDRescue",
-                require_urgent_flag=False,
-                inspect_details_for_deadline=True,
-                default_badge="48-Hr Rescue Only",
-                default_urgency="Rescue Only / At Risk",
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[6/8]",
+                    url="https://24petconnect.com/RVSDRescue?at=DOG",
+                    shelter_name="Riverside County Animal Services (Rescue Only)",
+                    city="Jurupa Valley",
+                    county="Riverside",
+                    portal_code="RVSDRescue",
+                    require_urgent_flag=False,
+                    inspect_details_for_deadline=True,
+                    default_badge="48-Hr Rescue Only",
+                    default_urgency="Rescue Only / At Risk",
+                )
             )
-        )
-        all_dogs.extend(
-            scrape_24petconnect_board(
-                page=page,
-                now_iso=now_iso,
-                step_label="[6b/8]",
-                url="https://24petconnect.com/RVSDPublic?at=DOG",
-                shelter_name="Riverside County Animal Services (Red List)",
-                city="Jurupa Valley",
-                county="Riverside",
-                portal_code="RVSDPublic",
-                require_urgent_flag=False,
-                inspect_details_for_deadline=True,
-                default_badge="72-Hr Red List",
-                default_urgency="Red List / Exit Deadline",
+            all_dogs.extend(
+                scrape_24petconnect_board(
+                    page=page,
+                    now_iso=now_iso,
+                    step_label="[6b/8]",
+                    url="https://24petconnect.com/RVSDPublic?at=DOG",
+                    shelter_name="Riverside County Animal Services (Red List)",
+                    city="Jurupa Valley",
+                    county="Riverside",
+                    portal_code="RVSDPublic",
+                    require_urgent_flag=False,
+                    inspect_details_for_deadline=True,
+                    default_badge="72-Hr Red List",
+                    default_urgency="Red List / Exit Deadline",
+                )
             )
-        )
-        all_dogs.extend(scrape_laas_newhope_alerts(page, now_iso))
+            all_dogs.extend(scrape_laas_newhope_alerts(page, now_iso))
 
         browser.close()
 
-    all_dogs.extend(fetch_sanjose_arcgis(now_iso))
+    if not only_oas:
+        all_dogs.extend(fetch_sanjose_arcgis(now_iso))
 
-    # Preserve previous county records if a shelter site temporarily returned 0 on this run
+    # Preserve previous county records if a shelter site temporarily returned 0 (or in --only-oas mode)
     active_counties = {d.get("county") for d in all_dogs if d.get("county")}
     for prev in previous_dogs:
         c = prev.get("county")
