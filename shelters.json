@@ -208,5 +208,34 @@
     "address": "6851 Van Buren Blvd, Jurupa Valley, CA 92509",
     "contact": "Rescue/Transfer: transfer@rivco.org | Phone: (951) 358-7387",
     "intro": "At-risk dogs at Riverside County Department of Animal Services (RCDAS) flagged with exit deadlines, medical urgency, or Rescue Only status."
+  },
+  {
+    "slug": "sacramento-county-animal-care",
+    "name": "Sacramento County Animal Care (Bradshaw)",
+    "short_name": "Sacramento County",
+    "city": "Sacramento",
+    "county": "Sacramento",
+    "state": "CA",
+    "timezone": "America/Los_Angeles",
+    "foster_capable": true,
+    "portal_type": "24petconnect",
+    "portal_config": {
+      "boards": [
+        {
+          "url": "https://24petconnect.com/SacramentoCountyAdoptablePets?at=DOG&sb=days_MaxMin",
+          "shelter_name": "Sacramento County Animal Care Services (Bradshaw)",
+          "portal_code": "SACC",
+          "require_urgent_flag": true,
+          "default_badge": "Urgent / At Risk",
+          "default_urgency": "Urgent Shelter Dog"
+        }
+      ]
+    },
+    "title": "Sacramento County Bradshaw Animal Shelter Urgent Dogs | UrgentPaws",
+    "h1": "Sacramento County Animal Care (Bradshaw) Urgent Dogs",
+    "meta_desc": "Live tracker for urgent and at-risk dogs at Sacramento County Bradshaw Animal Shelter in Sacramento, CA. Updated every 3 hours with Animal IDs and shelter links.",
+    "address": "3839 Bradshaw Rd, Sacramento, CA 95827",
+    "contact": "Phone: (916) 368-7387 | Foster: foster@saccounty.gov",
+    "intro": "Urgent and at-risk dogs at Sacramento County Animal Care Services (Bradshaw Animal Shelter). Note the Animal ID when contacting the shelter or visiting Tuesday–Sunday."
   }
 ]
