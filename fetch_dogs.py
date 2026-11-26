@@ -1,11 +1,10 @@
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import html
 import json
 import os
 import re
-import sys
-import urllib.parse
 import urllib.request
 from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright
@@ -35,12 +34,11 @@ BOILERPLATE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-FOSTER_CAPABLE_COUNTIES = {"alameda", "stanislaus", "santa clara"}
-
 DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 
 LAAS_WEB_BLOCKED = False
 MAX_PRESERVED_DAYS = 7
+BROWSER_PORTAL_TYPES = {"stanislaus", "24petconnect", "laas_petharbor"}
 
 LAAS_ALERT_BOARDS = [
     {
@@ -66,89 +64,6 @@ LAAS_ALERT_BOARDS = [
         "badge": "BLUE MEDICAL ALERT",
         "urgency_type": "LAAS Severe Medical (Blue Alert)",
         "url": "https://petharbor.com/results.asp?WHERE=type_DOG&PAGE=1&searchtype=ALL&friends=1&samaritans=1&nosuccess=0&rows=50&imght=120&imgres=thumb&view=sysadm.v_lact_alert_blue&start=3&SHELTERLIST=%27LACT%27,%27LACT1%27,%27LACT4%27,%27LACT3%27,%27LACT2%27,%27LACT5%27,%27LACT6%27&OrderBy=shelter",
-    },
-]
-
-SHELTER_SEO_CONFIG = [
-    {
-        "slug": "oakland-animal-services",
-        "county": "Alameda",
-        "title": "Oakland Animal Services Urgent Dogs & Exit Deadlines | UrgentPaws",
-        "h1": "Oakland Animal Services (OAS) Urgent Dogs",
-        "meta_desc": "Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.",
-        "address": "1101 29th Ave, Oakland, CA 94601",
-        "contact": "Rescue/Transfer: oastransfers@oaklandca.gov | Foster: oasfoster@oaklandca.gov",
-        "intro": "Dogs currently listed on Oakland Animal Services' Rescue Needed and urgent priority boards. Include the dog's Animal ID when emailing OAS for a rescue pull, foster hold, or adoption inquiry.",
-    },
-    {
-        "slug": "contra-costa-animal-services",
-        "county": "Contra Costa",
-        "title": "Contra Costa Animal Services Urgent & Transfer Preferred Dogs | UrgentPaws",
-        "h1": "Contra Costa County Animal Services Urgent Dogs",
-        "meta_desc": "Live tracker for urgent and Transfer Preferred dogs at Contra Costa Animal Services in Martinez, CA. Updated every 3 hours with Animal IDs and shelter links.",
-        "address": "4800 Imhoff Pl, Martinez, CA 94553",
-        "contact": "Rescue/Transfer: asdrescue@asd.cccounty.us | Phone: (925) 608-8400",
-        "intro": "At-risk and Transfer Preferred dogs at Contra Costa County Animal Services (CCASD) in Martinez needing 501(c)(3) rescue placement, foster homes, or immediate adoption.",
-    },
-    {
-        "slug": "san-jose-animal-care",
-        "county": "Santa Clara",
-        "title": "San Jose Animal Care Center Urgent & Rescue Priority Dogs | UrgentPaws",
-        "h1": "San Jose Animal Care Center (SJACS) Urgent Dogs",
-        "meta_desc": "Live feed of staff-flagged Rescue Priority and Foster Priority dogs at San Jose Animal Care Center. Updated every 3 hours with kennel numbers and Animal IDs.",
-        "address": "2750 Monterey Rd, San Jose, CA 95111",
-        "contact": "Rescue/Transfer: SJACSRescue@sanjoseca.gov | Phone: (408) 794-7297",
-        "intro": "Dogs flagged by San Jose Animal Care & Services staff for urgent rescue transfer or foster placement. Reference the Animal ID and kennel number when contacting SJACS.",
-    },
-    {
-        "slug": "stanislaus-animal-services",
-        "county": "Stanislaus",
-        "title": "Stanislaus Animal Services RED List & Final Call Dogs | UrgentPaws",
-        "h1": "Stanislaus Animal Services (Modesto) RED & Final Call Dogs",
-        "meta_desc": "Live list of RED status and Final Call dogs at Stanislaus Animal Services in Modesto, CA. Updated every 3 hours with Tuesday/Wednesday exit deadlines and IDs.",
-        "address": "3647 Cornucopia Way, Modesto, CA 95358",
-        "contact": "Rescue/Transfer: rescue@stancounty.com | Phone: (209) 558-7387",
-        "intro": "Kennel dogs currently on Stanislaus Animal Services' RED at-risk list and Final Call deadlines in Modesto. Final Call dogs generally require rescue or adopter commitment by Tuesday COB / Wednesday 6:30 AM.",
-    },
-    {
-        "slug": "la-animal-services",
-        "county": "Los Angeles",
-        "title": "LA Animal Services Euthanasia & Urgent Alert Dogs | UrgentPaws",
-        "h1": "LA Animal Services (LAAS) Urgent & Medical Alert Dogs",
-        "meta_desc": "Live tracker across all 6 LA Animal Services shelters (East Valley, West Valley, West LA, South LA, Harbor, North Central) for Euthanasia, Urgent, Orange, and Blue alerts.",
-        "address": "6 City Shelters across Los Angeles, CA (East Valley, West Valley, West LA, South LA, Harbor, North Central)",
-        "contact": "New Hope Rescue Program: ani.newhope@lacity.org | Phone: (888) 452-7381",
-        "intro": "Active dogs on LA Animal Services' New Hope Euthanasia Alert, Urgent Needs, Orange Medical, and Blue Severe Medical boards across all six Los Angeles municipal shelters.",
-    },
-    {
-        "slug": "kern-county-animal-services",
-        "county": "Kern",
-        "title": "Kern County Animal Services Dogs at Greatest Risk | UrgentPaws",
-        "h1": "Kern County Animal Services (Bakersfield) Greatest Risk Dogs",
-        "meta_desc": "Live tracker for dogs at greatest risk of euthanasia at Kern County Animal Services in Bakersfield, CA. Updated every 3 hours with Animal IDs and rescue notes.",
-        "address": "3951 Fruitvale Ave, Bakersfield, CA 93308",
-        "contact": "Rescue/Transfer: rescue@kerncounty.com | Phone: (661) 868-7100",
-        "intro": "Dogs currently listed on Kern County Animal Services' Animals at Greatest Risk board needing immediate 501(c)(3) rescue commitment, foster placement, or adoption.",
-    },
-    {
-        "slug": "devore-animal-shelter",
-        "county": "San Bernardino",
-        "title": "Devore Animal Shelter Urgent & Rescue Only Dogs | UrgentPaws",
-        "h1": "San Bernardino County - Devore Animal Shelter Urgent Dogs",
-        "meta_desc": "Live tracker for urgent and Rescue Only dogs at Devore Animal Shelter in San Bernardino County, CA. Updated every 3 hours with behavioral and medical flags.",
-        "address": "19777 Shelter Way, San Bernardino, CA 92407",
-        "contact": "Rescue/Transfer: sbrescue@dph.sbcounty.gov | Phone: (909) 386-9820",
-        "intro": "Urgent and Rescue Only dogs at San Bernardino County's Devore Animal Shelter requiring immediate rescue transfer, foster commitment, or adoption.",
-    },
-    {
-        "slug": "riverside-county-animal-services",
-        "county": "Riverside",
-        "title": "Riverside County Animal Services Red List & Urgent Dogs | UrgentPaws",
-        "h1": "Riverside County Animal Services (Jurupa Valley) Urgent Dogs",
-        "meta_desc": "Live tracker for 48-hour Rescue Only and 72-hour Red List dogs at Riverside County Department of Animal Services in Jurupa Valley, CA.",
-        "address": "6851 Van Buren Blvd, Jurupa Valley, CA 92509",
-        "contact": "Rescue/Transfer: transfer@rivco.org | Phone: (951) 358-7387",
-        "intro": "At-risk dogs at Riverside County Department of Animal Services (RCDAS) flagged with exit deadlines, medical urgency, or Rescue Only status.",
     },
 ]
 
@@ -190,15 +105,25 @@ def is_active_flag(val) -> bool:
     return True
 
 
-def is_deadline_expired(dog: dict, today_la) -> bool:
-    """Returns True if the dog has an explicit MM/DD/YY(YY) deadline earlier than today (PT)."""
+def load_shelters() -> list[dict]:
+    with open("shelters.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def is_deadline_expired(dog: dict, shelter_tz: str, now_utc: datetime) -> bool:
+    """Checks explicit MM/DD/YY(YY) deadlines against the shelter's local date."""
+    try:
+        local_today = now_utc.astimezone(ZoneInfo(shelter_tz)).date()
+    except Exception:
+        local_today = now_utc.astimezone(ZoneInfo("America/Los_Angeles")).date()
+
     blob = f"{dog.get('deadline_or_urgency') or ''} {dog.get('urgency_type') or ''}"
     for m in DATE_PATTERN.finditer(blob):
         month, day, year_str = int(m.group(1)), int(m.group(2)), m.group(3)
         year = int(year_str) + 2000 if len(year_str) == 2 else int(year_str)
         try:
             deadline_date = datetime(year, month, day).date()
-            if deadline_date < today_la:
+            if deadline_date < local_today:
                 return True
         except ValueError:
             continue
@@ -284,11 +209,11 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 1. STANISLAUS COUNTY - RED STATUS & FINAL CALL
+# PORTAL 1: STANISLAUS COUNTY - RED STATUS & FINAL CALL
 # ---------------------------------------------------------------------------
-def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
-    url = "https://www.stanislausanimalservices.com/atrisk/adopt-dogs.shtm?color=red&sort=orderByIntakeDate"
-    print("[1/8] Scraping Stanislaus County RED / Final Call dogs...", flush=True)
+def scrape_stanislaus_red(page, cfg: dict, now_iso: str) -> list[dict]:
+    url = cfg["portal_config"]["url"]
+    print(f"Scraping {cfg['name']} ({cfg['slug']})...", flush=True)
     try:
         page.goto(url, wait_until="domcontentloaded", timeout=40000)
         page.wait_for_timeout(3000)
@@ -361,13 +286,14 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
         results.append({
             "id": f"stanislaus-{aid.lower()}",
+            "shelter_slug": cfg["slug"],
             "animal_id": aid,
             "name": name,
             "breed": "",
             "shelter": "Stanislaus Animal Services (Modesto)",
-            "city": "Modesto",
-            "county": "Stanislaus",
-            "state": "CA",
+            "city": cfg["city"],
+            "county": cfg["county"],
+            "state": cfg["state"],
             "size": "",
             "age": age,
             "urgency_type": "Final Call (Tue/Wed Deadline)" if is_final_call else "RED Status (At Risk)",
@@ -380,22 +306,23 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"  Stanislaus RED/Final Call kennel dogs saved: {len(results)}", flush=True)
+    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (RescueGroups Org 5970 API)
+# PORTAL 2: RESCUEGROUPS V5 API (e.g., OAS Org 5970)
 # ---------------------------------------------------------------------------
-def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
-    """Fetches OAS (Org 5970) urgent dogs directly from RescueGroups v5 API."""
+def fetch_rescuegroups(cfg: dict, now_iso: str) -> list[dict]:
+    org_id = str(cfg["portal_config"]["org_id"]).strip()
+    print(f"Fetching {cfg['name']} via RescueGroups API (Org {org_id})...", flush=True)
     api_key = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
     if not api_key:
-        print("  RESCUEGROUPS_API_KEY not found in environment; skipping OAS API.", flush=True)
+        print("  RESCUEGROUPS_API_KEY not found in environment; skipping.", flush=True)
         return []
 
     url = (
-        "https://api.rescuegroups.org/v5/public/orgs/5970/animals/search/available/dogs"
+        f"https://api.rescuegroups.org/v5/public/orgs/{org_id}/animals/search/available/dogs"
         "?include=pictures,breeds&limit=100"
     )
     headers = {
@@ -409,7 +336,7 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
         with urllib.request.urlopen(req, timeout=20) as resp:
             payload = json.loads(resp.read().decode("utf-8", errors="replace"))
     except Exception as exc:
-        print(f"  OAS RescueGroups API error: {exc}", flush=True)
+        print(f"  RescueGroups API error ({cfg['slug']}): {exc}", flush=True)
         return []
 
     pictures_by_id = {}
@@ -433,13 +360,15 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
                 breeds_by_id[inc_id] = b_name
 
     results = []
+    prefix = "oas" if cfg["slug"] == "oakland-animal-services" else f"rg-{org_id}"
+
     for item in payload.get("data", []):
         attrs = item.get("attributes") or {}
         rels = item.get("relationships") or {}
 
         rg_id = str(item.get("id") or "").strip()
         aid = clean_space(str(attrs.get("rescueId") or rg_id))
-        name = clean_space(attrs.get("name") or f"OAS #{aid}")
+        name = clean_space(attrs.get("name") or f"Dog #{aid}")
 
         priority_raw = str(attrs.get("priority") or "").strip()
         kill_date_raw = str(attrs.get("killDate") or attrs.get("reviewDate") or "").strip()
@@ -456,10 +385,10 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
 
         if deadline_str:
             badge = f"DEADLINE {deadline_str}"
-            urgency_type = f"OAS Exit Deadline ({deadline_str})"
+            urgency_type = f"Exit Deadline ({deadline_str})"
         else:
-            badge = "OAS PRIORITY"
-            urgency_type = "OAS Priority Urgent Dog"
+            badge = "PRIORITY URGENT"
+            urgency_type = "Priority Urgent Dog"
 
         pic_refs = (rels.get("pictures") or {}).get("data") or []
         photo_url = next((pictures_by_id[str(p["id"])] for p in pic_refs if str(p.get("id")) in pictures_by_id), "")
@@ -476,17 +405,22 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
 
         meta_bits = [b for b in [age, sex, breed] if b]
         listing_id = rg_id or aid
-        listing_url = f"https://www.oaklandanimalservices.org/rescue-needed/animal?animalId={listing_id}"
+        listing_url = (
+            f"https://www.oaklandanimalservices.org/rescue-needed/animal?animalId={listing_id}"
+            if cfg["slug"] == "oakland-animal-services"
+            else clean_space(attrs.get("url") or f"https://www.rescuegroups.org/animals/detail?AnimalID={listing_id}")
+        )
 
         results.append({
-            "id": f"oas-{listing_id}",
+            "id": f"{prefix}-{listing_id}",
+            "shelter_slug": cfg["slug"],
             "animal_id": listing_id,
             "name": name,
             "breed": breed,
-            "shelter": "Oakland Animal Services",
-            "city": "Oakland",
-            "county": "Alameda",
-            "state": "CA",
+            "shelter": cfg["name"],
+            "city": cfg["city"],
+            "county": cfg["county"],
+            "state": cfg["state"],
             "size": size,
             "age": age,
             "urgency_type": urgency_type,
@@ -499,182 +433,174 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"  OAS RescueGroups API urgent dogs saved: {len(results)}", flush=True)
-    return results
-
-
-def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
-    """Entry point called by main() at [2/8]—uses RescueGroups API exclusively for OAS."""
-    print("[2/8] Fetching Oakland Animal Services via RescueGroups API (Org 5970)...", flush=True)
-    results = fetch_oas_via_rescuegroups(now_iso)
-    if not results:
-        print("  No new OAS records returned; preserving non-expired Alameda records from dogs.json.", flush=True)
+    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
 
 
 # ---------------------------------------------------------------------------
-# 3-6. 24PETCONNECT MUNICIPAL URGENT BOARDS
+# PORTAL 3: 24PETCONNECT BOARDS (Supports 1 or more boards per shelter config)
 # ---------------------------------------------------------------------------
-def scrape_24petconnect_board(
-    page,
-    now_iso: str,
-    step_label: str,
-    url: str,
-    shelter_name: str,
-    city: str,
-    county: str,
-    portal_code: str,
-    require_urgent_flag: bool = False,
-    inspect_details_for_deadline: bool = False,
-    default_badge: str = "Urgent / Rescue Needed",
-    default_urgency: str = "At-Risk Shelter Dog",
-) -> list[dict]:
-    print(f"{step_label} Scraping {shelter_name} ({url})...", flush=True)
-    try:
-        page.goto(url, wait_until="networkidle", timeout=45000)
-        page.wait_for_timeout(4500)
-    except Exception as exc:
-        print(f"  Load error ({shelter_name}): {exc}", flush=True)
-        return []
+def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
+    boards = cfg.get("portal_config", {}).get("boards", [])
+    shelter_results = []
 
-    raw_cards = find_petconnect_cards_across_frames(page)
-    print(f"  Detected {len(raw_cards)} raw cards on {shelter_name}", flush=True)
+    for board in boards:
+        url = board["url"]
+        shelter_name = board.get("shelter_name") or cfg["name"]
+        portal_code = board["portal_code"]
+        require_urgent_flag = board.get("require_urgent_flag", False)
+        inspect_details = board.get("inspect_details_for_deadline", False)
+        default_badge = board.get("default_badge", "Urgent / Rescue Needed")
+        default_urgency = board.get("default_urgency", "At-Risk Shelter Dog")
 
-    results = []
-    seen_ids = set()
-
-    for c in raw_cards:
-        txt = c.get("text") or ""
-        href = (c.get("href") or "").split("?")[0]
-
-        if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+        print(f"Scraping {shelter_name} ({url})...", flush=True)
+        try:
+            page.goto(url, wait_until="networkidle", timeout=45000)
+            page.wait_for_timeout(4500)
+        except Exception as exc:
+            print(f"  Load error ({shelter_name}): {exc}", flush=True)
             continue
 
-        id_match = re.search(r"\b(A\d{5,8})\b", txt) or re.search(r"/(A\d{5,8})\b", href)
-        animal_id = id_match.group(1).upper() if id_match else ""
-        if not animal_id or animal_id in seen_ids:
-            continue
+        raw_cards = find_petconnect_cards_across_frames(page)
+        print(f"  Detected {len(raw_cards)} raw cards on {shelter_name}", flush=True)
 
-        if require_urgent_flag:
-            has_flag = bool(
-                re.search(
-                    r"(UrgentFlag:\s*URGENT|Meet:\s*URGENT|Status:\s*Rescue Onl|Substatus:\s*U-(Behavior|LOS|Medical)|at risk|deadline)",
-                    txt,
-                    re.IGNORECASE,
+        board_results = []
+        seen_ids = set()
+
+        for c in raw_cards:
+            txt = c.get("text") or ""
+            href = (c.get("href") or "").split("?")[0]
+
+            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+                continue
+
+            id_match = re.search(r"\b(A\d{5,8})\b", txt) or re.search(r"/(A\d{5,8})\b", href)
+            animal_id = id_match.group(1).upper() if id_match else ""
+            if not animal_id or animal_id in seen_ids:
+                continue
+
+            if require_urgent_flag:
+                has_flag = bool(
+                    re.search(
+                        r"(UrgentFlag:\s*URGENT|Meet:\s*URGENT|Status:\s*Rescue Onl|Substatus:\s*U-(Behavior|LOS|Medical)|at risk|deadline)",
+                        txt,
+                        re.IGNORECASE,
+                    )
                 )
-            )
-            if not has_flag:
-                continue
+                if not has_flag:
+                    continue
 
-        seen_ids.add(animal_id)
+            seen_ids.add(animal_id)
 
-        name = extract_field(txt, ("Meet", "Name"))
-        if name:
-            name = re.sub(r"\s*\(A\d{5,8}\)\s*", "", name).replace("URGENT ", "").strip()
-        if not name:
-            name = f"Dog {animal_id}"
+            name = extract_field(txt, ("Meet", "Name"))
+            if name:
+                name = re.sub(r"\s*\(A\d{5,8}\)\s*", "", name).replace("URGENT ", "").strip()
+            if not name:
+                name = f"Dog {animal_id}"
 
-        breed = extract_field(txt, ("Breed",))
-        age = extract_field(txt, ("Age",))
-        reason = extract_field(txt, ("Reason for Rescue", "Substatus"))
-        status = extract_field(txt, ("Status",))
-        location = extract_field(txt, ("Located at", "Location")) or shelter_name
-        photo_url = c.get("img") or ""
+            breed = extract_field(txt, ("Breed",))
+            age = extract_field(txt, ("Age",))
+            reason = extract_field(txt, ("Reason for Rescue", "Substatus"))
+            status = extract_field(txt, ("Status",))
+            location = extract_field(txt, ("Located at", "Location")) or shelter_name
+            photo_url = c.get("img") or ""
 
-        if "CCASDTransferPreferredPets" in url:
-            href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
-        elif "CCASDAvailablePets" in url:
-            href = f"https://24petconnect.com/CCASDAvailablePets/Details/CCST/{animal_id}"
-        elif portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
-            code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
-            href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
+            if "CCASDTransferPreferredPets" in url:
+                href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
+            elif "CCASDAvailablePets" in url:
+                href = f"https://24petconnect.com/CCASDAvailablePets/Details/CCST/{animal_id}"
+            elif portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
+                code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
+                href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
 
-        urgency_type = default_urgency
-        badge = default_badge
-        note = reason
-        is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(status + " " + txt + " " + default_badge))
-        needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull or Adopt"
+            urgency_type = default_urgency
+            badge = default_badge
+            note = reason
+            is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(status + " " + txt + " " + default_badge))
+            needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull or Adopt"
 
-        if reason:
-            if "u-behavior" in reason.lower():
-                urgency_type = "Urgent Behavior (Euthanasia Risk)"
-                badge = "URGENT: U-Behavior"
-            elif "u-medical" in reason.lower() or "uri" in reason.lower() or "med" in reason.lower():
-                urgency_type = "Urgent Medical"
-                badge = f"URGENT: {reason[:24]}"
-            elif "u-los" in reason.lower():
-                urgency_type = "Urgent Length-of-Stay (30d+)"
-                badge = "URGENT: U-LOS"
-            else:
-                badge = f"At Risk: {reason[:24]}"
+            if reason:
+                if "u-behavior" in reason.lower():
+                    urgency_type = "Urgent Behavior (Euthanasia Risk)"
+                    badge = "URGENT: U-Behavior"
+                elif "u-medical" in reason.lower() or "uri" in reason.lower() or "med" in reason.lower():
+                    urgency_type = "Urgent Medical"
+                    badge = f"URGENT: {reason[:24]}"
+                elif "u-los" in reason.lower():
+                    urgency_type = "Urgent Length-of-Stay (30d+)"
+                    badge = "URGENT: U-LOS"
+                else:
+                    badge = f"At Risk: {reason[:24]}"
 
-        results.append({
-            "id": f"24pc-{portal_code.lower()}-{animal_id.lower()}",
-            "animal_id": animal_id,
-            "name": name,
-            "breed": breed,
-            "shelter": location,
-            "city": city,
-            "county": county,
-            "state": "CA",
-            "size": extract_field(txt, ("Weight", "Size")),
-            "age": age,
-            "urgency_type": urgency_type,
-            "deadline_or_urgency": badge,
-            "needs_type": needs,
-            "transport_note": note,
-            "photo_url": photo_url,
-            "listing_url": href,
-            "updated_at": now_iso,
-            "last_checked": now_iso,
-        })
+            board_results.append({
+                "id": f"24pc-{portal_code.lower()}-{animal_id.lower()}",
+                "shelter_slug": cfg["slug"],
+                "animal_id": animal_id,
+                "name": name,
+                "breed": breed,
+                "shelter": location,
+                "city": cfg["city"],
+                "county": cfg["county"],
+                "state": cfg["state"],
+                "size": extract_field(txt, ("Weight", "Size")),
+                "age": age,
+                "urgency_type": urgency_type,
+                "deadline_or_urgency": badge,
+                "needs_type": needs,
+                "transport_note": note,
+                "photo_url": photo_url,
+                "listing_url": href,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
 
-    if inspect_details_for_deadline and results:
-        verified = []
-        for dog in results[:35]:
-            try:
-                page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=15000)
-                page.wait_for_timeout(800)
-                body = page.inner_text("body")
-            except Exception:
-                continue
+        if inspect_details and board_results:
+            verified = []
+            for dog in board_results[:35]:
+                try:
+                    page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=15000)
+                    page.wait_for_timeout(800)
+                    body = page.inner_text("body")
+                except Exception:
+                    continue
 
-            if RESCUED_PATTERN.search(body) or NON_DOG_PATTERN.search(body[:600]):
-                continue
+                if RESCUED_PATTERN.search(body) or NON_DOG_PATTERN.search(body[:600]):
+                    continue
 
-            is_at_risk = bool(re.search(r"at risk animal|deadline|must exit|rescue only|extremely urgent|parvo|medical", body, re.IGNORECASE))
-            if not is_at_risk:
-                continue
+                is_at_risk = bool(re.search(r"at risk animal|deadline|must exit|rescue only|extremely urgent|parvo|medical", body, re.IGNORECASE))
+                if not is_at_risk:
+                    continue
 
-            if RESCUE_ONLY_PATTERN.search(body):
-                dog["needs_type"] = "Rescue Pull Only"
+                if RESCUE_ONLY_PATTERN.search(body):
+                    dog["needs_type"] = "Rescue Pull Only"
 
-            dl = re.search(r"(\*{0,3}DEADLINE[^\n\r*]{0,50})", body, re.IGNORECASE)
-            if dl:
-                dog["deadline_or_urgency"] = clean_space(dl.group(1).replace("*", ""))[:38]
-                dog["urgency_type"] = "Euthanasia / Exit Deadline"
+                dl = re.search(r"(\*{0,3}DEADLINE[^\n\r*]{0,50})", body, re.IGNORECASE)
+                if dl:
+                    dog["deadline_or_urgency"] = clean_space(dl.group(1).replace("*", ""))[:38]
+                    dog["urgency_type"] = "Euthanasia / Exit Deadline"
 
-            note_match = re.search(r"More Info:\s*([^\n\r]{10,220})", body, re.IGNORECASE)
-            if note_match:
-                dog["transport_note"] = clean_space(note_match.group(1))[:160]
+                note_match = re.search(r"More Info:\s*([^\n\r]{10,220})", body, re.IGNORECASE)
+                if note_match:
+                    dog["transport_note"] = clean_space(note_match.group(1))[:160]
 
-            if not dog["photo_url"]:
-                img_src = page.eval_on_selector("img[src*='24petconnect'], img[src*='petplace'], img[src*='amazonaws']", "el => el ? el.src : ''")
-                if img_src:
-                    dog["photo_url"] = img_src
+                if not dog["photo_url"]:
+                    img_src = page.eval_on_selector("img[src*='24petconnect'], img[src*='petplace'], img[src*='amazonaws']", "el => el ? el.src : ''")
+                    if img_src:
+                        dog["photo_url"] = img_src
 
-            verified.append(dog)
-        results = verified
+                verified.append(dog)
+            board_results = verified
 
-    print(f"  {shelter_name} urgent dogs saved: {len(results)}", flush=True)
-    return results
+        print(f"  {shelter_name} urgent dogs saved: {len(board_results)}", flush=True)
+        shelter_results.extend(board_results)
+
+    return shelter_results
 
 
 # ---------------------------------------------------------------------------
-# 7. LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
+# PORTAL 4: LA ANIMAL SERVICES (6 CITY SHELTERS) - NEW HOPE ALERT BOARDS
 # ---------------------------------------------------------------------------
 def enrich_laas_from_petharbor(dog: dict) -> bool:
-    """Enriches a single LAAS dog in parallel via laanimalservices.com or PetHarbor."""
     global LAAS_WEB_BLOCKED
     aid = (dog.get("animal_id") or "").strip()
     if not aid:
@@ -684,7 +610,6 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
     laas_pet_url = f"https://www.laanimalservices.com/pet/{aid.lower()}"
     petharbor_url = dog.get("listing_url") or ""
 
-    # 1. Try laanimalservices.com/pet/<id> unless flagged as blocked by datacenter firewall
     if not LAAS_WEB_BLOCKED:
         try:
             req = urllib.request.Request(laas_pet_url, headers={"User-Agent": USER_AGENT})
@@ -729,7 +654,6 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
         except Exception:
             LAAS_WEB_BLOCKED = True
 
-    # 2. Fast PetHarbor detail fallback (always reachable from GitHub Actions)
     if "petharbor.com/detail.asp" not in petharbor_url.lower():
         return False
     try:
@@ -773,8 +697,8 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
     return dog.get("name") != before_name
 
 
-def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
-    print("[7/8] Scraping LA Animal Services New Hope Alert boards (Euth/Urgent/Orange/Blue)...", flush=True)
+def scrape_laas_newhope_alerts(page, cfg: dict, now_iso: str) -> list[dict]:
+    print(f"Scraping {cfg['name']} New Hope Alert boards...", flush=True)
     results = []
     seen_ids = set()
 
@@ -848,13 +772,14 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
             results.append({
                 "id": f"laas-{animal_id.lower()}",
+                "shelter_slug": cfg["slug"],
                 "animal_id": animal_id,
                 "name": name,
                 "breed": breed,
                 "shelter": shelter_loc,
-                "city": "Los Angeles",
-                "county": "Los Angeles",
-                "state": "CA",
+                "city": cfg["city"],
+                "county": cfg["county"],
+                "state": cfg["state"],
                 "size": "",
                 "age": age,
                 "urgency_type": board["urgency_type"],
@@ -873,15 +798,15 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
     with ThreadPoolExecutor(max_workers=12) as pool:
         enriched_count = sum(1 for changed in pool.map(enrich_laas_from_petharbor, results) if changed)
 
-    print(f"  LAAS total alert dogs saved: {len(results)} (resolved {enriched_count} names from official profiles)", flush=True)
+    print(f"  {cfg['name']} saved: {len(results)} (resolved {enriched_count} names from official profiles)", flush=True)
     return results
 
 
 # ---------------------------------------------------------------------------
-# 8. SAN JOSE ACS - ARCGIS REST JSON API (Staff-Flagged Rescue Priority Only)
+# PORTAL 5: SAN JOSE ACS - ARCGIS REST JSON API
 # ---------------------------------------------------------------------------
-def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
-    print("[8/8] Querying San Jose ACS ArcGIS MapServer Layer 1 (Strict Filter)...", flush=True)
+def fetch_sanjose_arcgis(cfg: dict, now_iso: str) -> list[dict]:
+    print(f"Querying {cfg['name']} ArcGIS MapServer Layer 1...", flush=True)
     api_url = (
         "https://geo.sanjoseca.gov/server/rest/services/DPW/DPW_AnimalCareServices/"
         "MapServer/1/query?where=ANIMALTYPE%3D%27Dog%27&outFields=*&returnGeometry=false&f=json"
@@ -953,13 +878,14 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
 
         results.append({
             "id": f"sj-acs-{aid.lower()}",
+            "shelter_slug": cfg["slug"],
             "animal_id": aid,
             "name": name,
             "breed": breed,
-            "shelter": "San Jose Animal Care Center",
-            "city": "San Jose",
-            "county": "Santa Clara",
-            "state": "CA",
+            "shelter": cfg["name"],
+            "city": cfg["city"],
+            "county": cfg["county"],
+            "state": cfg["state"],
             "size": size,
             "age": age,
             "urgency_type": urgency_type,
@@ -972,22 +898,34 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    print(f"  San Jose ArcGIS strict urgent/priority dogs saved: {len(results)}", flush=True)
+    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
 
 
 # ---------------------------------------------------------------------------
-# 9. GLOBAL STANDARDIZATION & STATIC SHELTER SEO PAGES
+# NORMALIZATION & STATIC SEO GENERATION
 # ---------------------------------------------------------------------------
-def normalize_dog_record(dog: dict) -> dict:
+def infer_shelter_slug(dog: dict, shelters_by_county: dict[str, str]) -> str:
+    if dog.get("shelter_slug"):
+        return dog["shelter_slug"]
+    county = (dog.get("county") or "").lower()
+    return shelters_by_county.get(county, "")
+
+
+def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
     """Standardizes needs_type into exact Rescue-Only, Foster-Eligible, or Adoptable categories."""
     for field, limit in (("breed", 50), ("age", 25), ("size", 25)):
         val = dog.get(field) or ""
         if val and not is_clean_meta(val, limit):
             dog[field] = ""
 
-    county = (dog.get("county") or "").lower()
-    is_laas = "los angeles" in county
+    if shelter_cfg and not dog.get("shelter_slug"):
+        dog["shelter_slug"] = shelter_cfg["slug"]
+
+    slug = (dog.get("shelter_slug") or "").lower()
+    is_laas = slug == "la-animal-services" or "los angeles" in (dog.get("county") or "").lower()
+    foster_capable = bool(shelter_cfg.get("foster_capable")) if shelter_cfg else False
+
     combined = " ".join(
         str(dog.get(k) or "")
         for k in ("needs_type", "urgency_type", "deadline_or_urgency", "transport_note")
@@ -997,7 +935,7 @@ def normalize_dog_record(dog: dict) -> dict:
         dog["needs_type"] = "New Hope Rescue Pull Only" if is_laas else "Rescue Pull Only"
     elif "foster priority" in (dog.get("urgency_type") or "").lower():
         dog["needs_type"] = "Urgent Foster / Adopt"
-    elif county in FOSTER_CAPABLE_COUNTIES or re.search(r"\bfoster\b", combined, re.IGNORECASE):
+    elif foster_capable or re.search(r"\bfoster\b", combined, re.IGNORECASE):
         dog["needs_type"] = "Rescue Pull, Foster, or Adopt"
     elif is_laas:
         dog["needs_type"] = "New Hope Rescue Pull or Adopt"
@@ -1007,19 +945,22 @@ def normalize_dog_record(dog: dict) -> dict:
     return dog
 
 
-def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
+def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now_iso: str) -> None:
     print("Generating static shelter HTML pages and sitemap.xml for SEO...", flush=True)
     base_url = "https://www.urgentpaws.org"
     today_date = now_iso[:10]
 
-    nav_links = [f'<a href="/{cfg["slug"]}">{html.escape(cfg["h1"].replace(" Urgent Dogs", ""))}</a>' for cfg in SHELTER_SEO_CONFIG]
+    nav_links = [f'<a href="/{cfg["slug"]}">{html.escape(cfg["h1"].replace(" Urgent Dogs", ""))}</a>' for cfg in shelters]
     nav_html = " &middot; ".join(nav_links)
 
-    for cfg in SHELTER_SEO_CONFIG:
+    for cfg in shelters:
         slug = cfg["slug"]
-        county = cfg["county"]
         page_url = f"{base_url}/{slug}"
-        shelter_dogs = [d for d in unique_dogs if (d.get("county") or "").lower() == county.lower()]
+        shelter_dogs = [
+            d for d in unique_dogs
+            if d.get("shelter_slug") == slug
+            or (not d.get("shelter_slug") and (d.get("county") or "").lower() == cfg["county"].lower())
+        ]
 
         cards_html = []
         ld_items = []
@@ -1071,7 +1012,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
         if not cards_html:
             cards_section = (
                 '<p class="empty">No dogs are currently listed on this urgent feed, or the shelter board is between updates. '
-                'Check back shortly or browse all California shelters on the <a href="/">UrgentPaws main directory</a>.</p>'
+                'Check back shortly or browse all shelters on the <a href="/">UrgentPaws main directory</a>.</p>'
             )
         else:
             cards_section = f'<section class="grid">{"".join(cards_html)}</section>'
@@ -1134,7 +1075,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
 <body>
   <header>
     <div class="wrap">
-      <a href="/">&larr; All California Urgent Shelter Dogs (UrgentPaws)</a>
+      <a href="/">&larr; All Urgent Shelter Dogs (UrgentPaws)</a>
       <h1>{html.escape(cfg["h1"])} ({len(shelter_dogs)})</h1>
       <p class="sub">Auto-updated every 3 hours &bull; Last checked: {html.escape(now_iso)}</p>
     </div>
@@ -1149,8 +1090,8 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
   </main>
   <footer>
     <div class="wrap">
-      <p><strong>Browse Other California Shelters:</strong> {nav_html}</p>
-      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a></p>
+      <p><strong>Browse Other Shelters:</strong> {nav_html}</p>
+      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a> &middot; <a href="/blog">How to Help</a></p>
     </div>
   </footer>
 </body>
@@ -1177,7 +1118,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
         for path, freq, prio in static_pages
     ]
 
-    for cfg in SHELTER_SEO_CONFIG:
+    for cfg in shelters:
         sitemap_urls.append(
             f"""  <url>
     <loc>{base_url}/{cfg["slug"]}</loc>
@@ -1196,141 +1137,95 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
     with open("sitemap.xml", "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
-    print(f"  Generated {len(SHELTER_SEO_CONFIG)} static shelter pages + sitemap.xml", flush=True)
+    print(f"  Generated {len(shelters)} static shelter pages + sitemap.xml", flush=True)
+
+
+def run_shelter_scraper(page, cfg: dict, now_iso: str) -> list[dict]:
+    ptype = cfg.get("portal_type")
+    if ptype == "stanislaus":
+        return scrape_stanislaus_red(page, cfg, now_iso)
+    if ptype == "rescuegroups":
+        return fetch_rescuegroups(cfg, now_iso)
+    if ptype == "24petconnect":
+        return scrape_24petconnect_shelter(page, cfg, now_iso)
+    if ptype == "laas_petharbor":
+        return scrape_laas_newhope_alerts(page, cfg, now_iso)
+    if ptype == "sanjose_arcgis":
+        return fetch_sanjose_arcgis(cfg, now_iso)
+    print(f"  Unknown portal_type '{ptype}' for {cfg.get('slug')}", flush=True)
+    return []
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Fetch urgent shelter dogs into dogs.json")
+    parser.add_argument(
+        "--shelter",
+        default="",
+        help="Optional comma-separated shelter slug(s) to run (e.g., --shelter oakland-animal-services)",
+    )
+    parser.add_argument(
+        "--only-oas",
+        action="store_true",
+        help="Alias for --shelter oakland-animal-services",
+    )
+    args = parser.parse_args()
+
+    all_shelters = load_shelters()
+    shelters_by_slug = {s["slug"]: s for s in all_shelters}
+    shelters_by_county = {s["county"].lower(): s["slug"] for s in all_shelters if s.get("county")}
+
+    target_slugs = set()
+    if args.only_oas:
+        target_slugs.add("oakland-animal-services")
+    if args.shelter:
+        target_slugs.update(s.strip() for s in args.shelter.split(",") if s.strip())
+
+    if target_slugs:
+        unknown = target_slugs - set(shelters_by_slug.keys())
+        if unknown:
+            raise SystemExit(f"Unknown shelter slug(s): {', '.join(sorted(unknown))}")
+        selected_shelters = [s for s in all_shelters if s["slug"] in target_slugs]
+        print(f"Running targeted scrape for: {', '.join(sorted(target_slugs))}...", flush=True)
+    else:
+        selected_shelters = all_shelters
+
     now_utc = datetime.now(timezone.utc)
     now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
-    today_la = datetime.now(ZoneInfo("America/Los_Angeles")).date()
-    only_oas = "--only-oas" in sys.argv
     previous_dogs = load_previous_dogs()
     all_dogs = []
 
-    if only_oas:
-        print("Running in --only-oas mode (preserving non-expired records for other counties)...", flush=True)
+    needs_browser = any(s.get("portal_type") in BROWSER_PORTAL_TYPES for s in selected_shelters)
+    browser = None
+    page = None
+    pw_ctx = None
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(user_agent=USER_AGENT, viewport={"width": 1280, "height": 1800})
-        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
-        page = context.new_page()
+    try:
+        if needs_browser:
+            pw_ctx = sync_playwright().start()
+            browser = pw_ctx.chromium.launch(headless=True)
+            context = browser.new_context(user_agent=USER_AGENT, viewport={"width": 1280, "height": 1800})
+            context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            page = context.new_page()
 
-        if only_oas:
-            all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
-        else:
-            all_dogs.extend(scrape_stanislaus_red(page, now_iso))
-            all_dogs.extend(scrape_oas_rescue_needed(page, now_iso))
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[3/8]",
-                    url="https://24petconnect.com/KernCountyRescue?at=DOG",
-                    shelter_name="Kern County Animal Services (Greatest Risk)",
-                    city="Bakersfield",
-                    county="Kern",
-                    portal_code="KernCountyRescue",
-                    require_urgent_flag=False,
-                    default_badge="Animals at Greatest Risk",
-                    default_urgency="Immediate Rescue Commitment Needed",
-                )
-            )
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[4/8]",
-                    url="https://24petconnect.com/CCASDTransferPreferredPets?at=DOG&sb=days_MaxMin",
-                    shelter_name="Contra Costa Animal Services - Martinez",
-                    city="Martinez",
-                    county="Contra Costa",
-                    portal_code="CCST",
-                    require_urgent_flag=False,
-                    default_badge="Transfer Preferred",
-                    default_urgency="Transfer Preferred / Rescue Priority",
-                )
-            )
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[4b/8]",
-                    url="https://24petconnect.com/CCASDAvailablePets?at=Dog&sb=days_MaxMin",
-                    shelter_name="Contra Costa Animal Services - Martinez (Urgent)",
-                    city="Martinez",
-                    county="Contra Costa",
-                    portal_code="CCST",
-                    require_urgent_flag=True,
-                    default_badge="Urgent / At Risk",
-                    default_urgency="Urgent Shelter Dog",
-                )
-            )
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[5/8]",
-                    url="https://animalcare.sbcounty.gov/pets/",
-                    shelter_name="San Bernardino County - Devore Shelter",
-                    city="San Bernardino",
-                    county="San Bernardino",
-                    portal_code="SBCO1",
-                    require_urgent_flag=True,
-                    default_badge="URGENT (Devore)",
-                    default_urgency="Urgent / Rescue Only",
-                )
-            )
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[6/8]",
-                    url="https://24petconnect.com/RVSDRescue?at=DOG",
-                    shelter_name="Riverside County Animal Services (Rescue Only)",
-                    city="Jurupa Valley",
-                    county="Riverside",
-                    portal_code="RVSDRescue",
-                    require_urgent_flag=False,
-                    inspect_details_for_deadline=True,
-                    default_badge="48-Hr Rescue Only",
-                    default_urgency="Rescue Only / At Risk",
-                )
-            )
-            all_dogs.extend(
-                scrape_24petconnect_board(
-                    page=page,
-                    now_iso=now_iso,
-                    step_label="[6b/8]",
-                    url="https://24petconnect.com/RVSDPublic?at=DOG",
-                    shelter_name="Riverside County Animal Services (Red List)",
-                    city="Jurupa Valley",
-                    county="Riverside",
-                    portal_code="RVSDPublic",
-                    require_urgent_flag=False,
-                    inspect_details_for_deadline=True,
-                    default_badge="72-Hr Red List",
-                    default_urgency="Red List / Exit Deadline",
-                )
-            )
-            all_dogs.extend(scrape_laas_newhope_alerts(page, now_iso))
+        for cfg in selected_shelters:
+            all_dogs.extend(run_shelter_scraper(page, cfg, now_iso))
+    finally:
+        if browser:
+            browser.close()
+        if pw_ctx:
+            pw_ctx.stop()
 
-        browser.close()
-
-    if not only_oas:
-        all_dogs.extend(fetch_sanjose_arcgis(now_iso))
-
-    # Preserve previous county records if a shelter site returned 0 (or in --only-oas mode),
-    # skipping anything older than MAX_PRESERVED_DAYS so unrefreshed feeds don't linger forever.
-    active_counties = {d.get("county") for d in all_dogs if d.get("county")}
+    # Preserve previous shelter records if a shelter wasn't targeted or returned 0
+    active_slugs = {d.get("shelter_slug") for d in all_dogs if d.get("shelter_slug")}
     stale_dropped = 0
     for prev in previous_dogs:
-        c = prev.get("county")
-        if c and c not in active_counties:
-            if not only_oas and is_preserved_record_stale(prev, now_utc):
+        slug = infer_shelter_slug(prev, shelters_by_county)
+        prev["shelter_slug"] = slug
+        if slug and slug not in active_slugs:
+            if not target_slugs and is_preserved_record_stale(prev, now_utc):
                 stale_dropped += 1
                 continue
-            if c == "Contra Costa" and prev.get("animal_id"):
+            if slug == "contra-costa-animal-services" and prev.get("animal_id"):
                 aid = prev["animal_id"].upper()
                 prev["id"] = f"24pc-ccst-{aid.lower()}"
                 prev["listing_url"] = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{aid}"
@@ -1340,13 +1235,19 @@ def main():
     unique_dogs = []
     expired_dropped = 0
     for dog in all_dogs:
-        if is_deadline_expired(dog, today_la):
+        slug = infer_shelter_slug(dog, shelters_by_county)
+        shelter_cfg = shelters_by_slug.get(slug)
+        tz_name = shelter_cfg.get("timezone", "America/Los_Angeles") if shelter_cfg else "America/Los_Angeles"
+
+        if is_deadline_expired(dog, tz_name, now_utc):
             expired_dropped += 1
             continue
-        key = f"{dog.get('county')}-{dog.get('animal_id')}".lower()
+
+        dedup_scope = slug or (dog.get("county") or "").lower()
+        key = f"{dedup_scope}-{dog.get('animal_id')}".lower()
         if key not in seen:
             seen.add(key)
-            unique_dogs.append(normalize_dog_record(dog))
+            unique_dogs.append(normalize_dog_record(dog, shelter_cfg))
 
     if expired_dropped or stale_dropped:
         print(
@@ -1364,7 +1265,7 @@ def main():
             tier = 2
         else:
             tier = 3
-        return (tier, d.get("county", ""), d.get("name", ""))
+        return (tier, d.get("state", ""), d.get("county", ""), d.get("name", ""))
 
     unique_dogs.sort(key=sort_rank)
 
@@ -1372,7 +1273,7 @@ def main():
         json.dump(unique_dogs, f, indent=2)
         f.write("\n")
 
-    generate_static_seo_pages(unique_dogs, now_iso)
+    generate_static_seo_pages(unique_dogs, all_shelters, now_iso)
     print(f"TOTAL VERIFIED MUNICIPAL URGENT DOGS SAVED: {len(unique_dogs)}", flush=True)
 
 
