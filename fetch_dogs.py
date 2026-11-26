@@ -946,20 +946,39 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
 
 
 def sync_static_page_navs() -> None:
-    """Enforces 'Urgent Dogs' and 'How to Help' labels across all static info pages."""
-    info_pages = [
-        "about-urgent-paws.html",
-        "for-shelters.html",
-        "blog.html",
-        "contact-us.html",
-    ]
-    for filename in info_pages:
+    """Enforces nav labels and active page underline across all static info pages."""
+    info_pages = {
+        "about-urgent-paws.html": "about-urgent-paws",
+        "for-shelters.html": "for-shelters",
+        "blog.html": "blog",
+        "contact-us.html": "contact-us",
+    }
+    for filename, active_slug in info_pages.items():
         if not os.path.exists(filename):
             continue
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
+
         updated = re.sub(r">\s*Live Feed\s*<", ">Urgent Dogs<", content)
         updated = re.sub(r">\s*Blog\s*<", ">How to Help<", updated)
+
+        def fix_header_nav(match: re.Match) -> str:
+            nav_html = match.group(0)
+            nav_html = re.sub(r'\bunderline\s*', '', nav_html)
+            nav_html = re.sub(
+                rf'(<a\s+href="{re.escape(active_slug)}"\s+class=")',
+                r'\1underline ',
+                nav_html,
+            )
+            return nav_html
+
+        updated = re.sub(
+            r'<nav aria-label="Primary navigation"[\s\S]*?</nav>',
+            fix_header_nav,
+            updated,
+            count=1,
+        )
+
         if updated != content:
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(updated)
