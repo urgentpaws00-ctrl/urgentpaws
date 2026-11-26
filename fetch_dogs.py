@@ -14,6 +14,8 @@ USER_AGENT = (
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 )
 
+BLOCKED_RESOURCE_TYPES = {"image", "media", "font"}
+
 NON_DOG_PATTERN = re.compile(
     r"\b(animal type:\s*(cat|bird|rabbit|other)|domestic shorthair|domestic mediumhair|domestic longhair|siamese|calico|tabby|kitten|chicken|pigeon|rabbit|bunny|guinea pig|hamster|ferret)\b",
     re.IGNORECASE,
@@ -35,6 +37,11 @@ BOILERPLATE_PATTERN = re.compile(
 )
 
 DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
+
+PETCONNECT_CARD_SELECTOR = (
+    "a[href*='Details'], a[href*='details'], .gridResult, "
+    "[class*='gridResult'], [class*='petCard']"
+)
 
 LAAS_WEB_BLOCKED = False
 MAX_PRESERVED_DAYS = 7
@@ -153,6 +160,24 @@ def load_previous_dogs() -> list[dict]:
         return []
 
 
+def wait_for_petconnect_cards(page, timeout_ms: int = 7000) -> None:
+    """Waits for 24PetConnect cards on the main frame or any embedded iframe."""
+    try:
+        page.wait_for_selector(PETCONNECT_CARD_SELECTOR, timeout=timeout_ms)
+        return
+    except Exception:
+        pass
+
+    for frame in page.frames:
+        if frame == page.main_frame:
+            continue
+        try:
+            frame.wait_for_selector(PETCONNECT_CARD_SELECTOR, timeout=3000)
+            return
+        except Exception:
+            continue
+
+
 def find_petconnect_cards_across_frames(page) -> list[dict]:
     all_cards = []
     seen_keys = set()
@@ -208,6 +233,46 @@ def find_petconnect_cards_across_frames(page) -> list[dict]:
     return all_cards
 
 
+def fetch_24petconnect_detail_http(dog: dict) -> tuple[dict, str, str, bool]:
+    """Fetches a 24PetConnect detail page over HTTP for concurrent inspection."""
+    url = dog.get("listing_url") or ""
+    if not url:
+        return (dog, "", "", False)
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw_html = resp.read().decode("utf-8", errors="replace")
+    except Exception:
+        return (dog, "", "", False)
+
+    stripped = re.sub(r"<(script|style|noscript)[^>]*>[\s\S]*?</\1>", " ", raw_html, flags=re.IGNORECASE)
+    body_lines = re.sub(r"<(?:br|/?p|/?div|/?li|/?tr|/?h[1-6])[^>]*>", "\n", stripped, flags=re.IGNORECASE)
+    body = html.unescape(re.sub(r"<[^>]+>", " ", body_lines))
+    body = re.sub(r"[ \t]+", " ", body)
+    body = re.sub(r"\n\s*\n+", "\n", body).strip()
+
+    aid = (dog.get("animal_id") or "").upper()
+    has_content = len(body) >= 150 and (
+        (aid and aid in body.upper())
+        or bool(re.search(r"More Info|Breed|Status|DEADLINE|at risk", body, re.IGNORECASE))
+    )
+    if not has_content:
+        return (dog, "", "", False)
+
+    img_src = ""
+    if not dog.get("photo_url"):
+        img_match = re.search(
+            r'<img[^>]+src=["\']([^"\']*(?:24petconnect|petplace|amazonaws)[^"\']*)["\']',
+            raw_html,
+            re.IGNORECASE,
+        )
+        if img_match:
+            img_src = html.unescape(img_match.group(1))
+
+    return (dog, body, img_src, True)
+
+
 # ---------------------------------------------------------------------------
 # PORTAL 1: STANISLAUS COUNTY - RED STATUS & FINAL CALL
 # ---------------------------------------------------------------------------
@@ -215,8 +280,11 @@ def scrape_stanislaus_red(page, cfg: dict, now_iso: str) -> list[dict]:
     url = cfg["portal_config"]["url"]
     print(f"Scraping {cfg['name']} ({cfg['slug']})...", flush=True)
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=40000)
-        page.wait_for_timeout(3000)
+        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        try:
+            page.wait_for_selector("text=/\\bA\\d{5,7}\\b/", timeout=5000)
+        except Exception:
+            pass
     except Exception as exc:
         print(f"  Stanislaus error: {exc}", flush=True)
         return []
@@ -455,8 +523,8 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
 
         print(f"Scraping {shelter_name} ({url})...", flush=True)
         try:
-            page.goto(url, wait_until="networkidle", timeout=45000)
-            page.wait_for_timeout(4500)
+            page.goto(url, wait_until="domcontentloaded", timeout=20000)
+            wait_for_petconnect_cards(page, timeout_ms=7000)
         except Exception as exc:
             print(f"  Load error ({shelter_name}): {exc}", flush=True)
             continue
@@ -555,14 +623,27 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
             })
 
         if inspect_details and board_results:
+            candidates = board_results[:35]
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                http_results = list(pool.map(fetch_24petconnect_detail_http, candidates))
+
             verified = []
-            for dog in board_results[:35]:
-                try:
-                    page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=15000)
-                    page.wait_for_timeout(800)
-                    body = page.inner_text("body")
-                except Exception:
-                    continue
+            for dog, body, img_src, ok in http_results:
+                if not ok:
+                    try:
+                        page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=10000)
+                        try:
+                            page.wait_for_selector("text=/More Info|DEADLINE|Status|Breed/i", timeout=3000)
+                        except Exception:
+                            pass
+                        body = page.inner_text("body")
+                        if not dog["photo_url"]:
+                            img_src = page.eval_on_selector(
+                                "img[src*='24petconnect'], img[src*='petplace'], img[src*='amazonaws']",
+                                "el => el ? el.src : ''",
+                            )
+                    except Exception:
+                        continue
 
                 if RESCUED_PATTERN.search(body) or NON_DOG_PATTERN.search(body[:600]):
                     continue
@@ -583,10 +664,8 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
                 if note_match:
                     dog["transport_note"] = clean_space(note_match.group(1))[:160]
 
-                if not dog["photo_url"]:
-                    img_src = page.eval_on_selector("img[src*='24petconnect'], img[src*='petplace'], img[src*='amazonaws']", "el => el ? el.src : ''")
-                    if img_src:
-                        dog["photo_url"] = img_src
+                if not dog["photo_url"] and img_src:
+                    dog["photo_url"] = img_src
 
                 verified.append(dog)
             board_results = verified
@@ -704,8 +783,14 @@ def scrape_laas_newhope_alerts(page, cfg: dict, now_iso: str) -> list[dict]:
 
     for board in LAAS_ALERT_BOARDS:
         try:
-            page.goto(board["url"], wait_until="domcontentloaded", timeout=35000)
-            page.wait_for_timeout(3000)
+            page.goto(board["url"], wait_until="domcontentloaded", timeout=20000)
+            try:
+                page.wait_for_selector(
+                    "a[href*='detail.asp'], a[href*='Details'], .gridResult",
+                    timeout=5000,
+                )
+            except Exception:
+                pass
         except Exception as exc:
             print(f"  {board['label']} error: {exc}", flush=True)
             continue
@@ -1234,26 +1319,43 @@ def main():
     previous_dogs = load_previous_dogs()
     all_dogs = []
 
-    needs_browser = any(s.get("portal_type") in BROWSER_PORTAL_TYPES for s in selected_shelters)
+    api_shelters = [s for s in selected_shelters if s.get("portal_type") not in BROWSER_PORTAL_TYPES]
+    browser_shelters = [s for s in selected_shelters if s.get("portal_type") in BROWSER_PORTAL_TYPES]
+
     browser = None
     page = None
     pw_ctx = None
+    api_pool = ThreadPoolExecutor(max_workers=max(1, min(8, len(api_shelters)))) if api_shelters else None
+    api_futures = [api_pool.submit(run_shelter_scraper, None, cfg, now_iso) for cfg in api_shelters] if api_pool else []
 
     try:
-        if needs_browser:
+        if browser_shelters:
             pw_ctx = sync_playwright().start()
             browser = pw_ctx.chromium.launch(headless=True)
             context = browser.new_context(user_agent=USER_AGENT, viewport={"width": 1280, "height": 1800})
+            context.route(
+                "**/*",
+                lambda route: route.abort()
+                if route.request.resource_type in BLOCKED_RESOURCE_TYPES
+                else route.continue_(),
+            )
             context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = context.new_page()
 
-        for cfg in selected_shelters:
-            all_dogs.extend(run_shelter_scraper(page, cfg, now_iso))
+            for cfg in browser_shelters:
+                all_dogs.extend(run_shelter_scraper(page, cfg, now_iso))
     finally:
         if browser:
             browser.close()
         if pw_ctx:
             pw_ctx.stop()
+        if api_pool:
+            for fut in api_futures:
+                try:
+                    all_dogs.extend(fut.result())
+                except Exception as exc:
+                    print(f"  API scraper error: {exc}", flush=True)
+            api_pool.shutdown(wait=True)
 
     # Preserve previous shelter records if a shelter wasn't targeted or returned 0
     active_slugs = {d.get("shelter_slug") for d in all_dogs if d.get("shelter_slug")}
