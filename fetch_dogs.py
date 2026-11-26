@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 import html
 import json
 import os
@@ -6,7 +7,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright
 
 USER_AGENT = (
@@ -29,7 +30,10 @@ RESCUE_ONLY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
+
 LAAS_WEB_BLOCKED = False
+MAX_PRESERVED_DAYS = 7
 
 LAAS_ALERT_BOARDS = [
     {
@@ -169,6 +173,33 @@ def is_active_flag(val) -> bool:
     if s.startswith("not ") or s.startswith("no "):
         return False
     return True
+
+
+def is_deadline_expired(dog: dict, today_la) -> bool:
+    """Returns True if the dog has an explicit MM/DD/YY(YY) deadline earlier than today (PT)."""
+    blob = f"{dog.get('deadline_or_urgency') or ''} {dog.get('urgency_type') or ''}"
+    for m in DATE_PATTERN.finditer(blob):
+        month, day, year_str = int(m.group(1)), int(m.group(2)), m.group(3)
+        year = int(year_str) + 2000 if len(year_str) == 2 else int(year_str)
+        try:
+            deadline_date = datetime(year, month, day).date()
+            if deadline_date < today_la:
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def is_preserved_record_stale(dog: dict, now_utc: datetime, max_days: int = MAX_PRESERVED_DAYS) -> bool:
+    """Returns True if a carried-over record hasn't been verified within max_days."""
+    ts_str = dog.get("last_checked") or dog.get("updated_at") or ""
+    if not ts_str:
+        return False
+    try:
+        checked_dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        return (now_utc - checked_dt) > timedelta(days=max_days)
+    except ValueError:
+        return False
 
 
 def load_previous_dogs() -> list[dict]:
@@ -339,156 +370,132 @@ def scrape_stanislaus_red(page, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (Direct + Google Translate Proxy)
+# 2. OAKLAND ANIMAL SERVICES - /rescue-needed/ (RescueGroups Org 5970 API)
 # ---------------------------------------------------------------------------
-def parse_oas_card(href: str, txt: str, img: str, heading: str, now_iso: str) -> dict | None:
-    if NON_DOG_PATTERN.search(txt):
-        return None
+def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
+    """Fetches OAS (Org 5970) urgent dogs directly from RescueGroups v5 API."""
+    api_key = os.environ.get("RESCUEGROUPS_API_KEY", "").strip()
+    if not api_key:
+        print("  RESCUEGROUPS_API_KEY not found in environment; skipping OAS API.", flush=True)
+        return []
 
-    id_match = re.search(r"animalid=(\d+)", href, re.IGNORECASE) or re.search(r"(\d{6,9})", href)
-    aid = id_match.group(1) if id_match else re.sub(r"\W+", "", (heading or "oas"))[:12]
-
-    date_match = re.search(r"\b(\d{1,2}/\d{1,2}/\d{2,4})\b", txt)
-    is_priority = bool(re.search(r"\bPRIORITY\b", txt, re.IGNORECASE))
-    is_out_of_time = bool(re.search(r"OUT OF TIME", txt, re.IGNORECASE))
-    is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(txt))
-
-    if is_out_of_time:
-        badge = "OUT OF TIME"
-        urgency_type = "OAS Out of Time (Immediate Exit)"
-    elif date_match:
-        badge = f"DEADLINE {date_match.group(1)}"
-        urgency_type = f"OAS Exit Deadline ({date_match.group(1)})"
-    elif is_priority:
-        badge = "OAS PRIORITY"
-        urgency_type = "OAS Priority Urgent Dog"
-    else:
-        badge = "OAS Rescue Needed"
-        urgency_type = "OAS Rescue Needed / At Risk"
-
-    lines = [
-        clean_space(ln)
-        for ln in txt.splitlines()
-        if clean_space(ln)
-        and not re.match(r"^(more info\.{0,3}|priority|\d{1,2}/\d{1,2}/\d{2,4})$", clean_space(ln), re.IGNORECASE)
-    ]
-
-    name = clean_space(heading or "")
-    if not name or re.match(r"^(priority|\d{1,2}/\d{1,2}/\d{2,4})$", name, re.IGNORECASE):
-        name = lines[0] if lines else f"OAS #{aid}"
-
-    meta_line = " ".join(ln for ln in lines if ln != name)
-    age_match = re.search(r"\b(Puppy|Young|Adult|Senior)\b", meta_line, re.IGNORECASE)
-    weight_match = re.search(r"\b(\d+\s*lbs?)\b", meta_line, re.IGNORECASE)
-    breed_match = re.search(r"\b(?:Male|Female),\s*(.+)$", meta_line, re.IGNORECASE)
-
-    return {
-        "id": f"oas-{aid}",
-        "animal_id": aid,
-        "name": name,
-        "breed": clean_space(breed_match.group(1)).rstrip(".") if breed_match else "",
-        "shelter": "Oakland Animal Services",
-        "city": "Oakland",
-        "county": "Alameda",
-        "state": "CA",
-        "size": weight_match.group(1) if weight_match else "",
-        "age": age_match.group(1).title() if age_match else "",
-        "urgency_type": urgency_type,
-        "deadline_or_urgency": badge,
-        "needs_type": "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt",
-        "transport_note": meta_line[:140],
-        "photo_url": img or "",
-        "listing_url": href,
-        "updated_at": now_iso,
-        "last_checked": now_iso,
+    url = (
+        "https://api.rescuegroups.org/v5/public/orgs/5970/animals/search/available/dogs"
+        "?include=pictures,breeds&limit=100"
+    )
+    headers = {
+        "Content-Type": "application/vnd.api+json",
+        "Authorization": api_key,
+        "User-Agent": USER_AGENT,
     }
 
+    try:
+        req = urllib.request.Request(url, headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            payload = json.loads(resp.read().decode("utf-8", errors="replace"))
+    except Exception as exc:
+        print(f"  OAS RescueGroups API error: {exc}", flush=True)
+        return []
 
-def extract_oas_cards_from_page(page) -> list[dict]:
-    raw_cards = []
-    seen_hrefs = set()
-
-    for frame in page.frames:
-        try:
-            cards = frame.evaluate(
-                """() => {
-                    const out = [];
-                    const links = Array.from(document.querySelectorAll("a[href]"))
-                        .filter(a => /more info/i.test(a.innerText || "") || /animalId=/i.test(a.href || ""));
-
-                    for (const a of links) {
-                        let card = a.parentElement;
-                        while (card && card !== document.body) {
-                            const hasImg = !!card.querySelector("img");
-                            const moreInfoCount = Array.from(card.querySelectorAll("a"))
-                                .filter(el => /more info/i.test(el.innerText || "")).length;
-                            if (hasImg && moreInfoCount <= 1) break;
-                            card = card.parentElement;
-                        }
-                        if (!card || card === document.body) card = a.parentElement || a;
-
-                        const img = card.querySelector("img");
-                        const heading = card.querySelector("h1, h2, h3, h4, strong, b, [class*='name'], [class*='title']");
-                        out.push({
-                            href: a.href || "",
-                            img: img ? (img.src || img.getAttribute("data-src") || "") : "",
-                            heading: heading ? (heading.innerText || "").trim() : "",
-                            text: (card.innerText || "").trim()
-                        });
-                    }
-                    return out;
-                }"""
+    pictures_by_id = {}
+    breeds_by_id = {}
+    for inc in payload.get("included", []):
+        inc_type = inc.get("type")
+        inc_id = str(inc.get("id") or "")
+        attrs = inc.get("attributes") or {}
+        if inc_type == "pictures":
+            pic_url = (
+                (attrs.get("original") or {}).get("url")
+                or (attrs.get("large") or {}).get("url")
+                or (attrs.get("small") or {}).get("url")
+                or ""
             )
-        except Exception:
+            if inc_id and pic_url:
+                pictures_by_id[inc_id] = pic_url
+        elif inc_type == "breeds":
+            b_name = clean_space(attrs.get("name") or "")
+            if inc_id and b_name:
+                breeds_by_id[inc_id] = b_name
+
+    results = []
+    for item in payload.get("data", []):
+        attrs = item.get("attributes") or {}
+        rels = item.get("relationships") or {}
+
+        rg_id = str(item.get("id") or "").strip()
+        aid = clean_space(str(attrs.get("rescueId") or rg_id))
+        name = clean_space(attrs.get("name") or f"OAS #{aid}")
+
+        priority_raw = str(attrs.get("priority") or "").strip()
+        kill_date_raw = str(attrs.get("killDate") or attrs.get("reviewDate") or "").strip()
+
+        deadline_str = ""
+        if kill_date_raw and not kill_date_raw.startswith("2500"):
+            m_iso = re.match(r"^(\d{4})-(\d{2})-(\d{2})", kill_date_raw)
+            if m_iso:
+                deadline_str = f"{int(m_iso.group(2))}/{int(m_iso.group(3))}/{m_iso.group(1)}"
+
+        # Only include dogs flagged with a deadline or priority level on OAS's urgent board
+        is_urgent = bool(deadline_str) or (priority_raw not in ("", "0", "0.0", "None", "null"))
+        if not is_urgent:
             continue
 
-        for c in cards:
-            href = (c.get("href") or "").strip()
-            if not href or href in seen_hrefs:
-                continue
-            seen_hrefs.add(href)
-            raw_cards.append(c)
+        if deadline_str:
+            badge = f"DEADLINE {deadline_str}"
+            urgency_type = f"OAS Exit Deadline ({deadline_str})"
+        else:
+            badge = "OAS PRIORITY"
+            urgency_type = "OAS Priority Urgent Dog"
 
-    return raw_cards
+        pic_refs = (rels.get("pictures") or {}).get("data") or []
+        photo_url = next((pictures_by_id[str(p["id"])] for p in pic_refs if str(p.get("id")) in pictures_by_id), "")
+
+        breed_refs = (rels.get("breeds") or {}).get("data") or []
+        breed_names = [breeds_by_id[str(b["id"])] for b in breed_refs if str(b.get("id")) in breeds_by_id]
+        breed = clean_space(attrs.get("breedString") or " / ".join(breed_names))
+
+        age = clean_space(attrs.get("ageGroup") or attrs.get("ageString") or "")
+        size = clean_space(attrs.get("sizeGroup") or "")
+        sex = clean_space(attrs.get("sex") or "")
+        desc_plain = clean_space(html.unescape(re.sub(r"<[^>]+>", " ", attrs.get("descriptionText") or attrs.get("descriptionHtml") or "")))
+        is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(desc_plain))
+
+        meta_bits = [b for b in [age, sex, breed] if b]
+        listing_id = rg_id or aid
+        listing_url = f"https://www.oaklandanimalservices.org/rescue-needed/animal?animalId={listing_id}"
+
+        results.append({
+            "id": f"oas-{listing_id}",
+            "animal_id": listing_id,
+            "name": name,
+            "breed": breed,
+            "shelter": "Oakland Animal Services",
+            "city": "Oakland",
+            "county": "Alameda",
+            "state": "CA",
+            "size": size,
+            "age": age,
+            "urgency_type": urgency_type,
+            "deadline_or_urgency": badge,
+            "needs_type": "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt",
+            "transport_note": ", ".join(meta_bits)[:140],
+            "photo_url": photo_url,
+            "listing_url": listing_url,
+            "updated_at": now_iso,
+            "last_checked": now_iso,
+        })
+
+    print(f"  OAS RescueGroups API urgent dogs saved: {len(results)}", flush=True)
+    return results
 
 
 def scrape_oas_rescue_needed(page, now_iso: str) -> list[dict]:
-    direct_url = "https://www.oaklandanimalservices.org/rescue-needed/"
-    proxy_url = "https://www-oaklandanimalservices-org.translate.goog/rescue-needed/?_x_tr_sl=es&_x_tr_tl=en&_x_tr_hl=en"
-    print("[2/8] Scraping Oakland Animal Services /rescue-needed/...", flush=True)
-
-    for target in (direct_url, proxy_url):
-        host = target.split("/")[2]
-        try:
-            resp = page.goto(target, wait_until="domcontentloaded", timeout=35000)
-            if resp and resp.status == 403:
-                print(f"  OAS blocked (403) on {host}; trying next endpoint...", flush=True)
-                continue
-            try:
-                page.wait_for_selector("a[href*='animalId=']", timeout=10000)
-            except Exception:
-                page.wait_for_timeout(3000)
-
-            raw_cards = extract_oas_cards_from_page(page)
-            if raw_cards:
-                results = []
-                for c in raw_cards:
-                    id_m = re.search(r"animalId=(\d+)", c["href"], re.IGNORECASE)
-                    clean_href = (
-                        f"https://www.oaklandanimalservices.org/rescue-needed/animal/?animalId={id_m.group(1)}"
-                        if id_m
-                        else direct_url
-                    )
-                    dog = parse_oas_card(clean_href, c["text"], c.get("img") or "", c.get("heading") or "", now_iso)
-                    if dog:
-                        results.append(dog)
-                print(f"  OAS /rescue-needed/ dogs saved via {host}: {len(results)}", flush=True)
-                return results
-        except Exception as exc:
-            print(f"  OAS attempt failed ({host}): {exc}", flush=True)
-
-    print("  OAS blocked on all endpoints; preserving previous OAS records.", flush=True)
-    return []
+    """Entry point called by main() at [2/8]—uses RescueGroups API exclusively for OAS."""
+    print("[2/8] Fetching Oakland Animal Services via RescueGroups API (Org 5970)...", flush=True)
+    results = fetch_oas_via_rescuegroups(now_iso)
+    if not results:
+        print("  No new OAS records returned; preserving non-expired Alameda records from dogs.json.", flush=True)
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -1164,13 +1171,15 @@ def generate_static_seo_pages(unique_dogs: list[dict], now_iso: str) -> None:
 
 
 def main():
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now_utc = datetime.now(timezone.utc)
+    now_iso = now_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+    today_la = datetime.now(ZoneInfo("America/Los_Angeles")).date()
     only_oas = "--only-oas" in sys.argv
     previous_dogs = load_previous_dogs()
     all_dogs = []
 
     if only_oas:
-        print("Running in --only-oas mode (preserving all other 7 counties from dogs.json)...", flush=True)
+        print("Running in --only-oas mode (preserving non-expired records for other counties)...", flush=True)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -1282,11 +1291,16 @@ def main():
     if not only_oas:
         all_dogs.extend(fetch_sanjose_arcgis(now_iso))
 
-    # Preserve previous county records if a shelter site temporarily returned 0 (or in --only-oas mode)
+    # Preserve previous county records if a shelter site returned 0 (or in --only-oas mode),
+    # skipping anything older than MAX_PRESERVED_DAYS so unrefreshed feeds don't linger forever.
     active_counties = {d.get("county") for d in all_dogs if d.get("county")}
+    stale_dropped = 0
     for prev in previous_dogs:
         c = prev.get("county")
         if c and c not in active_counties:
+            if not only_oas and is_preserved_record_stale(prev, now_utc):
+                stale_dropped += 1
+                continue
             if c == "Contra Costa" and prev.get("animal_id"):
                 aid = prev["animal_id"].upper()
                 prev["id"] = f"24pc-ccst-{aid.lower()}"
@@ -1295,11 +1309,21 @@ def main():
 
     seen = set()
     unique_dogs = []
+    expired_dropped = 0
     for dog in all_dogs:
+        if is_deadline_expired(dog, today_la):
+            expired_dropped += 1
+            continue
         key = f"{dog.get('county')}-{dog.get('animal_id')}".lower()
         if key not in seen:
             seen.add(key)
             unique_dogs.append(normalize_dog_record(dog))
+
+    if expired_dropped or stale_dropped:
+        print(
+            f"  Pruned {expired_dropped} passed-deadline dogs and {stale_dropped} stale (>7d) preserved dogs.",
+            flush=True,
+        )
 
     def sort_rank(d: dict) -> tuple:
         badge = (d.get("deadline_or_urgency") or "").upper()
