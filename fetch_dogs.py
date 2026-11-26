@@ -30,6 +30,13 @@ RESCUE_ONLY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+BOILERPLATE_PATTERN = re.compile(
+    r"\b(featur(?:e|ed|ing)\s+a\s+pet|sponsor|donate|click\s+here|http|www\.|learn\s+more|subscribe|newsletter)\b",
+    re.IGNORECASE,
+)
+
+FOSTER_CAPABLE_COUNTIES = {"alameda", "stanislaus", "santa clara"}
+
 DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 
 LAAS_WEB_BLOCKED = False
@@ -148,6 +155,14 @@ SHELTER_SEO_CONFIG = [
 
 def clean_space(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
+
+
+def is_clean_meta(val: str, max_len: int = 55) -> bool:
+    """Rejects promo banners or runaway HTML text captured during profile parsing."""
+    s = clean_space(val)
+    if not s or len(s) > max_len:
+        return False
+    return not BOILERPLATE_PATTERN.search(s)
 
 
 def extract_field(text: str, labels: tuple[str, ...]) -> str:
@@ -435,7 +450,6 @@ def fetch_oas_via_rescuegroups(now_iso: str) -> list[dict]:
             if m_iso:
                 deadline_str = f"{int(m_iso.group(2))}/{int(m_iso.group(3))}/{m_iso.group(1)}"
 
-        # Only include dogs flagged with a deadline or priority level on OAS's urgent board
         is_urgent = bool(deadline_str) or (priority_raw not in ("", "0", "0.0", "None", "null"))
         if not is_urgent:
             continue
@@ -579,7 +593,7 @@ def scrape_24petconnect_board(
         badge = default_badge
         note = reason
         is_rescue_only = bool(RESCUE_ONLY_PATTERN.search(status + " " + txt + " " + default_badge))
-        needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull, Foster, or Adopt"
+        needs = "Rescue Pull Only" if is_rescue_only else "Rescue Pull or Adopt"
 
         if reason:
             if "u-behavior" in reason.lower():
@@ -683,7 +697,7 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
                 h1_match = re.search(r"<h1[^>]*>(.*?)</h1>", raw_html, re.IGNORECASE | re.DOTALL)
                 if h1_match:
                     parsed_name = clean_space(html.unescape(re.sub(r"<[^>]+>", "", h1_match.group(1))))
-                    if parsed_name and parsed_name.upper() != "LAAS":
+                    if is_clean_meta(parsed_name, 35) and parsed_name.upper() != "LAAS":
                         dog["name"] = parsed_name
 
                 if RESCUE_ONLY_PATTERN.search(plain):
@@ -699,16 +713,16 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
                 if m_branch:
                     dog["shelter"] = f"LA Animal Services ({m_branch.group(1).title()})"
 
-                m_size = re.search(r"\bSize\s+([^\n]+?)(?=\s+Color\b|\s+Breed\b)", plain, re.IGNORECASE)
-                if m_size and not dog.get("size"):
+                m_size = re.search(r"\bSize\s+([^\n]+?)(?=\s+Color\b|\s+Breed\b|\s+Lifestage\b)", plain, re.IGNORECASE)
+                if m_size and not dog.get("size") and is_clean_meta(m_size.group(1), 25):
                     dog["size"] = clean_space(m_size.group(1))
 
-                m_breed = re.search(r"\bBreed\s+([^\n]+?)(?=\s+Lifestage\b|\s+Care Status\b)", plain, re.IGNORECASE)
-                if m_breed and not dog.get("breed"):
+                m_breed = re.search(r"\bBreed\s+([^\n]+?)(?=\s+Lifestage\b|\s+Care Status\b|\s+Medical\b)", plain, re.IGNORECASE)
+                if m_breed and not dog.get("breed") and is_clean_meta(m_breed.group(1), 45):
                     dog["breed"] = clean_space(m_breed.group(1))
 
-                m_stage = re.search(r"\bLifestage\s+([^\n]+?)(?=\s+Care Status\b|\s+Medical\b)", plain, re.IGNORECASE)
-                if m_stage and not dog.get("age"):
+                m_stage = re.search(r"\bLifestage\s+([^\n]+?)(?=\s+Care Status\b|\s+Medical\b|\s+Sex\b)", plain, re.IGNORECASE)
+                if m_stage and not dog.get("age") and is_clean_meta(m_stage.group(1), 25):
                     dog["age"] = clean_space(m_stage.group(1))
 
                 return dog.get("name") != before_name
@@ -729,18 +743,18 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
     m_title = re.search(rf"\b([A-Za-z][A-Za-z0-9' .-]{{1,30}}?)\s*-\s*ID\s*#?\s*{re.escape(aid)}\b", ph_plain, re.IGNORECASE)
     m_intro = re.search(r"\bMy name is\s+([A-Za-z][A-Za-z0-9' -]{1,30}?)\s+and I am\b", ph_plain, re.IGNORECASE)
     parsed_name = (m_title.group(1) if m_title else (m_intro.group(1) if m_intro else "")).strip(" -–|:")
-    if parsed_name and parsed_name.upper() != "LAAS":
+    if is_clean_meta(parsed_name, 35) and parsed_name.upper() != "LAAS":
         dog["name"] = parsed_name.title() if parsed_name.isupper() else parsed_name
 
     m_branch = re.search(r"Los Angeles Animal Services\s*-\s*([A-Za-z ]+?Shelter)\b", ph_plain, re.IGNORECASE)
     if m_branch:
         branch = clean_space(m_branch.group(1)).replace(" Shelter", "").strip()
-        if branch:
+        if branch and is_clean_meta(branch, 30):
             dog["shelter"] = f"LA Animal Services ({branch})"
 
     if not dog.get("age"):
         m_age = re.search(r"\babout\s+(\d+\s+(?:years?|months?|weeks?)\s+old)\b", ph_plain, re.IGNORECASE)
-        if m_age:
+        if m_age and is_clean_meta(m_age.group(1), 25):
             dog["age"] = clean_space(m_age.group(1))
 
     if not dog.get("size"):
@@ -750,7 +764,7 @@ def enrich_laas_from_petharbor(dog: dict) -> bool:
 
     if not dog.get("breed"):
         m_breed = re.search(r"\bMy name is\s+[^.]+?\s+and I am (?:a|an)\s+([^.]+)\.", ph_plain, re.IGNORECASE)
-        if m_breed:
+        if m_breed and is_clean_meta(m_breed.group(1), 45):
             dog["breed"] = clean_space(m_breed.group(1))
 
     if RESCUE_ONLY_PATTERN.search(ph_plain):
@@ -818,7 +832,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
 
             if cells:
                 name_clean = re.sub(r"\(?\bA\d{6,8}\b\)?", "", cells[0]).strip(" -()")
-                if name_clean and len(name_clean) < 35 and name_clean.upper() != "LAAS":
+                if is_clean_meta(name_clean, 35) and name_clean.upper() != "LAAS":
                     name = name_clean
                 for cell in cells[1:]:
                     if any(s in cell.lower() for s in ("east valley", "west valley", "west la", "south la", "harbor", "north central", "chesterfield", "shelter")):
@@ -829,7 +843,8 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
                         breed = cell
 
             if not name:
-                name = extract_field(txt, ("Meet", "Name")) or f"LAAS {animal_id}"
+                extracted = extract_field(txt, ("Meet", "Name"))
+                name = extracted if is_clean_meta(extracted, 35) else f"LAAS {animal_id}"
 
             results.append({
                 "id": f"laas-{animal_id.lower()}",
@@ -844,7 +859,7 @@ def scrape_laas_newhope_alerts(page, now_iso: str) -> list[dict]:
                 "age": age,
                 "urgency_type": board["urgency_type"],
                 "deadline_or_urgency": board["badge"],
-                "needs_type": "New Hope Rescue Pull Only" if RESCUE_ONLY_PATTERN.search(txt) else "New Hope Rescue Pull / Foster / Adopt",
+                "needs_type": "New Hope Rescue Pull Only" if RESCUE_ONLY_PATTERN.search(txt) else "New Hope Rescue Pull or Adopt",
                 "transport_note": f"Active on {board['label']}",
                 "photo_url": r.get("img") or "",
                 "listing_url": href or f"https://www.laanimalservices.com/pet/{animal_id.lower()}",
@@ -965,16 +980,30 @@ def fetch_sanjose_arcgis(now_iso: str) -> list[dict]:
 # 9. GLOBAL STANDARDIZATION & STATIC SHELTER SEO PAGES
 # ---------------------------------------------------------------------------
 def normalize_dog_record(dog: dict) -> dict:
-    """Ensures needs_type and metadata formatting are consistent across all 8 shelters."""
+    """Standardizes needs_type into exact Rescue-Only, Foster-Eligible, or Adoptable categories."""
+    for field, limit in (("breed", 50), ("age", 25), ("size", 25)):
+        val = dog.get(field) or ""
+        if val and not is_clean_meta(val, limit):
+            dog[field] = ""
+
+    county = (dog.get("county") or "").lower()
+    is_laas = "los angeles" in county
     combined = " ".join(
         str(dog.get(k) or "")
         for k in ("needs_type", "urgency_type", "deadline_or_urgency", "transport_note")
     )
-    is_laas = "los angeles" in (dog.get("county") or "").lower()
+
     if RESCUE_ONLY_PATTERN.search(combined):
         dog["needs_type"] = "New Hope Rescue Pull Only" if is_laas else "Rescue Pull Only"
-    elif not dog.get("needs_type"):
-        dog["needs_type"] = "New Hope Rescue Pull / Foster / Adopt" if is_laas else "Rescue Pull, Foster, or Adopt"
+    elif "foster priority" in (dog.get("urgency_type") or "").lower():
+        dog["needs_type"] = "Urgent Foster / Adopt"
+    elif county in FOSTER_CAPABLE_COUNTIES or re.search(r"\bfoster\b", combined, re.IGNORECASE):
+        dog["needs_type"] = "Rescue Pull, Foster, or Adopt"
+    elif is_laas:
+        dog["needs_type"] = "New Hope Rescue Pull or Adopt"
+    else:
+        dog["needs_type"] = "Rescue Pull or Adopt"
+
     return dog
 
 
