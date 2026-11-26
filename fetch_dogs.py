@@ -942,7 +942,7 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
     else:
         dog["needs_type"] = "Rescue Pull or Adopt"
 
-   return dog
+    return dog
 
 
 def sync_static_page_navs() -> None:
@@ -964,10 +964,10 @@ def sync_static_page_navs() -> None:
 
         def fix_header_nav(match: re.Match) -> str:
             nav_html = match.group(0)
-            nav_html = re.sub(r'\bunderline\s*', '', nav_html)
+            nav_html = re.sub(r"\bunderline\s*", "", nav_html)
             nav_html = re.sub(
                 rf'(<a\s+href="{re.escape(active_slug)}"\s+class=")',
-                r'\1underline ',
+                r"\1underline ",
                 nav_html,
             )
             return nav_html
