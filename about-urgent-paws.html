@@ -14,7 +14,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-neutral-100 text-neutral-900 min-h-screen flex flex-col">
- <header class="bg-white border-b border-neutral-200 sm:sticky sm:top-0 z-20">
+  <header class="bg-white border-b border-neutral-200 sm:sticky sm:top-0 z-20">
     <div class="w-full px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
       <div class="relative flex items-center justify-between gap-2">
         <a href="./" class="flex items-center gap-2 min-w-0">
@@ -30,7 +30,7 @@
         <div class="flex items-center gap-2 sm:gap-4 shrink-0">
           <nav aria-label="Primary navigation" class="hidden sm:flex items-center gap-4 text-xs font-semibold text-neutral-700">
             <a href="./" class="hover:text-neutral-950">Urgent Dogs</a>
-            <a href="about-urgent-paws" class="hover:text-neutral-950">About</a>
+            <a href="about-urgent-paws" class="underline underline-offset-4 text-neutral-950 hover:text-neutral-950">About</a>
             <a href="for-shelters" class="hover:text-neutral-950">For Shelters</a>
             <a href="blog" class="hover:text-neutral-950">Guide</a>
             <a href="contact-us" class="hover:text-neutral-950">Contact</a>
@@ -60,7 +60,7 @@
           class="hidden sm:hidden absolute right-0 top-full mt-2 w-44 rounded-xl border border-neutral-200 bg-white py-1.5 shadow-lg z-30 flex-col text-xs font-semibold text-neutral-800"
         >
           <a href="./" class="px-3.5 py-2 hover:bg-neutral-100">Urgent Dogs</a>
-          <a href="about-urgent-paws" class="px-3.5 py-2 hover:bg-neutral-100">About</a>
+          <a href="about-urgent-paws" class="underline underline-offset-4 text-neutral-950 px-3.5 py-2 hover:bg-neutral-100">About</a>
           <a href="for-shelters" class="px-3.5 py-2 hover:bg-neutral-100">For Shelters</a>
           <a href="blog" class="px-3.5 py-2 hover:bg-neutral-100">Guide</a>
           <a href="contact-us" class="px-3.5 py-2 hover:bg-neutral-100">Contact</a>
@@ -130,5 +130,40 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      const btn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileNavDrawer');
+      const openIcon = document.getElementById('burgerIconOpen');
+      const closeIcon = document.getElementById('burgerIconClose');
+
+      function setMenuOpen(open) {
+        if (!drawer || !btn) return;
+        drawer.classList.toggle('hidden', !open);
+        drawer.classList.toggle('flex', open);
+        if (openIcon) openIcon.classList.toggle('hidden', open);
+        if (closeIcon) closeIcon.classList.toggle('hidden', !open);
+        btn.setAttribute('aria-expanded', String(open));
+      }
+
+      if (btn && drawer) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setMenuOpen(drawer.classList.contains('hidden'));
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!drawer.classList.contains('hidden') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+            setMenuOpen(false);
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') setMenuOpen(false);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
