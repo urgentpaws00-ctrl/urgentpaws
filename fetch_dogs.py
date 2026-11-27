@@ -27,7 +27,7 @@ RESCUED_PATTERN = re.compile(
 )
 
 RESCUE_ONLY_PATTERN = re.compile(
-    r"\b(rescue\s*only|rescue\s*pull\s*only|available\s+to\s+rescue\s+organizations?\s+only|501\s*\(c\)\s*\(3\)\s*only)\b",
+    r"\b(rescue\s*only|rescue\s*pull\s*only|available\s+to\s+rescue\s+organizations?\s+only|501\s*\(c\)\s*\(3\)\s*only|resq-bhv|resq|ap-khoa)\b",
     re.IGNORECASE,
 )
 
@@ -51,6 +51,17 @@ SBCT_FOSTER_RE = re.compile(
     re.IGNORECASE,
 )
 
+DACC_CENTER_EMAILS = {
+    "downey": "DACCDowneyRescue@animalcare.lacounty.gov",
+    "baldwin park": "DACCBaldwinParkRescue@animalcare.lacounty.gov",
+    "carson": "DACCCarsonRescue@animalcare.lacounty.gov",
+    "gardena": "DACCCarsonRescue@animalcare.lacounty.gov",
+    "lancaster": "DACCLancasterRescue@animalcare.lacounty.gov",
+    "palmdale": "DACCPalmdaleRescue@animalcare.lacounty.gov",
+    "agoura": "DACCAgouraRescue@animalcare.lacounty.gov",
+    "castaic": "DACCCastaicRescue@animalcare.lacounty.gov",
+}
+
 PETCONNECT_CARD_SELECTOR = (
     "a[href*='Details'], a[href*='details'], .gridResult, "
     "[class*='gridResult'], [class*='petCard']"
@@ -58,7 +69,13 @@ PETCONNECT_CARD_SELECTOR = (
 
 LAAS_WEB_BLOCKED = False
 MAX_PRESERVED_DAYS = 7
-BROWSER_PORTAL_TYPES = {"stanislaus", "24petconnect", "laas_petharbor"}
+BROWSER_PORTAL_TYPES = {
+    "stanislaus",
+    "24petconnect",
+    "laas_petharbor",
+    "oc_rescuetrack",
+    "lacounty_dacc",
+}
 
 LAAS_ALERT_BOARDS = [
     {
@@ -1062,6 +1079,417 @@ def fetch_sanjose_arcgis(cfg: dict, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# PORTAL 6: OC ANIMAL CARE - PUBLIC RESCUE TRACK PORTAL
+# ---------------------------------------------------------------------------
+def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
+    url = cfg["portal_config"]["url"]
+    print(f"Scraping {cfg['name']} Rescue Track portal...", flush=True)
+
+    captured_records: list[dict] = []
+
+    def handle_response(resp):
+        try:
+            r_url = resp.url.lower()
+            if resp.status != 200 or not any(k in r_url for k in ("rescuetrack", "animal", "special", "pet", "get")):
+                return
+            ctype = (resp.headers.get("content-type") or "").lower()
+            if "json" not in ctype and "javascript" not in ctype and "text/plain" not in ctype:
+                return
+            raw = resp.text()
+            if not raw or len(raw) < 20:
+                return
+            parsed = json.loads(raw)
+            if isinstance(parsed, str):
+                parsed = json.loads(parsed)
+            if isinstance(parsed, dict):
+                for key in ("d", "data", "animals", "results", "items", "records"):
+                    if isinstance(parsed.get(key), list):
+                        parsed = parsed[key]
+                        break
+            if isinstance(parsed, list):
+                for item in parsed:
+                    if isinstance(item, dict) and any(k in item for k in ("AnimalID", "animalId", "animal_id", "PetID", "id", "Id")):
+                        captured_records.append(item)
+        except Exception:
+            pass
+
+    page.on("response", handle_response)
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        try:
+            page.wait_for_selector("text=/\\bA\\d{5,8}\\b/", timeout=7000)
+        except Exception:
+            page.wait_for_timeout(3500)
+    except Exception as exc:
+        print(f"  OC Rescue Track load error: {exc}", flush=True)
+    finally:
+        try:
+            page.remove_listener("response", handle_response)
+        except Exception:
+            pass
+
+    results: list[dict] = []
+    seen_ids: set[str] = set()
+
+    def build_oc_record(
+        aid: str,
+        name: str,
+        breed: str,
+        age: str,
+        size: str,
+        code: str,
+        note: str,
+        photo: str,
+        listing_url: str,
+    ) -> None:
+        aid_clean = aid.strip().upper()
+        if not aid_clean or aid_clean in seen_ids:
+            return
+        seen_ids.add(aid_clean)
+
+        code_upper = clean_space(code).upper()
+        if "BHV" in code_upper or "BEHAV" in code_upper:
+            badge = "OC RESQ-BHV"
+            urgency_type = "OC Rescue Track — Behavioral (RESQ-BHV)"
+        elif "MED" in code_upper:
+            badge = "OC MEDICAL"
+            urgency_type = "OC Rescue Track — Medical"
+        elif code_upper:
+            badge = f"OC {code_upper}"[:28]
+            urgency_type = f"OC Rescue Track ({code_upper})"
+        else:
+            badge = "OC RESQ"
+            urgency_type = "OC Rescue Track Priority"
+
+        note_clean = clean_space(note)
+        contact_hint = "Rescue desk: rescue@occr.ocgov.com"
+        full_note = f"{note_clean} • {contact_hint}".strip(" •") if note_clean else contact_hint
+
+        results.append({
+            "id": f"ocac-{aid_clean.lower()}",
+            "shelter_slug": cfg["slug"],
+            "animal_id": aid_clean,
+            "name": clean_space(name) or f"OC Animal Care {aid_clean}",
+            "breed": clean_space(breed),
+            "shelter": cfg["name"],
+            "city": cfg["city"],
+            "county": cfg["county"],
+            "state": cfg["state"],
+            "size": clean_space(size),
+            "age": clean_space(age),
+            "urgency_type": urgency_type,
+            "deadline_or_urgency": badge,
+            "needs_type": "Rescue Pull Only",
+            "transport_note": full_note[:180],
+            "photo_url": clean_space(photo),
+            "listing_url": clean_space(listing_url) or url,
+            "updated_at": now_iso,
+            "last_checked": now_iso,
+        })
+
+    for item in captured_records:
+        species = str(item.get("Species") or item.get("AnimalType") or item.get("animalType") or "Dog").lower()
+        if species and "dog" not in species and "canine" not in species:
+            continue
+        aid = str(item.get("AnimalID") or item.get("animalId") or item.get("animal_id") or item.get("PetID") or item.get("id") or "")
+        if not re.match(r"^A\d{5,8}$", aid.strip(), re.IGNORECASE):
+            continue
+        name = str(item.get("AnimalName") or item.get("Name") or item.get("name") or "")
+        breed = str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or "")
+        age = str(item.get("Age") or item.get("age") or "")
+        weight = str(item.get("Weight") or item.get("Size") or item.get("weight") or "")
+        code = str(item.get("Status") or item.get("RescueCode") or item.get("SpecialCode") or item.get("Category") or "RESQ")
+        note = str(item.get("Memo") or item.get("Notes") or item.get("Reason") or item.get("Description") or "")
+        photo = str(item.get("PhotoUrl") or item.get("ImageUrl") or item.get("Photo") or item.get("photoUrl") or "")
+        if photo and not photo.startswith("http"):
+            photo = f"https://petadoption.oc.gov/{photo.lstrip('/')}"
+        detail_link = str(item.get("DetailUrl") or item.get("Url") or url)
+        build_oc_record(aid, name, breed, age, weight, code, note, photo, detail_link)
+
+    if not results:
+        dom_rows = page.evaluate(
+            """() => {
+                const out = [];
+                const idRe = /\\bA\\d{5,8}\\b/;
+                const seen = new Set();
+                const nodes = Array.from(document.querySelectorAll("tr, .card, [class*='card'], [class*='pet'], [class*='animal'], li, article"));
+                for (const el of nodes) {
+                    const txt = (el.innerText || "").trim();
+                    if (!txt || txt.length < 12 || txt.length > 1600) continue;
+                    const m = txt.match(idRe);
+                    if (!m) continue;
+                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
+                    if (nested) continue;
+                    const aid = m[0].toUpperCase();
+                    if (seen.has(aid)) continue;
+                    seen.add(aid);
+                    const img = el.querySelector("img");
+                    const a = el.querySelector("a[href]");
+                    out.push({
+                        aid,
+                        text: txt,
+                        img: img ? (img.src || img.getAttribute("data-src") || "") : "",
+                        href: a ? a.href : window.location.href
+                    });
+                }
+                return out;
+            }"""
+        )
+
+        for row in dom_rows:
+            txt = row.get("text") or ""
+            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+                continue
+            aid = row["aid"]
+            lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
+            name = next(
+                (
+                    ln for ln in lines[:3]
+                    if aid not in ln
+                    and len(ln) < 35
+                    and not re.search(r"\b(RESQ|MEDICAL|MALE|FEMALE|DOG|YEARS?|MONTHS?)\b", ln, re.IGNORECASE)
+                ),
+                f"OC Animal Care {aid}",
+            )
+            code_m = re.search(r"\b(RESQ-BHV|MEDICAL|RESQ[A-Z0-9-]*)\b", txt, re.IGNORECASE)
+            code = code_m.group(1) if code_m else "RESQ"
+            breed = extract_field(txt, ("Breed",))
+            age = extract_field(txt, ("Age",))
+            size = extract_field(txt, ("Weight", "Size"))
+            build_oc_record(aid, name, breed, age, size, code, "", row.get("img") or "", row.get("href") or url)
+
+    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
+    return results
+
+
+# ---------------------------------------------------------------------------
+# PORTAL 7: LA COUNTY DACC (7 CARE CENTERS) - RESCUE ONLY & AP-KHOA
+# ---------------------------------------------------------------------------
+def format_dacc_care_center(raw_loc: str) -> tuple[str, str]:
+    loc_clean = clean_space(raw_loc)
+    loc_lower = loc_clean.lower()
+    for key, email in DACC_CENTER_EMAILS.items():
+        if key in loc_lower:
+            center_label = "Carson / Gardena" if key in ("carson", "gardena") else key.title()
+            return f"LA County DACC ({center_label})", email
+    return (f"LA County DACC ({loc_clean})" if loc_clean else "LA County DACC"), ""
+
+
+def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
+    url = cfg["portal_config"]["url"]
+    print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
+
+    captured_items: list[dict] = []
+
+    def handle_response(resp):
+        try:
+            if resp.status != 200:
+                return
+            ctype = (resp.headers.get("content-type") or "").lower()
+            if "json" not in ctype:
+                return
+            r_url = resp.url.lower()
+            if not any(k in r_url for k in ("dacc", "animal", "search", "pet", "wp-json", "admin-ajax")):
+                return
+            data = json.loads(resp.text())
+            if isinstance(data, dict):
+                for k in ("data", "animals", "results", "items", "pets", "rows"):
+                    if isinstance(data.get(k), list):
+                        data = data[k]
+                        break
+            if isinstance(data, list):
+                for entry in data:
+                    if isinstance(entry, dict) and any(
+                        k in entry for k in ("animal_id", "animalId", "AnimalID", "id", "pet_id")
+                    ):
+                        captured_items.append(entry)
+        except Exception:
+            pass
+
+    page.on("response", handle_response)
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=25000)
+        try:
+            page.wait_for_selector("select, input, form, [class*='search'], [class*='animal']", timeout=7000)
+        except Exception:
+            page.wait_for_timeout(3000)
+
+        # Trigger searches for Dog + Rescue Only and Dog + AP-KHOA if standard form controls are present
+        for target_status in ("Rescue Only", "AP-KHOA"):
+            try:
+                page.evaluate(
+                    """(statusTarget) => {
+                        const selects = Array.from(document.querySelectorAll("select"));
+                        for (const sel of selects) {
+                            const opts = Array.from(sel.options);
+                            const dogOpt = opts.find(o => /^dog$/i.test(o.text.trim()) || /^dog$/i.test(o.value.trim()));
+                            if (dogOpt) {
+                                sel.value = dogOpt.value;
+                                sel.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
+                            const stOpt = opts.find(o =>
+                                o.text.toLowerCase().includes(statusTarget.toLowerCase()) ||
+                                o.value.toLowerCase().includes(statusTarget.toLowerCase())
+                            );
+                            if (stOpt) {
+                                sel.value = stOpt.value;
+                                sel.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
+                        }
+                        const btn = Array.from(document.querySelectorAll("button, input[type='submit']")).find(b =>
+                            /search|filter|apply|submit/i.test((b.innerText || b.value || ""))
+                        );
+                        if (btn) btn.click();
+                    }""",
+                    target_status,
+                )
+                page.wait_for_timeout(2200)
+            except Exception:
+                continue
+    except Exception as exc:
+        print(f"  LA County DACC load error: {exc}", flush=True)
+    finally:
+        try:
+            page.remove_listener("response", handle_response)
+        except Exception:
+            pass
+
+    results: list[dict] = []
+    seen_ids: set[str] = set()
+
+    def add_dacc_dog(
+        aid: str,
+        name: str,
+        breed: str,
+        age: str,
+        size: str,
+        raw_center: str,
+        raw_status: str,
+        note: str,
+        photo: str,
+        detail_url: str,
+    ) -> None:
+        aid_clean = aid.strip().upper()
+        if not aid_clean or aid_clean in seen_ids:
+            return
+        seen_ids.add(aid_clean)
+
+        status_upper = clean_space(raw_status).upper()
+        if "KHOA" in status_upper:
+            badge = "DACC AP-KHOA"
+            urgency_type = "LA County DACC — AP-KHOA (Urgent)"
+            needs = "Rescue Pull or Adopt"
+        else:
+            badge = "DACC RESCUE ONLY"
+            urgency_type = "LA County DACC — Rescue Only"
+            needs = "Rescue Pull Only"
+
+        shelter_label, center_email = format_dacc_care_center(raw_center)
+        note_bits = [clean_space(note), f"Rescue desk: {center_email}" if center_email else ""]
+        full_note = " • ".join(b for b in note_bits if b)
+
+        results.append({
+            "id": f"dacc-{aid_clean.lower()}",
+            "shelter_slug": cfg["slug"],
+            "animal_id": aid_clean,
+            "name": clean_space(name) or f"DACC {aid_clean}",
+            "breed": clean_space(breed),
+            "shelter": shelter_label,
+            "city": cfg["city"],
+            "county": cfg["county"],
+            "state": cfg["state"],
+            "size": clean_space(size),
+            "age": clean_space(age),
+            "urgency_type": urgency_type,
+            "deadline_or_urgency": badge,
+            "needs_type": needs,
+            "transport_note": full_note[:180],
+            "photo_url": clean_space(photo),
+            "listing_url": clean_space(detail_url) or f"https://animalcare.lacounty.gov/view-our-animals/?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid_clean}",
+            "updated_at": now_iso,
+            "last_checked": now_iso,
+        })
+
+    for item in captured_items:
+        atype = str(item.get("animalType") or item.get("animal_type") or item.get("species") or "DOG").upper()
+        if atype and "DOG" not in atype:
+            continue
+        status_val = str(item.get("animalStatus") or item.get("status") or item.get("intake_status") or "")
+        if not re.search(r"rescue\s*only|ap-khoa|khoa", status_val, re.IGNORECASE):
+            continue
+        aid = str(item.get("animalID") or item.get("animal_id") or item.get("animalId") or item.get("id") or "")
+        if not re.match(r"^A\d{6,8}$", aid.strip(), re.IGNORECASE):
+            continue
+        name = str(item.get("animalName") or item.get("name") or "")
+        breed = str(item.get("primaryBreed") or item.get("breed") or "")
+        age = str(item.get("animalAge") or item.get("age") or "")
+        size = str(item.get("animalSize") or item.get("weight") or item.get("size") or "")
+        center = str(item.get("animalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
+        note = str(item.get("memo") or item.get("notes") or item.get("description") or "")
+        photo = str(item.get("photoUrl") or item.get("photo_url") or item.get("image") or "")
+        detail_link = str(item.get("detailUrl") or item.get("url") or "")
+        add_dacc_dog(aid, name, breed, age, size, center, status_val, note, photo, detail_link)
+
+    # DOM fallback if the search page rendered cards directly without a JSON endpoint
+    dom_cards = page.evaluate(
+        """() => {
+            const out = [];
+            const idRe = /\\bA\\d{6,8}\\b/;
+            const seen = new Set();
+            const cards = Array.from(document.querySelectorAll(".card, [class*='animal'], [class*='pet'], article, tr, li"));
+            for (const el of cards) {
+                const txt = (el.innerText || "").trim();
+                if (!txt || txt.length < 15 || txt.length > 1800) continue;
+                const m = txt.match(idRe);
+                if (!m) continue;
+                if (!/rescue\\s*only|ap-khoa|khoa/i.test(txt)) continue;
+                const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
+                if (nested) continue;
+                const aid = m[0].toUpperCase();
+                if (seen.has(aid)) continue;
+                seen.add(aid);
+                const img = el.querySelector("img");
+                const a = el.querySelector("a[href]");
+                out.push({
+                    aid,
+                    text: txt,
+                    img: img ? (img.src || img.getAttribute("data-src") || "") : "",
+                    href: a ? a.href : ""
+                });
+            }
+            return out;
+        }"""
+    )
+
+    for c in dom_cards:
+        txt = c.get("text") or ""
+        if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+            continue
+        aid = c["aid"]
+        lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
+        name = next(
+            (
+                ln for ln in lines[:3]
+                if aid not in ln
+                and len(ln) < 35
+                and not re.search(r"\b(RESCUE ONLY|AP-KHOA|DOWNEY|LANCASTER|PALMDALE|BALDWIN|CARSON|AGOURA|CASTAIC|DOG)\b", ln, re.IGNORECASE)
+            ),
+            f"DACC {aid}",
+        )
+        status_m = re.search(r"\b(Rescue Only|AP-KHOA)\b", txt, re.IGNORECASE)
+        status_str = status_m.group(1) if status_m else "Rescue Only"
+        center_m = re.search(r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b", txt, re.IGNORECASE)
+        center_str = center_m.group(1) if center_m else ""
+        breed = extract_field(txt, ("Breed",))
+        age = extract_field(txt, ("Age",))
+        size = extract_field(txt, ("Weight", "Size"))
+        add_dacc_dog(aid, name, breed, age, size, center_str, status_str, "", c.get("img") or "", c.get("href") or "")
+
+    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
+    return results
+
+
+# ---------------------------------------------------------------------------
 # NORMALIZATION & STATIC SEO GENERATION
 # ---------------------------------------------------------------------------
 def infer_shelter_slug(dog: dict, shelters_by_county: dict[str, str]) -> str:
@@ -1082,7 +1510,7 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
         dog["shelter_slug"] = shelter_cfg["slug"]
 
     slug = (dog.get("shelter_slug") or "").lower()
-    is_laas = slug == "la-animal-services" or "los angeles" in (dog.get("county") or "").lower()
+    is_laas = slug == "la-animal-services"
     foster_capable = bool(shelter_cfg.get("foster_capable")) if shelter_cfg else False
 
     combined = " ".join(
@@ -1090,7 +1518,7 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
         for k in ("needs_type", "urgency_type", "deadline_or_urgency", "transport_note")
     )
 
-    if RESCUE_ONLY_PATTERN.search(combined):
+    if RESCUE_ONLY_PATTERN.search(combined) and "ap-khoa" not in combined.lower():
         dog["needs_type"] = "New Hope Rescue Pull Only" if is_laas else "Rescue Pull Only"
     elif "foster priority" in (dog.get("urgency_type") or "").lower():
         dog["needs_type"] = "Urgent Foster / Adopt"
@@ -1351,6 +1779,10 @@ def run_shelter_scraper(page, cfg: dict, now_iso: str) -> list[dict]:
         return scrape_laas_newhope_alerts(page, cfg, now_iso)
     if ptype == "sanjose_arcgis":
         return fetch_sanjose_arcgis(cfg, now_iso)
+    if ptype == "oc_rescuetrack":
+        return scrape_oc_rescuetrack(page, cfg, now_iso)
+    if ptype == "lacounty_dacc":
+        return scrape_lacounty_dacc(page, cfg, now_iso)
     print(f"  Unknown portal_type '{ptype}' for {cfg.get('slug')}", flush=True)
     return []
 
@@ -1475,7 +1907,7 @@ def main():
         badge = (d.get("deadline_or_urgency") or "").upper()
         if any(k in badge for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "OUT OF TIME", "NEEDS RESCUE FINAL")):
             tier = 0
-        elif any(k in badge for k in ("URGENT", "RESCUE", "RED", "ALERT", "PRIORITY")):
+        elif any(k in badge for k in ("URGENT", "RESCUE", "RED", "ALERT", "PRIORITY", "MEDICAL", "AP-KHOA")):
             tier = 1
         elif any(k in badge for k in ("GREATEST RISK", "TRANSFER")):
             tier = 2
