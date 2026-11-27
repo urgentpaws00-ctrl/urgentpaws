@@ -36,6 +36,11 @@ BOILERPLATE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+NAME_NOISE_RE = re.compile(
+    r"^(?:dog|canine|male|female|neutered|spayed|unknown|available|rescue\s*only|ap-khoa|resq[a-z0-9-]*|medical|urgent|tustin|downey|lancaster|palmdale|baldwin\s*park|carson|gardena|agoura|castaic|santa\s*clarita\s*valley|oc\s*animal\s*care|la\s*county\s*dacc)$",
+    re.IGNORECASE,
+)
+
 DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 
 SBCT_DEADLINE_RE = re.compile(
@@ -140,6 +145,55 @@ def is_active_flag(val) -> bool:
     if s.startswith("not ") or s.startswith("no "):
         return False
     return True
+
+
+def resolve_record_name(
+    item: dict | None,
+    aid: str,
+    dom_text: str = "",
+    dom_heading: str = "",
+    fallback_prefix: str = "",
+) -> str:
+    """Extracts a clean dog name from JSON fields, DOM headings, or card text lines."""
+    candidates: list[str] = []
+
+    if item:
+        for k in (
+            "AnimalName", "animalName", "animal_name", "ANIMALNAME",
+            "PetName", "petName", "pet_name", "PETNAME",
+            "Name", "name", "NAME", "CallName", "callName", "call_name",
+            "DogName", "dogName", "Title", "title", "Label", "label",
+        ):
+            val = clean_space(str(item.get(k) or ""))
+            if val:
+                candidates.append(val)
+
+    if dom_heading:
+        candidates.append(clean_space(dom_heading))
+
+    if dom_text:
+        named_field = extract_field(dom_text, ("Name", "Pet Name", "Animal Name", "Meet"))
+        if named_field:
+            candidates.append(named_field)
+        for ln in dom_text.splitlines():
+            s = clean_space(ln)
+            if s and len(s) <= 35:
+                candidates.append(s)
+
+    for raw in candidates:
+        cleaned = re.sub(rf"\(?\b{re.escape(aid)}\b\)?", "", raw, flags=re.IGNORECASE)
+        cleaned = re.sub(r"^(?:Meet|Name|ID)\s*:\s*", "", cleaned, flags=re.IGNORECASE).strip(" -–|:#•")
+        if not cleaned or len(cleaned) < 2 or len(cleaned) > 35:
+            continue
+        if re.fullmatch(r"A\d{5,8}", cleaned, re.IGNORECASE):
+            continue
+        if re.search(r"\d+\s*(?:yrs?|years?|mos?|months?|wks?|weeks?|lbs?)\b", cleaned, re.IGNORECASE):
+            continue
+        if NAME_NOISE_RE.match(cleaned) or not is_clean_meta(cleaned, 35):
+            continue
+        return cleaned.title() if cleaned.isupper() else cleaned
+
+    return f"{fallback_prefix} {aid}".strip() if fallback_prefix else aid
 
 
 def load_shelters() -> list[dict]:
@@ -1194,27 +1248,39 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         except Exception:
             pass
 
-    # Map any rendered <img> tags on #/speciallist/DOG to their Animal ID
-    dom_photos_by_id: dict[str, str] = {}
+    dom_cards_by_id: dict[str, dict] = {}
     try:
-        dom_img_pairs = page.evaluate(
+        dom_cards = page.evaluate(
             """() => {
-                const pairs = [];
+                const out = [];
                 const idRe = /\\bA\\d{5,8}\\b/i;
-                for (const img of Array.from(document.querySelectorAll("img"))) {
-                    const src = img.currentSrc || img.src || img.getAttribute("ng-src") || img.getAttribute("data-src") || "";
-                    if (!src || /logo|icon|placeholder|blank/i.test(src)) continue;
-                    const card = img.closest("tr, .card, [class*='card'], [ng-repeat], li, article, div");
-                    const blob = (src + " " + (card ? card.innerText : "")).trim();
-                    const m = blob.match(idRe);
-                    if (m) pairs.push([m[0].toUpperCase(), src]);
+                const seen = new Set();
+                for (const el of Array.from(document.querySelectorAll("tr, .card, [class*='card'], [ng-repeat], li, article, div"))) {
+                    const txt = (el.innerText || "").trim();
+                    if (!txt || txt.length < 10 || txt.length > 1600) continue;
+                    const m = txt.match(idRe);
+                    if (!m) continue;
+                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || ""));
+                    if (nested) continue;
+                    const aid = m[0].toUpperCase();
+                    if (seen.has(aid)) continue;
+                    seen.add(aid);
+                    const img = el.querySelector("img");
+                    const src = img ? (img.currentSrc || img.src || img.getAttribute("ng-src") || img.getAttribute("data-src") || "") : "";
+                    const heading = el.querySelector("h1, h2, h3, h4, .name, [class*='name'], [class*='title'], strong, b");
+                    out.push({
+                        aid,
+                        text: txt,
+                        heading: heading ? (heading.innerText || "").trim() : "",
+                        img: /logo|icon|placeholder|blank/i.test(src) ? "" : src
+                    });
                 }
-                return pairs;
+                return out;
             }"""
         )
-        for aid_k, img_u in dom_img_pairs or []:
-            if aid_k not in dom_photos_by_id and img_u:
-                dom_photos_by_id[aid_k] = img_u
+        for c in dom_cards or []:
+            if c.get("aid") and c["aid"] not in dom_cards_by_id:
+                dom_cards_by_id[c["aid"]] = c
     except Exception:
         pass
 
@@ -1223,54 +1289,65 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
     logged_sample = False
 
     def resolve_oc_photo(item: dict, aid_clean: str) -> str:
-        # 1. Check explicit photo keys first
         for k in (
             "PhotoUrl", "photoUrl", "photo_url", "ImageUrl", "imageUrl", "image_url",
             "Photo", "photo", "Image", "image", "Picture", "picture", "Pic", "pic",
             "PhotoLink", "PhotoPath", "ImagePath", "Thumbnail", "thumbnail", "FileName",
         ):
             val = clean_space(str(item.get(k) or ""))
-            if val and not val.lower().endswith("noimage.jpg") and not val.lower().endswith("no_image.jpg"):
+            if val and not val.lower().endswith(("noimage.jpg", "no_image.jpg")):
                 if val.startswith("http"):
                     return val
                 if "/" in val:
                     return f"https://petadoption.oc.gov/{val.lstrip('/')}"
                 return f"https://petadoption.oc.gov/rescuetrackportal/Images/{val}"
 
-        # 2. Scan all string values in the dict for any .jpg/.jpeg/.png/.webp URL or path
         for val in item.values():
-            if not isinstance(val, str):
-                continue
-            s = val.strip()
-            if re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", s, re.IGNORECASE) and "logo" not in s.lower():
+            if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE) and "logo" not in val.lower():
+                s = val.strip()
                 if s.startswith("http"):
                     return s
                 if "/" in s:
                     return f"https://petadoption.oc.gov/{s.lstrip('/')}"
                 return f"https://petadoption.oc.gov/rescuetrackportal/Images/{s}"
 
-        # 3. Fallback to rendered DOM <img> matched by AnimalID
-        return dom_photos_by_id.get(aid_clean, "")
+        return (dom_cards_by_id.get(aid_clean) or {}).get("img", "")
 
-    def build_oc_record(
-        aid: str,
-        name: str,
-        breed: str,
-        age: str,
-        size: str,
-        code: str,
-        note: str,
-        photo: str,
-    ) -> None:
-        aid_clean = aid.strip().upper()
-        if not aid_clean or aid_clean in seen_ids:
-            return
-        seen_ids.add(aid_clean)
+    for item in captured_records:
+        species = str(item.get("Species") or item.get("AnimalType") or item.get("animalType") or "Dog").lower()
+        if species and "dog" not in species and "canine" not in species:
+            continue
+        aid = str(
+            item.get("AnimalID") or item.get("AnimalId") or item.get("animalId")
+            or item.get("animal_id") or item.get("PetID") or item.get("id") or ""
+        ).strip().upper()
+        if not re.match(r"^A\d{5,8}$", aid) or aid in seen_ids:
+            continue
+        seen_ids.add(aid)
 
-        size_clean = clean_space(size)
+        if not logged_sample:
+            logged_sample = True
+            print(f"  [debug] OC sample keys={list(item.keys())} | sample={json.dumps(item)[:350]}", flush=True)
+
+        dom_info = dom_cards_by_id.get(aid) or {}
+        name = resolve_record_name(
+            item,
+            aid,
+            dom_text=dom_info.get("text", ""),
+            dom_heading=dom_info.get("heading", ""),
+            fallback_prefix="OC Animal Care",
+        )
+        breed = clean_space(str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or ""))
+        age = clean_space(str(item.get("Age") or item.get("age") or ""))
+        size_clean = clean_space(str(item.get("Weight") or item.get("Size") or item.get("weight") or ""))
         if size_clean and re.match(r"^\d+(?:\.\d+)?$", size_clean):
             size_clean = f"{int(round(float(size_clean)))} lbs"
 
+        code = str(
+            item.get("SubStatus") or item.get("RescueStatus") or item.get("StatusCode")
+            or item.get("Status") or item.get("RescueCode") or item.get("SpecialCode")
+            or item.get("Category") or "RESQ"
+        )
         code_upper = clean_space(code).upper()
         if "BHV" in code_upper or "BEHAV" in code_upper:
             badge = "OC RESQ-BHV"
@@ -1285,65 +1362,36 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             badge = "OC RESQ"
             urgency_type = "OC Rescue Track Priority"
 
-        note_clean = clean_space(note)
+        note_clean = clean_space(str(item.get("Memo") or item.get("Notes") or item.get("Reason") or item.get("Description") or ""))
         contact_hint = "Rescue desk: rescue@occr.ocgov.com"
         full_note = f"{note_clean} • {contact_hint}".strip(" •") if note_clean else contact_hint
 
         results.append({
-            "id": f"ocac-{aid_clean.lower()}",
+            "id": f"ocac-{aid.lower()}",
             "shelter_slug": cfg["slug"],
-            "animal_id": aid_clean,
-            "name": clean_space(name) or f"OC Animal Care {aid_clean}",
-            "breed": clean_space(breed),
+            "animal_id": aid,
+            "name": name,
+            "breed": breed,
             "shelter": cfg["name"],
             "city": cfg["city"],
             "county": cfg["county"],
             "state": cfg["state"],
             "size": size_clean,
-            "age": clean_space(age),
+            "age": age,
             "urgency_type": urgency_type,
             "deadline_or_urgency": badge,
             "needs_type": "Rescue Pull Only",
             "transport_note": full_note[:180],
-            "photo_url": clean_space(photo),
-            "listing_url": f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{aid_clean}",
+            "photo_url": resolve_oc_photo(item, aid),
+            "listing_url": f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{aid}",
             "updated_at": now_iso,
             "last_checked": now_iso,
         })
 
-    for item in captured_records:
-        species = str(item.get("Species") or item.get("AnimalType") or item.get("animalType") or "Dog").lower()
-        if species and "dog" not in species and "canine" not in species:
-            continue
-        aid = str(
-            item.get("AnimalID") or item.get("AnimalId") or item.get("animalId")
-            or item.get("animal_id") or item.get("PetID") or item.get("id") or ""
-        ).strip().upper()
-        if not re.match(r"^A\d{5,8}$", aid):
-            continue
-
-        if not logged_sample:
-            logged_sample = True
-            print(f"  [debug] OC sample record keys={list(item.keys())} | sample={json.dumps(item)[:320]}", flush=True)
-
-        name = str(
-            item.get("PetName") or item.get("pet_name") or item.get("AnimalName")
-            or item.get("Animal_Name") or item.get("Name") or item.get("name") or ""
-        )
-        breed = str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or "")
-        age = str(item.get("Age") or item.get("age") or "")
-        weight = str(item.get("Weight") or item.get("Size") or item.get("weight") or "")
-        code = str(
-            item.get("SubStatus") or item.get("RescueStatus") or item.get("StatusCode")
-            or item.get("Status") or item.get("RescueCode") or item.get("SpecialCode")
-            or item.get("Category") or "RESQ"
-        )
-        note = str(item.get("Memo") or item.get("Notes") or item.get("Reason") or item.get("Description") or "")
-        photo = resolve_oc_photo(item, aid)
-        build_oc_record(aid, name, breed, age, weight, code, note, photo)
-
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
+
+
 # ---------------------------------------------------------------------------
 # PORTAL 7: LA COUNTY DACC (7 CARE CENTERS) - RESCUE ONLY & AP-KHOA
 # ---------------------------------------------------------------------------
@@ -1358,19 +1406,66 @@ def format_dacc_care_center(raw_loc: str) -> tuple[str, str]:
 
 
 def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
-    start_url = cfg.get("portal_config", {}).get("url") or "https://animalcare.lacounty.gov/dacc-search/"
     print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
     results: list[dict] = []
     seen_ids: set[str] = set()
+    logged_sample = False
+
+    def resolve_dacc_photo(item: dict | None, dom_img: str = "") -> str:
+        candidates: list[str] = []
+        if item:
+            for k in (
+                "PhotoUrl", "photoUrl", "PhotoURL", "photo_url", "ImageUrl", "imageUrl",
+                "image_url", "Photo", "photo", "Image", "image", "Picture", "picture",
+                "Thumbnail", "thumbnail", "Pic", "pic", "PhotoLink", "FileName",
+            ):
+                val = clean_space(str(item.get(k) or ""))
+                if val:
+                    candidates.append(val)
+            for val in item.values():
+                if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE):
+                    candidates.append(val.strip())
+        if dom_img:
+            candidates.append(clean_space(dom_img))
+
+        for raw in candidates:
+            low = raw.lower()
+            if not raw or low.startswith("data:") or any(
+                bad in low for bad in ("logo", "icon", "placeholder", "noimage", "no_image", "spinner")
+            ):
+                continue
+            if raw.startswith("//"):
+                return f"https:{raw}"
+            if raw.startswith("http"):
+                return raw
+            return f"https://animalcare.lacounty.gov/{raw.lstrip('/')}"
+        return ""
+
+    # Start on homepage to clear Incapsula JS challenge, then follow "View Our Animals"
+    animal_search_url = ""
+    try:
+        page.goto("https://animalcare.lacounty.gov/", wait_until="domcontentloaded", timeout=25000)
+        page.wait_for_timeout(3000)
+        animal_search_url = page.evaluate(
+            """() => {
+                const a = Array.from(document.querySelectorAll("a")).find(el =>
+                    /view our animals/i.test(el.innerText || "")
+                );
+                return a ? a.href : "";
+            }"""
+        )
+    except Exception as exc:
+        print(f"  LA County DACC homepage error: {exc}", flush=True)
+
+    target_search_url = animal_search_url or "https://animalcare.lacounty.gov/dacc-search/"
 
     status_targets = [
         ("rescue", "DACC RESCUE ONLY", "LA County DACC — Rescue Only", "Rescue Pull Only"),
-        ("khoa", "DACC AP-KHOA", "LA County DACC — AP-KHOA (Urgent)", "Rescue Pull or Adopt"),
+        ("khoa", "DACC AP-KHOA", "LA County DACC — AP-KHOA (Adoption Partner Only)", "Rescue Pull Only"),
     ]
 
     for keyword, badge, urgency_type, needs in status_targets:
         captured_json: list[dict] = []
-        seen_xhr_urls: list[str] = []
 
         def handle_dacc_resp(resp):
             try:
@@ -1380,7 +1475,6 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 ctype = (resp.headers.get("content-type") or "").lower()
                 if rtype not in ("xhr", "fetch") and "json" not in ctype:
                     return
-                seen_xhr_urls.append(resp.url)
                 raw = resp.text()
                 if not raw or len(raw) < 30:
                     return
@@ -1390,49 +1484,32 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 pass
 
         page.on("response", handle_dacc_resp)
-        form_debug = {}
         try:
-            page.goto(start_url, wait_until="domcontentloaded", timeout=25000)
+            page.goto(target_search_url, wait_until="domcontentloaded", timeout=25000)
             page.wait_for_timeout(1500)
-
-            # If /dacc-search/ is a 404, follow the top nav "View Our Animals" link
-            if "not found" in page.title().lower():
-                nav_href = page.evaluate(
-                    """() => {
-                        const a = Array.from(document.querySelectorAll("a")).find(el =>
-                            /view our animals/i.test(el.innerText || "")
-                        );
-                        return a ? a.href : "";
-                    }"""
-                )
-                if nav_href:
-                    page.goto(nav_href, wait_until="domcontentloaded", timeout=25000)
-                    page.wait_for_timeout(2000)
 
             for frame in page.frames:
                 try:
-                    info = frame.evaluate(
+                    frame.evaluate(
                         """(statusKeyword) => {
                             const selects = Array.from(document.querySelectorAll("select"));
-                            if (!selects.length) return null;
-                            let matchedStatus = "";
-                            const allOptions = [];
+                            if (!selects.length) return;
+                            let matchedStatus = false;
                             for (const sel of selects) {
-                                const opts = Array.from(sel.options).map(o => ({ value: o.value, text: (o.text || "").trim() }));
-                                allOptions.push({ name: sel.name || sel.id || "select", options: opts });
-                                const dogOpt = opts.find(o => /^dog$/i.test(o.text) || /^dog$/i.test(o.value));
+                                const opts = Array.from(sel.options);
+                                const dogOpt = opts.find(o => /^dog$/i.test((o.text || "").trim()) || /^dog$/i.test((o.value || "").trim()));
                                 if (dogOpt) {
                                     sel.value = dogOpt.value;
                                     sel.dispatchEvent(new Event("change", { bubbles: true }));
                                 }
                                 const stOpt = opts.find(o =>
-                                    o.text.toLowerCase().includes(statusKeyword) ||
-                                    o.value.toLowerCase().includes(statusKeyword)
+                                    (o.text || "").toLowerCase().includes(statusKeyword) ||
+                                    (o.value || "").toLowerCase().includes(statusKeyword)
                                 );
                                 if (stOpt) {
                                     sel.value = stOpt.value;
                                     sel.dispatchEvent(new Event("change", { bubbles: true }));
-                                    matchedStatus = stOpt.value + " (" + stOpt.text + ")";
+                                    matchedStatus = true;
                                 }
                             }
                             const submitBtn = Array.from(document.querySelectorAll("button, input[type='submit'], a.btn, a.button")).find(b =>
@@ -1441,12 +1518,9 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                             if (matchedStatus && submitBtn) {
                                 submitBtn.click();
                             }
-                            return { matchedStatus, clicked: Boolean(matchedStatus && submitBtn), selects: allOptions };
                         }""",
                         keyword,
                     )
-                    if info:
-                        form_debug = info
                 except Exception:
                     continue
 
@@ -1459,26 +1533,101 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             except Exception:
                 pass
 
+        dom_cards_all: list[dict] = []
+        for frame in page.frames:
+            try:
+                frame_cards = frame.evaluate(
+                    """() => {
+                        const out = [];
+                        const idRe = /\\bA\\d{6,8}\\b/i;
+                        const seen = new Set();
+                        for (const el of Array.from(document.querySelectorAll(".card, [class*='animal'], [class*='pet'], [class*='result'], [class*='grid'], article, tr, li"))) {
+                            const txt = (el.innerText || "").trim();
+                            if (!txt || txt.length < 12 || txt.length > 1800) continue;
+                            const m = txt.match(idRe);
+                            if (!m) continue;
+                            const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
+                            if (nested) continue;
+                            const aid = m[0].toUpperCase();
+                            if (seen.has(aid)) continue;
+                            seen.add(aid);
+
+                            let imgSrc = "";
+                            const img = el.querySelector("img");
+                            if (img) {
+                                const srcset = img.getAttribute("data-srcset") || img.getAttribute("srcset") || "";
+                                const firstSet = srcset ? srcset.split(",")[0].trim().split(" ")[0] : "";
+                                imgSrc =
+                                    img.getAttribute("data-src") ||
+                                    img.getAttribute("data-lazy-src") ||
+                                    img.getAttribute("data-original") ||
+                                    img.getAttribute("ng-src") ||
+                                    firstSet ||
+                                    img.getAttribute("src") ||
+                                    img.currentSrc ||
+                                    "";
+                            }
+                            if (!imgSrc) {
+                                const bgEl = Array.from(el.querySelectorAll("[style*='background']")).find(d => /url\\(/i.test(d.getAttribute("style") || ""));
+                                if (bgEl) {
+                                    const bgM = (bgEl.getAttribute("style") || "").match(/url\\(['"]?([^'")]+)['"]?\\)/i);
+                                    if (bgM) imgSrc = bgM[1];
+                                }
+                            }
+
+                            const heading = el.querySelector("h1, h2, h3, h4, .name, [class*='name'], [class*='title'], strong, b");
+                            const headingTxt = heading ? (heading.innerText || "").trim() : "";
+                            const a = el.querySelector("a[href]");
+                            out.push({
+                                aid,
+                                text: txt,
+                                heading: headingTxt,
+                                img: imgSrc,
+                                href: a ? a.href : ""
+                            });
+                        }
+                        return out;
+                    }"""
+                )
+                dom_cards_all.extend(frame_cards or [])
+            except Exception:
+                continue
+
+        dom_by_id = {c["aid"]: c for c in dom_cards_all if c.get("aid")}
+
         for item in captured_json:
             aid = str(
                 item.get("animalID") or item.get("AnimalID") or item.get("animal_id")
-                or item.get("animalId") or item.get("id") or ""
+                or item.get("animalId") or item.get("PetID") or item.get("id") or ""
             ).strip().upper()
             if not re.match(r"^A\d{6,8}$", aid) or aid in seen_ids:
                 continue
-            atype = str(item.get("animalType") or item.get("species") or "DOG").upper()
+            atype = str(item.get("animalType") or item.get("AnimalType") or item.get("species") or "DOG").upper()
             if atype and "DOG" not in atype:
                 continue
-            seen_ids.add(aid)
 
-            name = clean_space(str(item.get("animalName") or item.get("name") or "")) or f"DACC {aid}"
-            breed = clean_space(str(item.get("primaryBreed") or item.get("breed") or ""))
-            age = clean_space(str(item.get("animalAge") or item.get("age") or ""))
-            size = clean_space(str(item.get("animalSize") or item.get("weight") or item.get("size") or ""))
-            center = str(item.get("animalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
+            if not logged_sample:
+                logged_sample = True
+                print(f"  [debug] DACC sample keys={list(item.keys())} | sample={json.dumps(item)[:350]}", flush=True)
+
+            seen_ids.add(aid)
+            dom_match = dom_by_id.get(aid) or {}
+
+            name = resolve_record_name(
+                item,
+                aid,
+                dom_text=dom_match.get("text", ""),
+                dom_heading=dom_match.get("heading", ""),
+                fallback_prefix="DACC",
+            )
+
+            breed = clean_space(str(item.get("primaryBreed") or item.get("PrimaryBreed") or item.get("breed") or item.get("Breed") or ""))
+            age = clean_space(str(item.get("animalAge") or item.get("AnimalAge") or item.get("age") or item.get("Age") or ""))
+            size = clean_space(str(item.get("animalSize") or item.get("AnimalSize") or item.get("weight") or item.get("Weight") or item.get("size") or ""))
+            center = str(item.get("animalCareCenter") or item.get("AnimalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
             shelter_label, center_email = format_dacc_care_center(center)
-            photo = clean_space(str(item.get("photoUrl") or item.get("photo_url") or item.get("image") or ""))
-            detail_url = clean_space(str(item.get("detailUrl") or item.get("url") or "")) or page.url
+            photo = resolve_dacc_photo(item, dom_match.get("img") or "")
+            detail_url = clean_space(str(item.get("detailUrl") or item.get("DetailUrl") or item.get("url") or dom_match.get("href") or "")) or page.url
 
             results.append({
                 "id": f"dacc-{aid.lower()}",
@@ -1502,95 +1651,55 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 "last_checked": now_iso,
             })
 
-        for frame in page.frames:
-            try:
-                dom_cards = frame.evaluate(
-                    """() => {
-                        const out = [];
-                        const idRe = /\\bA\\d{6,8}\\b/;
-                        const seen = new Set();
-                        for (const el of Array.from(document.querySelectorAll(".card, [class*='animal'], [class*='pet'], [class*='result'], [class*='grid'], article, tr, li"))) {
-                            const txt = (el.innerText || "").trim();
-                            if (!txt || txt.length < 12 || txt.length > 1800) continue;
-                            const m = txt.match(idRe);
-                            if (!m) continue;
-                            const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
-                            if (nested) continue;
-                            const aid = m[0].toUpperCase();
-                            if (seen.has(aid)) continue;
-                            seen.add(aid);
-                            const img = el.querySelector("img");
-                            const a = el.querySelector("a[href]");
-                            out.push({
-                                aid,
-                                text: txt,
-                                img: img ? (img.src || img.getAttribute("data-src") || "") : "",
-                                href: a ? a.href : ""
-                            });
-                        }
-                        return out;
-                    }"""
-                )
-            except Exception:
+        for c in dom_cards_all:
+            txt = c.get("text") or ""
+            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
                 continue
+            aid = c["aid"]
+            if aid in seen_ids:
+                continue
+            seen_ids.add(aid)
 
-            for c in dom_cards:
-                txt = c.get("text") or ""
-                if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
-                    continue
-                aid = c["aid"]
-                if aid in seen_ids:
-                    continue
-                seen_ids.add(aid)
-
-                lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
-                name = next(
-                    (
-                        ln for ln in lines[:4]
-                        if aid not in ln
-                        and len(ln) < 35
-                        and not re.search(r"\b(RESCUE ONLY|AP-KHOA|DOWNEY|LANCASTER|PALMDALE|BALDWIN|CARSON|GARDENA|AGOURA|CASTAIC|DOG|AVAILABLE)\b", ln, re.IGNORECASE)
-                    ),
-                    f"DACC {aid}",
-                )
-                center_m = re.search(
-                    r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b",
-                    txt,
-                    re.IGNORECASE,
-                )
-                shelter_label, center_email = format_dacc_care_center(center_m.group(1) if center_m else "")
-
-                results.append({
-                    "id": f"dacc-{aid.lower()}",
-                    "shelter_slug": cfg["slug"],
-                    "animal_id": aid,
-                    "name": name,
-                    "breed": extract_field(txt, ("Breed",)),
-                    "shelter": shelter_label,
-                    "city": cfg["city"],
-                    "county": cfg["county"],
-                    "state": cfg["state"],
-                    "size": extract_field(txt, ("Weight", "Size")),
-                    "age": extract_field(txt, ("Age",)),
-                    "urgency_type": urgency_type,
-                    "deadline_or_urgency": badge,
-                    "needs_type": needs,
-                    "transport_note": f"Rescue desk: {center_email}" if center_email else f"Status: {badge}",
-                    "photo_url": clean_space(c.get("img") or ""),
-                    "listing_url": clean_space(c.get("href") or "") or page.url,
-                    "updated_at": now_iso,
-                    "last_checked": now_iso,
-                })
-
-        if not results:
-            print(
-                f"  [debug] DACC ({keyword}) url={page.url} | XHRs={seen_xhr_urls[:5]} | form={json.dumps(form_debug)[:450]}",
-                flush=True,
+            name = resolve_record_name(
+                None,
+                aid,
+                dom_text=txt,
+                dom_heading=c.get("heading", ""),
+                fallback_prefix="DACC",
             )
+            center_m = re.search(
+                r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b",
+                txt,
+                re.IGNORECASE,
+            )
+            shelter_label, center_email = format_dacc_care_center(center_m.group(1) if center_m else "")
+
+            results.append({
+                "id": f"dacc-{aid.lower()}",
+                "shelter_slug": cfg["slug"],
+                "animal_id": aid,
+                "name": name,
+                "breed": extract_field(txt, ("Breed",)),
+                "shelter": shelter_label,
+                "city": cfg["city"],
+                "county": cfg["county"],
+                "state": cfg["state"],
+                "size": extract_field(txt, ("Weight", "Size")),
+                "age": extract_field(txt, ("Age",)),
+                "urgency_type": urgency_type,
+                "deadline_or_urgency": badge,
+                "needs_type": needs,
+                "transport_note": f"Rescue desk: {center_email}" if center_email else f"Status: {badge}",
+                "photo_url": resolve_dacc_photo(None, c.get("img") or ""),
+                "listing_url": clean_space(c.get("href") or "") or page.url,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
-    
+
+
 # ---------------------------------------------------------------------------
 # NORMALIZATION & STATIC SEO GENERATION
 # ---------------------------------------------------------------------------
@@ -1620,7 +1729,7 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
         for k in ("needs_type", "urgency_type", "deadline_or_urgency", "transport_note")
     )
 
-    if RESCUE_ONLY_PATTERN.search(combined) and "ap-khoa" not in combined.lower():
+    if RESCUE_ONLY_PATTERN.search(combined):
         dog["needs_type"] = "New Hope Rescue Pull Only" if is_laas else "Rescue Pull Only"
     elif "foster priority" in (dog.get("urgency_type") or "").lower():
         dog["needs_type"] = "Urgent Foster / Adopt"
@@ -1675,12 +1784,20 @@ def sync_static_page_navs() -> None:
 
 def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now_iso: str) -> None:
     sync_static_page_navs()
-    print("Generating static shelter HTML pages and sitemap.xml for SEO...", flush=True)
+    print("Generating clean static shelter HTML pages and sitemap.xml for SEO...", flush=True)
     base_url = "https://www.urgentpaws.org"
     today_date = now_iso[:10]
 
-    nav_links = [f'<a href="/{cfg["slug"]}">{html.escape(cfg["h1"].replace(" Urgent Dogs", ""))}</a>' for cfg in shelters]
-    nav_html = " &middot; ".join(nav_links)
+    try:
+        pt_dt = datetime.fromisoformat(now_iso.replace("Z", "+00:00")).astimezone(ZoneInfo("America/Los_Angeles"))
+        checked_label = pt_dt.strftime("%b %d, %Y at %I:%M %p PT")
+    except Exception:
+        checked_label = now_iso
+
+    footer_shelter_links = " &middot; ".join(
+        f'<a href="/{cfg["slug"]}">{html.escape(cfg["name"])}</a>'
+        for cfg in shelters
+    )
 
     for cfg in shelters:
         slug = cfg["slug"]
@@ -1702,7 +1819,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
             d_size = html.escape(dog.get("size") or "")
             d_badge = html.escape(dog.get("deadline_or_urgency") or "Urgent")
             d_needs = html.escape(dog.get("needs_type") or "")
-            d_shelter = html.escape(dog.get("shelter") or cfg["h1"])
+            d_shelter = html.escape(dog.get("shelter") or cfg["name"])
             d_note = html.escape(dog.get("transport_note") or "")
             d_url = html.escape(dog.get("listing_url") or base_url)
             d_photo = html.escape(dog.get("photo_url") or "")
@@ -1713,18 +1830,23 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
             img_tag = (
                 f'<img src="{d_photo}" alt="{d_name} ({d_id}) at {d_shelter}" loading="lazy">'
                 if d_photo
-                else '<div class="no-photo">Photo on Shelter Listing</div>'
+                else '<div class="no-photo">Photo on Official Shelter Listing</div>'
             )
 
             cards_html.append(
                 f"""<article class="card">
-  {img_tag}
-  <div class="card-body">
+  <div class="card-media">
+    {img_tag}
     <span class="badge">{d_badge}</span>
-    <h2>{d_name} <span class="aid">#{d_id}</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>{d_name}</h2>
+      <span class="aid">#{d_id}</span>
+    </div>
     <p class="shelter-loc">{d_shelter}</p>
-    <p class="meta">{meta_str}</p>
-    {f'<p class="needs">{d_needs}</p>' if d_needs else ''}
+    {f'<p class="meta">{meta_str}</p>' if meta_str else ''}
+    {f'<span class="needs-pill">{d_needs}</span>' if d_needs else ''}
     {f'<p class="note">{d_note}</p>' if d_note else ''}
     <a class="btn" href="{d_url}" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
@@ -1740,8 +1862,11 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
 
         if not cards_html:
             cards_section = (
-                '<p class="empty">No dogs are currently listed on this urgent feed, or the shelter board is between updates. '
-                'Check back shortly or browse all shelters on the <a href="/">UrgentPaws main directory</a>.</p>'
+                '<div class="empty-state">'
+                '<h2>No Active Urgent Listings Right Now</h2>'
+                '<p>No dogs are currently posted on this shelter\'s urgent board, or the shelter is between updates. '
+                'Check back soon or <a href="/">browse all California shelters on UrgentPaws</a>.</p>'
+                '</div>'
             )
         else:
             cards_section = f'<section class="grid">{"".join(cards_html)}</section>'
@@ -1773,54 +1898,287 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
   <link rel="canonical" href="{page_url}">
   <script type="application/ld+json">{json_ld}</script>
   <style>
-    :root {{ --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #475569; --accent: #dc2626; --border: #e2e8f0; }}
+    :root {{
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --text: #1c1917;
+      --muted: #57534e;
+      --border: #e7e5e4;
+      --accent: #dc2626;
+      --accent-soft: #fef2f2;
+    }}
     * {{ box-sizing: border-box; }}
-    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }}
-    header {{ background: #0f172a; color: #fff; padding: 1.25rem 1rem; }}
-    .wrap {{ max-width: 1120px; margin: 0 auto; padding: 0 1rem; }}
-    header a {{ color: #93c5fd; text-decoration: none; font-weight: 600; }}
-    h1 {{ margin: 0.5rem 0 0.25rem; font-size: 1.65rem; }}
-    .sub {{ color: #cbd5e1; margin: 0; font-size: 0.95rem; }}
-    .info-box {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; }}
-    .info-box p {{ margin: 0.35rem 0; font-size: 0.95rem; }}
-    .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.15rem; margin: 1.25rem 0 2rem; }}
-    .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }}
-    .card img {{ width: 100%; height: 240px; object-fit: cover; object-position: center 20%; background: #e2e8f0; }}
-    .no-photo {{ height: 240px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: var(--muted); font-size: 0.9rem; }}
-    .card-body {{ padding: 1rem; display: flex; flex-direction: column; flex: 1; }}
-    .badge {{ display: inline-block; align-self: flex-start; background: #fee2e2; color: #991b1b; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px; margin-bottom: 0.5rem; }}
-    .card h2 {{ margin: 0 0 0.25rem; font-size: 1.2rem; }}
-    .aid {{ color: var(--muted); font-weight: 500; font-size: 0.95rem; }}
-    .shelter-loc {{ margin: 0 0 0.25rem; font-size: 0.88rem; color: var(--muted); }}
-    .meta {{ margin: 0 0 0.4rem; font-size: 0.9rem; font-weight: 500; }}
-    .needs {{ margin: 0 0 0.5rem; font-size: 0.82rem; font-weight: 700; color: #b91c1c; }}
-    .note {{ margin: 0 0 0.85rem; font-size: 0.88rem; color: var(--muted); }}
-    .btn {{ margin-top: auto; display: inline-block; text-align: center; background: #0f172a; color: #fff; text-decoration: none; padding: 0.6rem 0.9rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }}
-    .btn:hover {{ background: #1e293b; }}
-    footer {{ border-top: 1px solid var(--border); padding: 1.5rem 0 2.5rem; font-size: 0.9rem; color: var(--muted); }}
-    footer a {{ color: #1d4ed8; text-decoration: none; }}
+    body {{
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }}
+    .wrap {{ max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }}
+    .topbar {{
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 0;
+    }}
+    .topbar-inner {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }}
+    .brand {{
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }}
+    .nav-links {{ display: flex; gap: 1.25rem; flex-wrap: wrap; }}
+    .nav-links a {{
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }}
+    .nav-links a:hover {{ color: var(--text); }}
+    .hero {{ padding: 1.75rem 0 1rem; }}
+    .breadcrumb {{
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }}
+    .breadcrumb a {{ color: var(--muted); text-decoration: none; }}
+    .breadcrumb a:hover {{ text-decoration: underline; }}
+    .title-row {{
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }}
+    h1 {{
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }}
+    .count-pill {{
+      background: #f5f5f4;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.15rem 0.65rem;
+      border-radius: 999px;
+    }}
+    .updated-sub {{
+      margin: 0.35rem 0 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }}
+    .shelter-card {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem 1.35rem;
+      margin: 1.15rem 0 1.5rem;
+    }}
+    .shelter-card p {{ margin: 0 0 0.75rem; font-size: 0.95rem; color: #292524; }}
+    .shelter-meta-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.65rem 1.25rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+    }}
+    .shelter-meta-grid strong {{ color: var(--text); }}
+    .grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.75rem;
+    }}
+    .card {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }}
+    .card-media {{ position: relative; background: #f5f5f4; }}
+    .card-media img {{
+      width: 100%;
+      height: 245px;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }}
+    .no-photo {{
+      height: 245px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }}
+    .badge {{
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }}
+    .card-body {{
+      padding: 1rem 1.1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }}
+    .card-head {{
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }}
+    .card-head h2 {{ margin: 0; font-size: 1.18rem; font-weight: 800; }}
+    .aid {{ color: var(--muted); font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }}
+    .shelter-loc {{ margin: 0.2rem 0 0.3rem; font-size: 0.86rem; color: var(--muted); }}
+    .meta {{ margin: 0 0 0.55rem; font-size: 0.88rem; font-weight: 500; color: #292524; }}
+    .needs-pill {{
+      display: inline-block;
+      align-self: flex-start;
+      background: var(--accent-soft);
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      margin-bottom: 0.55rem;
+    }}
+    .note {{ margin: 0 0 0.9rem; font-size: 0.85rem; color: var(--muted); }}
+    .btn {{
+      margin-top: auto;
+      display: block;
+      text-align: center;
+      background: #1c1917;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.62rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }}
+    .btn:hover {{ background: #292524; }}
+    .empty-state {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.25rem 1.5rem;
+      text-align: center;
+      margin-bottom: 2.75rem;
+    }}
+    .empty-state h2 {{ margin: 0 0 0.4rem; font-size: 1.15rem; }}
+    .empty-state p {{ margin: 0; color: var(--muted); font-size: 0.94rem; }}
+    .empty-state a {{ color: #1d4ed8; font-weight: 600; }}
+    footer {{
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1.75rem 0 2.25rem;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }}
+    .footer-shelters-title {{
+      margin: 0 0 0.45rem;
+      font-weight: 700;
+      color: var(--text);
+    }}
+    .footer-shelters-list {{
+      margin: 0 0 1.25rem;
+      line-height: 1.85;
+    }}
+    .footer-shelters-list a {{
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }}
+    .footer-shelters-list a:hover {{ color: var(--text); }}
+    .footer-bottom {{
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }}
+    .footer-bottom-links {{ display: flex; gap: 1.15rem; flex-wrap: wrap; }}
+    .footer-bottom-links a {{ color: var(--muted); text-decoration: none; }}
+    .footer-bottom-links a:hover {{ color: var(--text); }}
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <a href="/">&larr; All Urgent Shelter Dogs (UrgentPaws)</a>
-      <h1>{html.escape(cfg["h1"])} ({len(shelter_dogs)})</h1>
-      <p class="sub">Auto-updated every 3 hours &bull; Last checked: {html.escape(now_iso)}</p>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/">UrgentPaws</a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="/">Urgent Dogs</a>
+        <a href="/about-urgent-paws">About</a>
+        <a href="/for-shelters">For Shelters</a>
+        <a href="/blog">Guide</a>
+        <a href="/contact-us">Contact Us</a>
+      </nav>
     </div>
   </header>
+
   <main class="wrap">
-    <section class="info-box">
-      <p>{html.escape(cfg["intro"])}</p>
-      <p><strong>Shelter Address:</strong> {html.escape(cfg["address"])}</p>
-      <p><strong>Contact:</strong> {html.escape(cfg["contact"])}</p>
+    <section class="hero">
+      <div class="breadcrumb"><a href="/">Urgent Dogs</a> &rsaquo; {html.escape(cfg["name"])}</div>
+      <div class="title-row">
+        <h1>{html.escape(cfg["h1"])}</h1>
+        <span class="count-pill">{len(shelter_dogs)} active</span>
+      </div>
+      <p class="updated-sub">Auto-updated every 3 hours &bull; Last checked {html.escape(checked_label)}</p>
     </section>
+
+    <section class="shelter-card">
+      <p>{html.escape(cfg["intro"])}</p>
+      <div class="shelter-meta-grid">
+        <div><strong>Address:</strong> {html.escape(cfg["address"])}</div>
+        <div><strong>Contact:</strong> {html.escape(cfg["contact"])}</div>
+      </div>
+    </section>
+
     {cards_section}
   </main>
+
   <footer>
     <div class="wrap">
-      <p><strong>Browse Other Shelters:</strong> {nav_html}</p>
-      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a> &middot; <a href="/blog">Guide</a></p>
+      <p class="footer-shelters-title">Browse Urgent Dogs by Shelter:</p>
+      <p class="footer-shelters-list">{footer_shelter_links}</p>
+      <div class="footer-bottom">
+        <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
+        <div class="footer-bottom-links">
+          <a href="/">Home</a>
+          <a href="/about-urgent-paws">About</a>
+          <a href="/for-shelters">For Shelters</a>
+          <a href="/blog">Guide</a>
+          <a href="/contact-us">Contact Us</a>
+        </div>
+      </div>
     </div>
   </footer>
 </body>
@@ -1866,7 +2224,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
     with open("sitemap.xml", "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
-    print(f"  Generated {len(shelters)} static shelter pages + sitemap.xml", flush=True)
+    print(f"  Generated {len(shelters)} clean static shelter pages + sitemap.xml", flush=True)
 
 
 def run_shelter_scraper(page, cfg: dict, now_iso: str) -> list[dict]:
