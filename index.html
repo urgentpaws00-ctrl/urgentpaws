@@ -14,85 +14,123 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-neutral-100 text-neutral-900 min-h-screen flex flex-col">
-  <header class="bg-white border-b border-neutral-200 sticky top-0 z-20">
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-3.5">
-      <div class="flex flex-wrap items-center justify-between gap-2.5">
-        <a href="./" class="flex items-center gap-2.5">
-          <img src="logo.png" alt="UrgentPaws logo" class="w-8 h-8 rounded-lg object-contain" onerror="this.style.display='none'" />
-          <div>
-            <h1 class="text-xl font-bold tracking-tight leading-none">UrgentPaws</h1>
-            <p class="text-xs text-neutral-600 mt-0.5">
+  <header class="bg-white border-b border-neutral-200 sm:sticky sm:top-0 z-20">
+    <div class="w-full px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
+      <!-- Top Brand Row -->
+      <div class="flex items-center justify-between gap-2">
+        <a href="./" class="flex items-center gap-2 min-w-0">
+          <img src="logo.png" alt="UrgentPaws logo" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain shrink-0" onerror="this.style.display='none'" />
+          <div class="min-w-0">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-none">UrgentPaws</h1>
+            <p class="hidden sm:block text-xs text-neutral-600 mt-0.5">
               Municipal shelter dogs facing urgent deadlines, with direct IDs and shelter links.
             </p>
           </div>
         </a>
 
-        <div class="flex flex-wrap items-center gap-3 sm:gap-4">
-          <nav aria-label="Primary navigation" class="flex items-center gap-3 sm:gap-4 text-xs font-semibold text-neutral-700">
+        <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+          <nav aria-label="Primary navigation" class="hidden sm:flex items-center gap-4 text-xs font-semibold text-neutral-700">
             <a href="about-urgent-paws" class="hover:text-neutral-950">About</a>
             <a href="for-shelters" class="hover:text-neutral-950">For Shelters</a>
             <a href="blog" class="hover:text-neutral-950">Guide</a>
             <a href="contact-us" class="hover:text-neutral-950">Contact</a>
           </nav>
-          <span id="lastChecked" class="shrink-0 text-xs font-medium text-neutral-600 bg-neutral-100 px-2.5 py-1 rounded-full">
+          <span id="lastChecked" class="text-[11px] sm:text-xs font-medium text-neutral-600 bg-neutral-100 px-2 sm:px-2.5 py-1 rounded-full">
             Syncing...
           </span>
+          <button
+            id="mobileMenuBtn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="mobileNavDrawer"
+            aria-label="Toggle site navigation"
+            class="sm:hidden inline-flex items-center justify-center rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 hover:bg-neutral-100"
+          >
+            Menu
+          </button>
         </div>
       </div>
 
-      <!-- Quick Role Pills (unchanged on mobile) + Full-Width Search & Dropdowns on Desktop -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 pt-3 pb-1 lg:pb-0">
-        <div class="flex flex-wrap gap-1.5 shrink-0" role="group" aria-label="Filter by action">
-          <button type="button" data-role="ALL" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-900 text-white">
+      <!-- Collapsible Mobile Site Nav -->
+      <nav id="mobileNavDrawer" aria-label="Mobile navigation" class="hidden sm:hidden flex-wrap items-center gap-x-4 gap-y-1.5 pt-2 mt-2 border-t border-neutral-100 text-xs font-semibold text-neutral-700">
+        <a href="about-urgent-paws" class="hover:text-neutral-950">About</a>
+        <a href="for-shelters" class="hover:text-neutral-950">For Shelters</a>
+        <a href="blog" class="hover:text-neutral-950">Guide</a>
+        <a href="contact-us" class="hover:text-neutral-950">Contact</a>
+      </nav>
+
+      <!-- Quick Role Pills + Search & Dropdown Filters -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-2.5 pt-2 sm:pt-3">
+        <!-- Single-row horizontal pills on mobile, standard wrap on sm+ -->
+        <div class="flex items-center gap-1.5 overflow-x-auto sm:flex-wrap shrink-0 no-scrollbar" role="group" aria-label="Filter by action">
+          <button type="button" data-role="ALL" class="role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-neutral-900 text-white">
             All Urgent
           </button>
-          <button type="button" data-role="RESCUE_ONLY" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+          <button type="button" data-role="RESCUE_ONLY" class="role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
             Rescue Only
           </button>
-          <button type="button" data-role="FOSTER" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+          <button type="button" data-role="FOSTER" class="role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
             Foster Needed
           </button>
-          <button type="button" data-role="ADOPT" class="role-pill px-3 py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
+          <button type="button" data-role="ADOPT" class="role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200">
             Adoptable
           </button>
         </div>
 
         <div id="filterBar" class="grid grid-cols-1 sm:grid-cols-12 gap-2 flex-1 lg:ml-6">
-          <input
-            id="searchInput"
-            type="search"
-            placeholder="Search ID, name, breed, shelter..."
-            aria-label="Search Animal ID, name, breed, or shelter"
-            class="sm:col-span-4 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
-          />
+          <!-- Search + Mobile Filters Toggle Button on one compact row -->
+          <div id="searchWrap" class="flex items-center gap-2 sm:col-span-4">
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="Search ID, name, breed, shelter..."
+              aria-label="Search Animal ID, name, breed, or shelter"
+              class="flex-1 min-w-0 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 sm:py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+            />
+            <button
+              id="mobileFilterToggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="dropdownGroup"
+              class="sm:hidden shrink-0 inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-neutral-50 px-2.5 py-1.5 text-xs font-semibold text-neutral-800 hover:bg-neutral-100"
+            >
+              <span id="mobileFilterLabel">Filters</span>
+              <svg id="mobileFilterChevron" class="w-3.5 h-3.5 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
 
-          <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
-            <option value="ALL">All States</option>
-          </select>
+          <!-- Dropdowns: hidden by default on mobile until toggled, always visible on sm+ -->
+          <div id="dropdownGroup" class="hidden sm:grid sm:col-span-8 sm:grid-cols-8 gap-2">
+            <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+              <option value="ALL">All States</option>
+            </select>
 
-          <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
-            <option value="ALL">All Counties</option>
-          </select>
+            <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+              <option value="ALL">All Counties</option>
+            </select>
 
-          <select id="shelterFilter" aria-label="Filter by shelter" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
-            <option value="ALL">All Shelters</option>
-          </select>
+            <select id="shelterFilter" aria-label="Filter by shelter" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+              <option value="ALL">All Shelters</option>
+            </select>
 
-          <select id="urgencyFilter" aria-label="Filter by urgency" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
-            <option value="ALL">All Urgency Types</option>
-            <option value="deadline">Urgent / Deadline Only</option>
-            <option value="behavior">Behavior / Kennel Stress</option>
-            <option value="medical">Medical Alert</option>
-            <option value="capacity">Space / Capacity / High-Risk</option>
-            <option value="rescue">Rescue Pull Only</option>
-          </select>
+            <select id="urgencyFilter" aria-label="Filter by urgency" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+              <option value="ALL">All Urgency Types</option>
+              <option value="deadline">Urgent / Deadline Only</option>
+              <option value="behavior">Behavior / Kennel Stress</option>
+              <option value="medical">Medical Alert</option>
+              <option value="capacity">Space / Capacity / High-Risk</option>
+              <option value="rescue">Rescue Pull Only</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
   </header>
 
-  <main class="w-full px-4 sm:px-6 lg:px-8 py-5 flex-1">
-    <div class="flex items-center justify-between gap-2 mb-3.5">
+  <main class="w-full px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-5 flex-1">
+    <div class="flex items-center justify-between gap-2 mb-3">
       <div class="flex flex-wrap items-center gap-2">
         <div id="countLabel" class="text-xs font-semibold uppercase tracking-wider text-neutral-500"></div>
         <a
@@ -235,6 +273,26 @@
       if (dog.shelter_slug) return dog.shelter_slug === slug;
       const cfg = sheltersBySlug[slug];
       return cfg ? (dog.county || '').toLowerCase() === (cfg.county || '').toLowerCase() : false;
+    }
+
+    function updateMobileFilterBadge() {
+      const state = document.getElementById('stateFilter').value;
+      const county = document.getElementById('countyFilter').value;
+      const shelter = document.getElementById('shelterFilter').value;
+      const urgency = document.getElementById('urgencyFilter').value;
+
+      const activeCount = [state, county, shelter, urgency].filter(v => v && v !== 'ALL').length;
+      const btn = document.getElementById('mobileFilterToggle');
+      const lbl = document.getElementById('mobileFilterLabel');
+
+      lbl.textContent = activeCount > 0 ? `Filters (${activeCount})` : 'Filters';
+      if (activeCount > 0) {
+        btn.classList.remove('bg-neutral-50', 'text-neutral-800', 'border-neutral-300');
+        btn.classList.add('bg-neutral-900', 'text-white', 'border-neutral-900');
+      } else {
+        btn.classList.remove('bg-neutral-900', 'text-white', 'border-neutral-900');
+        btn.classList.add('bg-neutral-50', 'text-neutral-800', 'border-neutral-300');
+      }
     }
 
     function renderFooterShelters() {
@@ -420,7 +478,8 @@
 
       const states = [...new Set(allShelters.map(s => s.state).filter(Boolean))].sort();
       const stateSelect = document.getElementById('stateFilter');
-      const searchInput = document.getElementById('searchInput');
+      const searchWrap = document.getElementById('searchWrap');
+      const dropdownGroup = document.getElementById('dropdownGroup');
       if (states.length > 1) {
         states.forEach(st => {
           const opt = document.createElement('option');
@@ -429,8 +488,10 @@
           stateSelect.appendChild(opt);
         });
         stateSelect.classList.remove('hidden');
-        searchInput.classList.remove('sm:col-span-4');
-        searchInput.classList.add('sm:col-span-2');
+        searchWrap.classList.remove('sm:col-span-4');
+        searchWrap.classList.add('sm:col-span-3');
+        dropdownGroup.classList.remove('sm:col-span-8', 'sm:grid-cols-8');
+        dropdownGroup.classList.add('sm:col-span-9', 'sm:grid-cols-10');
       }
 
       syncCountyOptions();
@@ -454,6 +515,8 @@
       const county = document.getElementById('countyFilter').value;
       const shelterSlug = document.getElementById('shelterFilter').value;
       const urgency = document.getElementById('urgencyFilter').value;
+
+      updateMobileFilterBadge();
 
       const filtered = allDogs.filter(d => {
         if (isDeadlinePassed(d)) return false;
@@ -572,12 +635,32 @@
       }).join('');
     }
 
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      const drawer = document.getElementById('mobileNavDrawer');
+      const btn = document.getElementById('mobileMenuBtn');
+      const isHidden = drawer.classList.contains('hidden');
+      drawer.classList.toggle('hidden', !isHidden);
+      drawer.classList.toggle('flex', isHidden);
+      btn.setAttribute('aria-expanded', String(isHidden));
+    });
+
+    document.getElementById('mobileFilterToggle').addEventListener('click', () => {
+      const group = document.getElementById('dropdownGroup');
+      const btn = document.getElementById('mobileFilterToggle');
+      const chevron = document.getElementById('mobileFilterChevron');
+      const isHidden = group.classList.contains('hidden');
+      group.classList.toggle('hidden', !isHidden);
+      group.classList.toggle('grid', isHidden);
+      btn.setAttribute('aria-expanded', String(isHidden));
+      chevron.classList.toggle('rotate-180', isHidden);
+    });
+
     document.querySelectorAll('.role-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         selectedRole = btn.dataset.role;
         document.querySelectorAll('.role-pill').forEach(b => {
           const active = b === btn;
-          b.className = `role-pill px-3 py-1.5 rounded-full text-xs font-semibold ${
+          b.className = `role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold ${
             active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
           }`;
         });
@@ -614,7 +697,7 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       selectedRole = 'ALL';
       document.querySelectorAll('.role-pill').forEach((b, i) => {
-        b.className = `role-pill px-3 py-1.5 rounded-full text-xs font-semibold ${
+        b.className = `role-pill shrink-0 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold ${
           i === 0 ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
         }`;
       });
