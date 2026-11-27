@@ -1820,7 +1820,7 @@ def sync_static_page_navs(shelters: list[dict] | None = None) -> None:
         def fix_header_nav(match: re.Match) -> str:
             nav_html = match.group(0)
             nav_html = re.sub(
-                r"\b(?:underline|underline-offset-4|text-neutral-950)\s*",
+                r"\b(?:underline-offset-4|underline|text-neutral-950)\s*",
                 "",
                 nav_html,
             )
@@ -2361,7 +2361,7 @@ def render_directory_html(
         <a href="/">Urgent Dogs</a>
         <a href="/about-urgent-paws">About</a>
         <a href="/for-shelters">For Shelters</a>
-        <a href="/blog">Guide</a>
+        <a href="/guide">Guide</a>
         <a href="/contact-us">Contact</a>
       </nav>
 
@@ -2544,7 +2544,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
         ("", "hourly", "1.0"),
         ("/about-urgent-paws", "weekly", "0.6"),
         ("/for-shelters", "weekly", "0.6"),
-        ("/blog", "weekly", "0.6"),
+        ("/guide", "weekly", "0.6"),
         ("/contact-us", "monthly", "0.5"),
     ]
 
