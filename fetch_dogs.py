@@ -38,6 +38,19 @@ BOILERPLATE_PATTERN = re.compile(
 
 DATE_PATTERN = re.compile(r"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b")
 
+SBCT_DEADLINE_RE = re.compile(
+    r"Needs Placement By:\s*(\d{1,2}/\d{1,2}/\d{2,4})",
+    re.IGNORECASE,
+)
+SBCT_RESCUE_ONLY_RE = re.compile(
+    r"not available for public adoption[^.]*only be placed with a rescue partner(?:\s+due to my\s+([a-z\s]+?)\s+needs)?",
+    re.IGNORECASE,
+)
+SBCT_FOSTER_RE = re.compile(
+    r"looking for a foster home or rescue partner",
+    re.IGNORECASE,
+)
+
 PETCONNECT_CARD_SELECTOR = (
     "a[href*='Details'], a[href*='details'], .gridResult, "
     "[class*='gridResult'], [class*='petCard']"
@@ -255,7 +268,7 @@ def fetch_24petconnect_detail_http(dog: dict) -> tuple[dict, str, str, bool]:
     aid = (dog.get("animal_id") or "").upper()
     has_content = len(body) >= 150 and (
         (aid and aid in body.upper())
-        or bool(re.search(r"More Info|Breed|Status|DEADLINE|at risk", body, re.IGNORECASE))
+        or bool(re.search(r"More Info|Breed|Status|DEADLINE|at risk|Needs Placement", body, re.IGNORECASE))
     )
     if not has_content:
         return (dog, "", "", False)
@@ -271,6 +284,54 @@ def fetch_24petconnect_detail_http(dog: dict) -> tuple[dict, str, str, bool]:
             img_src = html.unescape(img_match.group(1))
 
     return (dog, body, img_src, True)
+
+
+def parse_sbct_detail(body: str) -> dict | None:
+    """Filters SBCT 24PetConnect detail pages to hard-deadline, rescue-only, or foster-urgent dogs."""
+    clean_text = clean_space(body)
+    if not clean_text:
+        return None
+
+    deadline_match = SBCT_DEADLINE_RE.search(clean_text)
+    rescue_match = SBCT_RESCUE_ONLY_RE.search(clean_text)
+    foster_match = SBCT_FOSTER_RE.search(clean_text)
+
+    if not (deadline_match or rescue_match or foster_match):
+        return None
+
+    if deadline_match:
+        deadline_str = deadline_match.group(1)
+        badge = f"DEADLINE {deadline_str}"
+        urgency_type = "Euthanasia / Exit Deadline"
+    elif rescue_match:
+        reason = clean_space(rescue_match.group(1) or "").upper()
+        badge = f"RESCUE ONLY ({reason})"[:38] if reason else "RESCUE ONLY"
+        urgency_type = "Rescue Only (Medical / Behavioral)"
+    else:
+        badge = "FOSTER / RESCUE NEEDED"
+        urgency_type = "Foster / Rescue Needed"
+
+    needs_type = (
+        "Rescue Pull Only"
+        if rescue_match
+        else ("Urgent Foster / Adopt" if foster_match else "Rescue Pull, Foster, or Adopt")
+    )
+
+    note_parts = []
+    if deadline_match:
+        note_parts.append(f"Needs placement by {deadline_match.group(1)}.")
+    if rescue_match:
+        note_parts.append(rescue_match.group(0).rstrip(".") + ".")
+    training_match = re.search(r"I may benefit from additional training[^.]*\.", clean_text, re.IGNORECASE)
+    if training_match:
+        note_parts.append(training_match.group(0))
+
+    return {
+        "deadline_or_urgency": badge,
+        "urgency_type": urgency_type,
+        "needs_type": needs_type,
+        "transport_note": clean_space(" ".join(note_parts))[:160],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -518,6 +579,7 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
         portal_code = board["portal_code"]
         require_urgent_flag = board.get("require_urgent_flag", False)
         inspect_details = board.get("inspect_details_for_deadline", False)
+        max_checks = int(board.get("max_detail_checks") or 35)
         default_badge = board.get("default_badge", "Urgent / Rescue Needed")
         default_urgency = board.get("default_urgency", "At-Risk Shelter Dog")
 
@@ -577,6 +639,8 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
                 href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
             elif "CCASDAvailablePets" in url:
                 href = f"https://24petconnect.com/CCASDAvailablePets/Details/CCST/{animal_id}"
+            elif portal_code == "SBCT":
+                href = f"https://24petconnect.com/SanBernardinoCityShelterPets/Details/SBCT/{animal_id}"
             elif portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
                 code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
                 href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
@@ -623,8 +687,8 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
             })
 
         if inspect_details and board_results:
-            candidates = board_results[:35]
-            with ThreadPoolExecutor(max_workers=10) as pool:
+            candidates = board_results[:max_checks]
+            with ThreadPoolExecutor(max_workers=12) as pool:
                 http_results = list(pool.map(fetch_24petconnect_detail_http, candidates))
 
             verified = []
@@ -633,7 +697,7 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
                     try:
                         page.goto(dog["listing_url"], wait_until="domcontentloaded", timeout=10000)
                         try:
-                            page.wait_for_selector("text=/More Info|DEADLINE|Status|Breed/i", timeout=3000)
+                            page.wait_for_selector("text=/More Info|DEADLINE|Needs Placement|Status|Breed/i", timeout=3000)
                         except Exception:
                             pass
                         body = page.inner_text("body")
@@ -646,6 +710,16 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
                         continue
 
                 if RESCUED_PATTERN.search(body) or NON_DOG_PATTERN.search(body[:600]):
+                    continue
+
+                if portal_code == "SBCT":
+                    sbct_info = parse_sbct_detail(body)
+                    if not sbct_info:
+                        continue
+                    dog.update(sbct_info)
+                    if not dog["photo_url"] and img_src:
+                        dog["photo_url"] = img_src
+                    verified.append(dog)
                     continue
 
                 is_at_risk = bool(re.search(r"at risk animal|deadline|must exit|rescue only|extremely urgent|parvo|medical", body, re.IGNORECASE))
