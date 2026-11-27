@@ -56,25 +56,29 @@
         </button>
       </div>
 
-      <!-- Search and Dropdown Filters -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2.5">
+      <!-- Search and Cascading Dropdown Filters -->
+      <div id="filterBar" class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-2.5">
         <input
           id="searchInput"
           type="search"
           placeholder="Search Animal ID, name, breed, shelter..."
           aria-label="Search Animal ID, name, breed, or shelter"
-          class="col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          class="sm:col-span-5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
         />
 
-        <select id="stateFilter" aria-label="Filter by state" class="hidden w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
           <option value="ALL">All States</option>
         </select>
 
-        <select id="countyFilter" aria-label="Filter by county" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
           <option value="ALL">All Counties</option>
         </select>
 
-        <select id="urgencyFilter" aria-label="Filter by urgency" class="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="shelterFilter" aria-label="Filter by shelter" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+          <option value="ALL">All Shelters</option>
+        </select>
+
+        <select id="urgencyFilter" aria-label="Filter by urgency" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
           <option value="ALL">All Urgency Types</option>
           <option value="deadline">Urgent / Deadline Only</option>
           <option value="behavior">Behavior / Kennel Stress</option>
@@ -87,12 +91,15 @@
   </header>
 
   <main class="max-w-4xl mx-auto px-4 py-5 flex-1 w-full">
-    <nav aria-label="Shelter Urgent Lists" class="mb-4">
-      <div id="shelterPills" class="flex items-center gap-1.5 overflow-x-auto pb-1.5"></div>
-    </nav>
-
     <div class="flex items-center justify-between gap-2 mb-3.5">
-      <div id="countLabel" class="text-xs font-semibold uppercase tracking-wider text-neutral-500"></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <div id="countLabel" class="text-xs font-semibold uppercase tracking-wider text-neutral-500"></div>
+        <a
+          id="shelterGuideLink"
+          href="#"
+          class="hidden text-xs font-semibold text-neutral-800 bg-white border border-neutral-300 rounded-full px-2.5 py-0.5 hover:bg-neutral-900 hover:text-white transition"
+        ></a>
+      </div>
       <button id="resetBtn" type="button" class="text-xs font-medium text-neutral-600 underline hover:text-neutral-950">
         Reset filters
       </button>
@@ -126,7 +133,6 @@
     let allShelters = [];
     let sheltersBySlug = {};
     let selectedRole = 'ALL';
-    let selectedShelterSlug = '';
 
     const REPO_RAW_BASE = 'https://raw.githubusercontent.com/urgentpaws00-ctrl/urgentpaws/main';
 
@@ -223,31 +229,14 @@
       return blob.includes(filterVal.toLowerCase());
     }
 
-    function renderShelterNav() {
-      const selectedState = document.getElementById('stateFilter').value;
-      const visibleShelters = allShelters.filter(s => selectedState === 'ALL' || s.state === selectedState);
+    function dogMatchesShelterSlug(dog, slug) {
+      if (!slug || slug === 'ALL') return true;
+      if (dog.shelter_slug) return dog.shelter_slug === slug;
+      const cfg = sheltersBySlug[slug];
+      return cfg ? (dog.county || '').toLowerCase() === (cfg.county || '').toLowerCase() : false;
+    }
 
-      const pillsContainer = document.getElementById('shelterPills');
-      pillsContainer.innerHTML = `<span class="text-xs font-semibold text-neutral-500 shrink-0 mr-1">Shelters:</span>` +
-        visibleShelters.map(s => {
-          const active = selectedShelterSlug === s.slug;
-          const cls = active
-            ? 'border-neutral-900 bg-neutral-900 text-white'
-            : 'border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900';
-          return `<a href="${escapeHtml(s.slug)}" data-shelter-slug="${escapeHtml(s.slug)}" class="shelter-pill shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition ${cls}">${escapeHtml(s.short_name || s.name)}</a>`;
-        }).join('');
-
-      pillsContainer.querySelectorAll('.shelter-pill').forEach(link => {
-        link.addEventListener('click', (e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-          e.preventDefault();
-          const slug = link.dataset.shelterSlug || '';
-          selectedShelterSlug = (selectedShelterSlug === slug) ? '' : slug;
-          renderShelterNav();
-          render();
-        });
-      });
-
+    function renderFooterShelters() {
       const footerContainer = document.getElementById('footerShelterLinks');
       footerContainer.innerHTML = allShelters.map(s =>
         `<a href="${escapeHtml(s.slug)}" class="hover:text-neutral-950 underline">${escapeHtml(s.name)}</a>`
@@ -259,8 +248,8 @@
       const countySelect = document.getElementById('countyFilter');
       const prevCounty = countySelect.value;
 
-      const relevantDogs = allDogs.filter(d => selectedState === 'ALL' || d.state === selectedState);
-      const counties = [...new Set(relevantDogs.map(d => d.county).filter(Boolean))].sort();
+      const relevantShelters = allShelters.filter(s => selectedState === 'ALL' || s.state === selectedState);
+      const counties = [...new Set(relevantShelters.map(s => s.county).filter(Boolean))].sort();
 
       countySelect.innerHTML = '<option value="ALL">All Counties</option>';
       counties.forEach(c => {
@@ -271,6 +260,55 @@
       });
 
       countySelect.value = counties.includes(prevCounty) ? prevCounty : 'ALL';
+    }
+
+    function syncShelterOptions() {
+      const selectedState = document.getElementById('stateFilter').value;
+      const selectedCounty = document.getElementById('countyFilter').value;
+      const shelterSelect = document.getElementById('shelterFilter');
+      const prevShelter = shelterSelect.value;
+
+      const activeDogs = allDogs.filter(d => !isDeadlinePassed(d));
+      const candidateShelters = allShelters.filter(s => {
+        if (selectedState !== 'ALL' && s.state !== selectedState) return false;
+        if (selectedCounty !== 'ALL' && s.county !== selectedCounty) return false;
+        return true;
+      });
+
+      shelterSelect.innerHTML = '<option value="ALL">All Shelters</option>';
+
+      if (selectedCounty !== 'ALL') {
+        candidateShelters.forEach(s => {
+          const count = activeDogs.filter(d => dogMatchesShelterSlug(d, s.slug)).length;
+          const opt = document.createElement('option');
+          opt.value = s.slug;
+          opt.textContent = `${s.short_name || s.name} (${count})`;
+          shelterSelect.appendChild(opt);
+        });
+      } else {
+        const byCounty = new Map();
+        candidateShelters.forEach(s => {
+          const groupLabel = s.county ? `${s.county} County` : 'Other';
+          if (!byCounty.has(groupLabel)) byCounty.set(groupLabel, []);
+          byCounty.get(groupLabel).push(s);
+        });
+
+        [...byCounty.keys()].sort().forEach(groupLabel => {
+          const groupEl = document.createElement('optgroup');
+          groupEl.label = groupLabel;
+          byCounty.get(groupLabel).forEach(s => {
+            const count = activeDogs.filter(d => dogMatchesShelterSlug(d, s.slug)).length;
+            const opt = document.createElement('option');
+            opt.value = s.slug;
+            opt.textContent = `${s.short_name || s.name} (${count})`;
+            groupEl.appendChild(opt);
+          });
+          shelterSelect.appendChild(groupEl);
+        });
+      }
+
+      const validSlugs = new Set(candidateShelters.map(s => s.slug));
+      shelterSelect.value = validSlugs.has(prevShelter) ? prevShelter : 'ALL';
     }
 
     async function copyAnimalId(btn, idText) {
@@ -354,6 +392,7 @@
                 slug: d.shelter_slug || '',
                 name: d.shelter || key,
                 short_name: d.county || d.shelter || key,
+                county: d.county || '',
                 state: d.state || 'CA',
                 timezone: 'America/Los_Angeles',
               });
@@ -389,12 +428,13 @@
           stateSelect.appendChild(opt);
         });
         stateSelect.classList.remove('hidden');
-        searchInput.classList.remove('col-span-2');
-        searchInput.classList.add('col-span-2', 'sm:col-span-1');
+        searchInput.classList.remove('sm:col-span-5');
+        searchInput.classList.add('sm:col-span-3');
       }
 
       syncCountyOptions();
-      renderShelterNav();
+      syncShelterOptions();
+      renderFooterShelters();
 
       const sharedDogParam = new URLSearchParams(window.location.search).get('dog');
       if (sharedDogParam) {
@@ -411,6 +451,7 @@
       const query = document.getElementById('searchInput').value.trim().toLowerCase();
       const state = document.getElementById('stateFilter').value;
       const county = document.getElementById('countyFilter').value;
+      const shelterSlug = document.getElementById('shelterFilter').value;
       const urgency = document.getElementById('urgencyFilter').value;
 
       const filtered = allDogs.filter(d => {
@@ -418,30 +459,31 @@
 
         const isRoleMatch = matchesRole(d, selectedRole);
         const matchesState = state === 'ALL' || d.state === state;
-
-        let matchesShelter = true;
-        if (selectedShelterSlug) {
-          const cfg = sheltersBySlug[selectedShelterSlug];
-          if (d.shelter_slug) {
-            matchesShelter = d.shelter_slug === selectedShelterSlug;
-          } else if (cfg) {
-            matchesShelter = (d.county || '').toLowerCase() === (cfg.county || '').toLowerCase();
-          }
-        }
-
         const matchesCounty = county === 'ALL' || d.county === county;
+        const matchesShelter = dogMatchesShelterSlug(d, shelterSlug);
         const isUrgencyMatch = matchesUrgency(d, urgency);
 
         const searchBlob = `${d.animal_id || ''} ${d.name || ''} ${d.breed || ''} ${d.shelter || ''} ${d.city || ''} ${d.county || ''} ${d.state || ''}`.toLowerCase();
         const matchesQuery = !query || searchBlob.includes(query);
 
-        return isRoleMatch && matchesState && matchesShelter && matchesCounty && isUrgencyMatch && matchesQuery;
+        return isRoleMatch && matchesState && matchesCounty && matchesShelter && isUrgencyMatch && matchesQuery;
       });
 
-      const activeShelterObj = selectedShelterSlug ? sheltersBySlug[selectedShelterSlug] : null;
-      const scopeSuffix = activeShelterObj ? ` · ${activeShelterObj.short_name || activeShelterObj.name}` : '';
+      const activeShelterObj = shelterSlug !== 'ALL' ? sheltersBySlug[shelterSlug] : null;
+      const scopeSuffix = activeShelterObj
+        ? ` · ${activeShelterObj.short_name || activeShelterObj.name}`
+        : (county !== 'ALL' ? ` · ${county} County` : '');
       document.getElementById('countLabel').textContent =
         `${filtered.length} ${filtered.length === 1 ? 'dog' : 'dogs'} shown${scopeSuffix}`;
+
+      const guideLink = document.getElementById('shelterGuideLink');
+      if (activeShelterObj && activeShelterObj.slug) {
+        guideLink.href = activeShelterObj.slug;
+        guideLink.textContent = `${activeShelterObj.short_name || activeShelterObj.name} Rescue & Address Info →`;
+        guideLink.classList.remove('hidden');
+      } else {
+        guideLink.classList.add('hidden');
+      }
 
       const grid = document.getElementById('dogGrid');
       if (!filtered.length) {
@@ -543,18 +585,33 @@
     });
 
     document.getElementById('stateFilter').addEventListener('change', () => {
-      selectedShelterSlug = '';
       syncCountyOptions();
-      renderShelterNav();
+      syncShelterOptions();
+      render();
+    });
+
+    document.getElementById('countyFilter').addEventListener('change', () => {
+      syncShelterOptions();
+      render();
+    });
+
+    document.getElementById('shelterFilter').addEventListener('change', () => {
+      const slug = document.getElementById('shelterFilter').value;
+      if (slug !== 'ALL' && sheltersBySlug[slug]?.county) {
+        const countySelect = document.getElementById('countyFilter');
+        if (countySelect.value !== sheltersBySlug[slug].county) {
+          countySelect.value = sheltersBySlug[slug].county;
+          syncShelterOptions();
+          document.getElementById('shelterFilter').value = slug;
+        }
+      }
       render();
     });
 
     document.getElementById('searchInput').addEventListener('input', render);
-    document.getElementById('countyFilter').addEventListener('change', render);
     document.getElementById('urgencyFilter').addEventListener('change', render);
     document.getElementById('resetBtn').addEventListener('click', () => {
       selectedRole = 'ALL';
-      selectedShelterSlug = '';
       document.querySelectorAll('.role-pill').forEach((b, i) => {
         b.className = `role-pill px-3 py-1.5 rounded-full text-xs font-semibold ${
           i === 0 ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
@@ -563,7 +620,7 @@
       document.getElementById('searchInput').value = '';
       document.getElementById('stateFilter').value = 'ALL';
       syncCountyOptions();
-      renderShelterNav();
+      syncShelterOptions();
       document.getElementById('urgencyFilter').value = 'ALL';
       render();
     });
