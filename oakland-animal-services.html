@@ -6,111 +6,369 @@
   <title>Oakland Animal Services Urgent Dogs &amp; Exit Deadlines | UrgentPaws</title>
   <meta name="description" content="Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.">
   <link rel="canonical" href="https://www.urgentpaws.org/oakland-animal-services">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Oakland Animal Services Urgent Dogs & Exit Deadlines | UrgentPaws", "description": "Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.", "url": "https://www.urgentpaws.org/oakland-animal-services", "dateModified": "2026-11-27T01:26:12Z", "mainEntity": {"@type": "ItemList", "numberOfItems": 5, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "OAS #22655119 (22655119) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22655119"}, {"@type": "ListItem", "position": 2, "name": "OAS #22707504 (22707504) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22707504"}, {"@type": "ListItem", "position": 3, "name": "OAS #22721890 (22721890) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22721890"}, {"@type": "ListItem", "position": 4, "name": "OAS #22751213 (22751213) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22751213"}, {"@type": "ListItem", "position": 5, "name": "OAS #22877307 (22877307) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22877307"}]}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Oakland Animal Services Urgent Dogs & Exit Deadlines | UrgentPaws", "description": "Live list of urgent and rescue-needed dogs at Oakland Animal Services (OAS). Updated every 3 hours with exit deadlines, behavioral notes, and Animal IDs.", "url": "https://www.urgentpaws.org/oakland-animal-services", "dateModified": "2026-11-27T01:34:31Z", "mainEntity": {"@type": "ItemList", "numberOfItems": 5, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "OAS #22655119 (22655119) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22655119"}, {"@type": "ListItem", "position": 2, "name": "OAS #22707504 (22707504) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22707504"}, {"@type": "ListItem", "position": 3, "name": "OAS #22721890 (22721890) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22721890"}, {"@type": "ListItem", "position": 4, "name": "OAS #22751213 (22751213) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22751213"}, {"@type": "ListItem", "position": 5, "name": "OAS #22877307 (22877307) - OAS PRIORITY", "url": "https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22877307"}]}}</script>
   <style>
-    :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #475569; --accent: #dc2626; --border: #e2e8f0; }
+    :root {
+      --bg: #fafaf9;
+      --surface: #ffffff;
+      --text: #1c1917;
+      --muted: #57534e;
+      --border: #e7e5e4;
+      --accent: #dc2626;
+      --accent-soft: #fef2f2;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
-    header { background: #0f172a; color: #fff; padding: 1.25rem 1rem; }
-    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 1rem; }
-    header a { color: #93c5fd; text-decoration: none; font-weight: 600; }
-    h1 { margin: 0.5rem 0 0.25rem; font-size: 1.65rem; }
-    .sub { color: #cbd5e1; margin: 0; font-size: 0.95rem; }
-    .info-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0; }
-    .info-box p { margin: 0.35rem 0; font-size: 0.95rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.15rem; margin: 1.25rem 0 2rem; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
-    .card img { width: 100%; height: 240px; object-fit: cover; object-position: center 20%; background: #e2e8f0; }
-    .no-photo { height: 240px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: var(--muted); font-size: 0.9rem; }
-    .card-body { padding: 1rem; display: flex; flex-direction: column; flex: 1; }
-    .badge { display: inline-block; align-self: flex-start; background: #fee2e2; color: #991b1b; font-weight: 700; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 999px; margin-bottom: 0.5rem; }
-    .card h2 { margin: 0 0 0.25rem; font-size: 1.2rem; }
-    .aid { color: var(--muted); font-weight: 500; font-size: 0.95rem; }
-    .shelter-loc { margin: 0 0 0.25rem; font-size: 0.88rem; color: var(--muted); }
-    .meta { margin: 0 0 0.4rem; font-size: 0.9rem; font-weight: 500; }
-    .needs { margin: 0 0 0.5rem; font-size: 0.82rem; font-weight: 700; color: #b91c1c; }
-    .note { margin: 0 0 0.85rem; font-size: 0.88rem; color: var(--muted); }
-    .btn { margin-top: auto; display: inline-block; text-align: center; background: #0f172a; color: #fff; text-decoration: none; padding: 0.6rem 0.9rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
-    .btn:hover { background: #1e293b; }
-    footer { border-top: 1px solid var(--border); padding: 1.5rem 0 2.5rem; font-size: 0.9rem; color: var(--muted); }
-    footer a { color: #1d4ed8; text-decoration: none; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1140px; margin: 0 auto; padding: 0 1.25rem; }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.9rem 0;
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-links { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .hero { padding: 1.75rem 0 1rem; }
+    .breadcrumb {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+    .breadcrumb a { color: var(--muted); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .count-pill {
+      background: #f5f5f4;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.15rem 0.65rem;
+      border-radius: 999px;
+    }
+    .updated-sub {
+      margin: 0.35rem 0 0;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .shelter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem 1.35rem;
+      margin: 1.15rem 0 1.5rem;
+    }
+    .shelter-card p { margin: 0 0 0.75rem; font-size: 0.95rem; color: #292524; }
+    .shelter-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.65rem 1.25rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .shelter-meta-grid strong { color: var(--text); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.75rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .card-media { position: relative; background: #f5f5f4; }
+    .card-media img {
+      width: 100%;
+      height: 245px;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }
+    .no-photo {
+      height: 245px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .badge {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .card-body {
+      padding: 1rem 1.1rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .card-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .card-head h2 { margin: 0; font-size: 1.18rem; font-weight: 800; }
+    .aid { color: var(--muted); font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }
+    .shelter-loc { margin: 0.2rem 0 0.3rem; font-size: 0.86rem; color: var(--muted); }
+    .meta { margin: 0 0 0.55rem; font-size: 0.88rem; font-weight: 500; color: #292524; }
+    .needs-pill {
+      display: inline-block;
+      align-self: flex-start;
+      background: var(--accent-soft);
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      margin-bottom: 0.55rem;
+    }
+    .note { margin: 0 0 0.9rem; font-size: 0.85rem; color: var(--muted); }
+    .btn {
+      margin-top: auto;
+      display: block;
+      text-align: center;
+      background: #1c1917;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.62rem 0.9rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .btn:hover { background: #292524; }
+    .empty-state {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.25rem 1.5rem;
+      text-align: center;
+      margin-bottom: 2.75rem;
+    }
+    .empty-state h2 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+    .empty-state p { margin: 0; color: var(--muted); font-size: 0.94rem; }
+    .empty-state a { color: #1d4ed8; font-weight: 600; }
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1.75rem 0 2.25rem;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+    .footer-shelters-title {
+      margin: 0 0 0.45rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .footer-shelters-list {
+      margin: 0 0 1.25rem;
+      line-height: 1.85;
+    }
+    .footer-shelters-list a {
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .footer-shelters-list a:hover { color: var(--text); }
+    .footer-bottom {
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .footer-bottom-links { display: flex; gap: 1.15rem; flex-wrap: wrap; }
+    .footer-bottom-links a { color: var(--muted); text-decoration: none; }
+    .footer-bottom-links a:hover { color: var(--text); }
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <a href="/">&larr; All Urgent Shelter Dogs (UrgentPaws)</a>
-      <h1>Oakland Animal Services (OAS) Urgent Dogs (5)</h1>
-      <p class="sub">Auto-updated every 3 hours &bull; Last checked: 2026-11-27T01:26:12Z</p>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="/">UrgentPaws</a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a href="/">Urgent Dogs</a>
+        <a href="/about-urgent-paws">About</a>
+        <a href="/for-shelters">For Shelters</a>
+        <a href="/blog">Guide</a>
+        <a href="/contact-us">Contact Us</a>
+      </nav>
     </div>
   </header>
+
   <main class="wrap">
-    <section class="info-box">
-      <p>Dogs currently listed on Oakland Animal Services&#x27; Rescue Needed and urgent priority boards. Include the dog&#x27;s Animal ID when emailing OAS for a rescue pull, foster hold, or adoption inquiry.</p>
-      <p><strong>Shelter Address:</strong> 1101 29th Ave, Oakland, CA 94601</p>
-      <p><strong>Contact:</strong> Rescue/Transfer: oastransfers@oaklandca.gov | Foster: oasfoster@oaklandca.gov</p>
+    <section class="hero">
+      <div class="breadcrumb"><a href="/">Urgent Dogs</a> &rsaquo; Oakland Animal Services</div>
+      <div class="title-row">
+        <h1>Oakland Animal Services (OAS) Urgent Dogs</h1>
+        <span class="count-pill">5 active</span>
+      </div>
+      <p class="updated-sub">Auto-updated every 3 hours &bull; Last checked Nov 26, 2026 at 05:34 PM PT</p>
     </section>
+
+    <section class="shelter-card">
+      <p>Dogs currently listed on Oakland Animal Services&#x27; Rescue Needed and urgent priority boards. Include the dog&#x27;s Animal ID when emailing OAS for a rescue pull, foster hold, or adoption inquiry.</p>
+      <div class="shelter-meta-grid">
+        <div><strong>Address:</strong> 1101 29th Ave, Oakland, CA 94601</div>
+        <div><strong>Contact:</strong> Rescue/Transfer: oastransfers@oaklandca.gov | Foster: oasfoster@oaklandca.gov</div>
+      </div>
+    </section>
+
     <section class="grid"><article class="card">
-  <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22655/22655119/104160990.jpg" alt="OAS #22655119 (22655119) at Oakland Animal Services" loading="lazy">
-  <div class="card-body">
+  <div class="card-media">
+    <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22655/22655119/104160990.jpg" alt="OAS #22655119 (22655119) at Oakland Animal Services" loading="lazy">
     <span class="badge">OAS PRIORITY</span>
-    <h2>OAS #22655119 <span class="aid">#22655119</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>OAS #22655119</h2>
+      <span class="aid">#22655119</span>
+    </div>
     <p class="shelter-loc">Oakland Animal Services</p>
     <p class="meta">Mixed Breed</p>
-    <p class="needs">Rescue Pull, Foster, or Adopt</p>
+    <span class="needs-pill">Rescue Pull, Foster, or Adopt</span>
     
     <a class="btn" href="https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22655119" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article><article class="card">
-  <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22707/22707504/104170264.jpg" alt="OAS #22707504 (22707504) at Oakland Animal Services" loading="lazy">
-  <div class="card-body">
+  <div class="card-media">
+    <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22707/22707504/104170264.jpg" alt="OAS #22707504 (22707504) at Oakland Animal Services" loading="lazy">
     <span class="badge">OAS PRIORITY</span>
-    <h2>OAS #22707504 <span class="aid">#22707504</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>OAS #22707504</h2>
+      <span class="aid">#22707504</span>
+    </div>
     <p class="shelter-loc">Oakland Animal Services</p>
     <p class="meta">Mixed Breed</p>
-    <p class="needs">Rescue Pull, Foster, or Adopt</p>
+    <span class="needs-pill">Rescue Pull, Foster, or Adopt</span>
     
     <a class="btn" href="https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22707504" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article><article class="card">
-  <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22721/22721890/104132112.jpg" alt="OAS #22721890 (22721890) at Oakland Animal Services" loading="lazy">
-  <div class="card-body">
+  <div class="card-media">
+    <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22721/22721890/104132112.jpg" alt="OAS #22721890 (22721890) at Oakland Animal Services" loading="lazy">
     <span class="badge">OAS PRIORITY</span>
-    <h2>OAS #22721890 <span class="aid">#22721890</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>OAS #22721890</h2>
+      <span class="aid">#22721890</span>
+    </div>
     <p class="shelter-loc">Oakland Animal Services</p>
     <p class="meta">Mixed Breed</p>
-    <p class="needs">Rescue Pull, Foster, or Adopt</p>
+    <span class="needs-pill">Rescue Pull, Foster, or Adopt</span>
     
     <a class="btn" href="https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22721890" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article><article class="card">
-  <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22751/22751213/104105831.jpg" alt="OAS #22751213 (22751213) at Oakland Animal Services" loading="lazy">
-  <div class="card-body">
+  <div class="card-media">
+    <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22751/22751213/104105831.jpg" alt="OAS #22751213 (22751213) at Oakland Animal Services" loading="lazy">
     <span class="badge">OAS PRIORITY</span>
-    <h2>OAS #22751213 <span class="aid">#22751213</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>OAS #22751213</h2>
+      <span class="aid">#22751213</span>
+    </div>
     <p class="shelter-loc">Oakland Animal Services</p>
     <p class="meta">Mixed Breed</p>
-    <p class="needs">Rescue Pull, Foster, or Adopt</p>
+    <span class="needs-pill">Rescue Pull, Foster, or Adopt</span>
     
     <a class="btn" href="https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22751213" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article><article class="card">
-  <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22877/22877307/104193718.jpg" alt="OAS #22877307 (22877307) at Oakland Animal Services" loading="lazy">
-  <div class="card-body">
+  <div class="card-media">
+    <img src="https://cdn.rescuegroups.org/5970/pictures/animals/22877/22877307/104193718.jpg" alt="OAS #22877307 (22877307) at Oakland Animal Services" loading="lazy">
     <span class="badge">OAS PRIORITY</span>
-    <h2>OAS #22877307 <span class="aid">#22877307</span></h2>
+  </div>
+  <div class="card-body">
+    <div class="card-head">
+      <h2>OAS #22877307</h2>
+      <span class="aid">#22877307</span>
+    </div>
     <p class="shelter-loc">Oakland Animal Services</p>
     <p class="meta">Mixed Breed</p>
-    <p class="needs">Rescue Pull, Foster, or Adopt</p>
+    <span class="needs-pill">Rescue Pull, Foster, or Adopt</span>
     
     <a class="btn" href="https://www.oaklandanimalservices.org/rescue-needed/animal?animalId=22877307" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article></section>
   </main>
+
   <footer>
     <div class="wrap">
-      <p><strong>Browse Other Shelters:</strong> <a href="/oakland-animal-services">Oakland Animal Services (OAS)</a> &middot; <a href="/contra-costa-animal-services">Contra Costa County Animal Services</a> &middot; <a href="/san-jose-animal-care">San Jose Animal Care Center (SJACS)</a> &middot; <a href="/stanislaus-animal-services">Stanislaus Animal Services (Modesto) RED &amp; Final Call Dogs</a> &middot; <a href="/la-animal-services">LA Animal Services (LAAS) Urgent &amp; Medical Alert Dogs</a> &middot; <a href="/kern-county-animal-services">Kern County Animal Services (Bakersfield) Greatest Risk Dogs</a> &middot; <a href="/devore-animal-shelter">San Bernardino County - Devore Animal Shelter</a> &middot; <a href="/riverside-county-animal-services">Riverside County Animal Services (Jurupa Valley)</a> &middot; <a href="/san-bernardino-city-animal-shelter">San Bernardino City Animal Shelter</a> &middot; <a href="/oc-animal-care">OC Animal Care (Tustin) Urgent &amp; Rescue Track Dogs</a> &middot; <a href="/la-county-dacc">LA County Animal Care &amp; Control (DACC)</a></p>
-      <p><a href="/">Main UrgentPaws Directory</a> &middot; <a href="/about-urgent-paws">About UrgentPaws</a> &middot; <a href="/blog">Guide</a></p>
+      <p class="footer-shelters-title">Browse Urgent Dogs by Shelter:</p>
+      <p class="footer-shelters-list"><a href="/oakland-animal-services">Oakland Animal Services</a> &middot; <a href="/contra-costa-animal-services">Contra Costa Animal Services</a> &middot; <a href="/san-jose-animal-care">San Jose Animal Care Center</a> &middot; <a href="/stanislaus-animal-services">Stanislaus Animal Services</a> &middot; <a href="/la-animal-services">LA Animal Services</a> &middot; <a href="/kern-county-animal-services">Kern County Animal Services</a> &middot; <a href="/devore-animal-shelter">Devore Animal Shelter</a> &middot; <a href="/riverside-county-animal-services">Riverside County Animal Services</a> &middot; <a href="/san-bernardino-city-animal-shelter">San Bernardino City Animal Shelter</a> &middot; <a href="/oc-animal-care">OC Animal Care</a> &middot; <a href="/la-county-dacc">LA County Animal Care &amp; Control (DACC)</a></p>
+      <div class="footer-bottom">
+        <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
+        <div class="footer-bottom-links">
+          <a href="/">Home</a>
+          <a href="/about-urgent-paws">About</a>
+          <a href="/for-shelters">For Shelters</a>
+          <a href="/blog">Guide</a>
+          <a href="/contact-us">Contact Us</a>
+        </div>
+      </div>
     </div>
   </footer>
 </body>
