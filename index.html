@@ -157,11 +157,38 @@
   </main>
 
   <footer class="bg-white border-t border-neutral-200 mt-10">
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-5 space-y-4 text-xs text-neutral-500">
-      <nav aria-label="Shelter Urgent Lists" class="border-b border-neutral-200 pb-4">
-        <p class="font-semibold text-neutral-700 mb-1.5">Browse Urgent Dogs by Shelter:</p>
-        <div id="footerShelterLinks" class="flex flex-wrap gap-x-3 gap-y-1.5 text-neutral-600"></div>
-      </nav>
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-3 text-xs text-neutral-500">
+      <details class="group border-b border-neutral-200 pb-3">
+        <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-neutral-700 hover:text-neutral-950 select-none">
+          <span id="footerSummaryLabel">Browse Urgent Dogs by Shelter &amp; Category</span>
+          <svg class="w-4 h-4 text-neutral-500 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </summary>
+
+        <nav aria-label="Shelter Urgent Lists" class="pt-3 space-y-3">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">By Shelter</p>
+            <div id="footerShelterLinks" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-1.5 text-neutral-600"></div>
+          </div>
+          <div class="pt-2 border-t border-neutral-100">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">By Urgency &amp; Breed</p>
+            <div class="flex flex-wrap gap-x-3 gap-y-1.5 text-neutral-600">
+              <a href="california-shelter-euthanasia-list" class="hover:text-neutral-950 underline">Euthanasia &amp; Red List</a>
+              <span>&middot;</span>
+              <a href="rescue-only-dogs-california" class="hover:text-neutral-950 underline">Rescue Only (501c3)</a>
+              <span>&middot;</span>
+              <a href="foster-urgent-shelter-dogs-california" class="hover:text-neutral-950 underline">Foster Urgent</a>
+              <span>&middot;</span>
+              <a href="urgent-huskies-california" class="hover:text-neutral-950 underline">Urgent Huskies</a>
+              <span>&middot;</span>
+              <a href="urgent-german-shepherds-california" class="hover:text-neutral-950 underline">Urgent German Shepherds</a>
+              <span>&middot;</span>
+              <a href="urgent-pit-bulls-california" class="hover:text-neutral-950 underline">Urgent Pit Bulls</a>
+            </div>
+          </div>
+        </nav>
+      </details>
 
       <div class="flex flex-wrap items-center justify-between gap-3">
         <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
@@ -175,7 +202,6 @@
       </div>
     </div>
   </footer>
-
   <script>
     let allDogs = [];
     let allShelters = [];
@@ -304,11 +330,15 @@
       }
     }
 
-    function renderFooterShelters() {
+   function renderFooterShelters() {
+      const summaryLabel = document.getElementById('footerSummaryLabel');
+      if (summaryLabel && allShelters.length) {
+        summaryLabel.textContent = `Browse Urgent Dogs by Shelter (${allShelters.length}) & Category`;
+      }
       const footerContainer = document.getElementById('footerShelterLinks');
       footerContainer.innerHTML = allShelters.map(s =>
-        `<a href="${escapeHtml(s.slug)}" class="hover:text-neutral-950 underline">${escapeHtml(s.name)}</a>`
-      ).join('<span>&middot;</span>');
+        `<a href="${escapeHtml(s.slug)}" class="hover:text-neutral-950 underline truncate">${escapeHtml(s.name)}</a>`
+      ).join('');
     }
 
     function syncCountyOptions() {
