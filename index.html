@@ -319,13 +319,13 @@
 
       lbl.textContent = activeCount > 0 ? `Filters (${activeCount})` : 'Filters';
       if (activeCount > 0) {
-        btn.classList.remove('bg-white', 'bg-neutral-50', 'text-neutral-800', 'border-neutral-300');
+        btn.classList.remove('bg-white', 'bg-neutral-50', 'text-neutral-900', 'text-neutral-800', 'border-neutral-300');
         btn.classList.add('bg-neutral-900', 'text-white', 'border-neutral-900');
-        if (chevron) chevron.classList.replace('text-neutral-700', 'text-white');
+        btn.style.color = '#ffffff';
       } else {
         btn.classList.remove('bg-neutral-900', 'text-white', 'border-neutral-900');
-        btn.classList.add('bg-white', 'text-neutral-800', 'border-neutral-300');
-        if (chevron) chevron.classList.replace('text-white', 'text-neutral-700');
+        btn.classList.add('bg-white', 'text-neutral-900', 'border-neutral-300');
+        btn.style.color = '#171717';
       }
     }
 
