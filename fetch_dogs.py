@@ -109,7 +109,6 @@ LAAS_ALERT_BOARDS = [
     },
 ]
 
-# Programmatic search-intent pages targeting real adopter, foster, networker & rescue queries
 PROGRAMMATIC_SEO_LANDERS = [
     {
         "slug": "california-shelter-euthanasia-list",
@@ -163,7 +162,7 @@ PROGRAMMATIC_SEO_LANDERS = [
         "slug": "urgent-pit-bulls-california",
         "name": "Urgent Pit Bulls & Bully Breeds in California Shelters",
         "title": "Urgent Pit Bulls, Staffies & Bully Breeds on California Shelter Lists | UrgentPaws",
-        "h1": "Urgent Pit Bulls, Staffies & Bully Breeds in California Shelters",
+        "h1": "Urgent Pit Bulls, Staffies & Bully Breeds on California Shelter Lists",
         "meta_desc": "Live tracker of American Pit Bull Terriers, Staffordshire Terriers, and bully breed dogs on California shelter euthanasia lists and rescue-only boards.",
         "intro": "Pit Bull Terriers, Staffordshire Terriers, American Bullies, and mixes currently on California municipal shelter urgent and rescue-only feeds.",
         "filter_fn": lambda d: bool(re.search(r"\b(pit\s*bull|staffordshire|bully|bulldog)\b", d.get("breed") or "", re.IGNORECASE)),
@@ -1320,22 +1319,25 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         ):
             val = clean_space(str(item.get(k) or ""))
             if val and not any(b in val.lower() for b in ("noimage", "no_image", "placeholder", "default")):
-                if val.startswith("http"):
+                if val.startswith(("http", "data:image/")):
                     return val
                 if "/" in val:
                     return f"https://petadoption.oc.gov/{val.lstrip('/')}"
                 return f"https://petadoption.oc.gov/rescuetrackportal/Images/{val}"
 
         for val in item.values():
-            if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE):
+            if isinstance(val, str):
                 s = val.strip()
-                if any(b in s.lower() for b in ("logo", "noimage", "no_image", "placeholder", "default")):
-                    continue
-                if s.startswith("http"):
+                if s.startswith("data:image/"):
                     return s
-                if "/" in s:
-                    return f"https://petadoption.oc.gov/{s.lstrip('/')}"
-                return f"https://petadoption.oc.gov/rescuetrackportal/Images/{s}"
+                if re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", s, re.IGNORECASE):
+                    if any(b in s.lower() for b in ("logo", "noimage", "no_image", "placeholder", "default")):
+                        continue
+                    if s.startswith("http"):
+                        return s
+                    if "/" in s:
+                        return f"https://petadoption.oc.gov/{s.lstrip('/')}"
+                    return f"https://petadoption.oc.gov/rescuetrackportal/Images/{s}"
         return ""
 
     for item in captured_records:
@@ -1402,10 +1404,10 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    # OC's list service omits image paths; probe the first detail route to discover OC's detail PHP service / image URL
+    # OC's list service omits photos; probe the first dog's detail route to capture the detail service/image pattern
     if results and not any(d.get("photo_url") for d in results):
         sample_aid = results[0]["animal_id"]
-        detail_service_urls: list[str] = []
+        captured_detail_reqs: list[dict] = []
         detail_img_urls: list[str] = []
 
         def handle_detail_resp(resp):
@@ -1413,10 +1415,16 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
                 if resp.status != 200 or "petadoption.oc.gov" not in resp.url.lower():
                     return
                 r_low = resp.url.lower()
-                if r_low.endswith((".js", ".css", ".png", ".jpg", ".svg", ".woff", ".woff2")):
+                if r_low.endswith((".js", ".css", ".html", ".svg", ".woff", ".woff2")):
                     return
-                if "/service/" in r_low or "detail" in r_low:
-                    detail_service_urls.append(resp.url)
+                req = resp.request
+                post_body = req.post_data or ""
+                if sample_aid in resp.url or sample_aid in post_body or "/service/" in r_low:
+                    captured_detail_reqs.append({
+                        "url": resp.url,
+                        "method": req.method,
+                        "post_data": post_body,
+                    })
                 txt = resp.text()
                 for m in re.finditer(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", txt, re.IGNORECASE):
                     u = m.group(0)
@@ -1437,10 +1445,10 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         page.on("response", handle_detail_resp)
         try:
             page.goto(f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{sample_aid}", wait_until="domcontentloaded", timeout=15000)
-            page.wait_for_timeout(2200)
+            page.wait_for_timeout(2500)
             dom_detail_imgs = page.evaluate(
                 """() => Array.from(document.querySelectorAll("img"))
-                    .map(i => i.currentSrc || i.src || "")
+                    .map(i => i.currentSrc || i.src || i.getAttribute("ng-src") || "")
                     .filter(s => s && !/logo|icon|placeholder|noimage/i.test(s))"""
             )
             detail_img_urls.extend(dom_detail_imgs or [])
@@ -1456,38 +1464,58 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             template_url = detail_img_urls[0]
             for d in results:
                 d["photo_url"] = template_url.replace(sample_aid, d["animal_id"])
-        elif detail_service_urls and sample_aid in detail_service_urls[0]:
-            # Fetch detail JSON concurrently for all OC dogs using the discovered service URL
-            svc_template = detail_service_urls[0]
+        else:
+            matching_req = next(
+                (r for r in captured_detail_reqs if sample_aid in r["url"] or sample_aid in r["post_data"]),
+                None,
+            )
+            if matching_req:
+                # Replay the exact detail XHR in parallel inside the browser session for all OC dogs
+                aids_list = [d["animal_id"] for d in results]
+                photo_map = page.evaluate(
+                    """async ({ reqTemplate, sampleAid, aids }) => {
+                        const out = {};
+                        await Promise.all(aids.map(async (aid) => {
+                            try {
+                                const url = reqTemplate.url.replaceAll(sampleAid, aid);
+                                const opts = { method: reqTemplate.method || "GET" };
+                                if (reqTemplate.post_data) {
+                                    opts.body = reqTemplate.post_data.replaceAll(sampleAid, aid);
+                                    opts.headers = { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" };
+                                }
+                                const resp = await fetch(url, opts);
+                                const txt = await resp.text();
+                                const imgM = txt.match(/https?:\\/\\/[^"'\\s<>]+\\.(?:jpg|jpeg|png|webp)/i);
+                                if (imgM && !/logo|noimage|placeholder/i.test(imgM[0])) {
+                                    out[aid] = imgM[0];
+                                    return;
+                                }
+                                const dataM = txt.match(/data:image\\/[a-z]+;base64,[A-Za-z0-9+/=]+/i);
+                                if (dataM) {
+                                    out[aid] = dataM[0];
+                                    return;
+                                }
+                                const relM = txt.match(/[^"'\\s<>]+\\.(?:jpg|jpeg|png|webp)/i);
+                                if (relM && !/logo|noimage|placeholder/i.test(relM[0])) {
+                                    const path = relM[0].startsWith("/") ? relM[0] : "/" + relM[0];
+                                    out[aid] = "https://petadoption.oc.gov" + path;
+                                }
+                            } catch (e) {}
+                        }));
+                        return out;
+                    }""",
+                    {"reqTemplate": matching_req, "sampleAid": sample_aid, "aids": aids_list},
+                )
+                if isinstance(photo_map, dict):
+                    for d in results:
+                        if photo_map.get(d["animal_id"]):
+                            d["photo_url"] = photo_map[d["animal_id"]]
 
-            def fetch_oc_detail_photo(dog: dict) -> tuple[str, str]:
-                aid_q = dog["animal_id"]
-                svc_url = svc_template.replace(sample_aid, aid_q)
-                try:
-                    req = urllib.request.Request(svc_url, headers={"User-Agent": USER_AGENT})
-                    with urllib.request.urlopen(req, timeout=6) as resp:
-                        raw = resp.read().decode("utf-8", errors="replace")
-                    parsed = json.loads(raw)
-                    if isinstance(parsed, str):
-                        parsed = json.loads(parsed)
-                    recs: list[dict] = []
-                    _extract_dict_records(parsed, recs)
-                    for rec in recs:
-                        p = resolve_oc_photo(rec)
-                        if p:
-                            return (aid_q, p)
-                    m = re.search(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", raw, re.IGNORECASE)
-                    if m and not any(b in m.group(0).lower() for b in ("logo", "noimage", "placeholder")):
-                        return (aid_q, m.group(0))
-                except Exception:
-                    pass
-                return (aid_q, "")
-
-            with ThreadPoolExecutor(max_workers=10) as pool:
-                photo_map = dict(pool.map(fetch_oc_detail_photo, results))
-            for d in results:
-                if photo_map.get(d["animal_id"]):
-                    d["photo_url"] = photo_map[d["animal_id"]]
+            if not any(d.get("photo_url") for d in results):
+                print(
+                    f"  [debug] OC detail reqs={captured_detail_reqs[:3]} | detail imgs={detail_img_urls[:3]}",
+                    flush=True,
+                )
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
@@ -1794,6 +1822,19 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 "updated_at": now_iso,
                 "last_checked": now_iso,
             })
+
+    # Strip any shared fallback placeholder image URLs (such as DACC's pink-heart cartoon)
+    url_counts: dict[str, int] = {}
+    for d in results:
+        p = d.get("photo_url") or ""
+        if p:
+            url_counts[p] = url_counts.get(p, 0) + 1
+    repeated_urls = {u for u, cnt in url_counts.items() if cnt >= 2}
+    if repeated_urls:
+        print(f"  [debug] DACC cleared repeated placeholder image(s): {list(repeated_urls)}", flush=True)
+        for d in results:
+            if d.get("photo_url") in repeated_urls:
+                d["photo_url"] = ""
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
