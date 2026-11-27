@@ -252,7 +252,7 @@
     "foster_capable": false,
     "portal_type": "oc_rescuetrack",
     "portal_config": {
-      "url": "https://petadoption.oc.gov/rescuetrackportal/Templates/V2_public_speciallanding.html"
+      "url": "https://petadoption.oc.gov/rescuetrackportal/"
     },
     "title": "OC Animal Care Urgent & Rescue Track Dogs (RESQ-BHV, MEDICAL) | UrgentPaws",
     "h1": "OC Animal Care (Tustin) Urgent & Rescue Track Dogs",
