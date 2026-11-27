@@ -1755,7 +1755,7 @@ def sync_static_page_navs(shelters: list[dict] | None = None) -> None:
     info_pages = {
         "about-urgent-paws.html": "about-urgent-paws",
         "for-shelters.html": "for-shelters",
-        "blog.html": "blog",
+        "guide.html": "guide",
         "contact-us.html": "contact-us",
     }
 
