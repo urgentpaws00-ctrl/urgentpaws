@@ -1130,18 +1130,20 @@ def _extract_dict_records(obj, out: list[dict]) -> None:
 
 def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
     root_url = "https://petadoption.oc.gov/rescuetrackportal/"
+    speciallist_url = "https://petadoption.oc.gov/rescuetrackportal/#/speciallist/DOG"
     print(f"Scraping {cfg['name']} Rescue Track portal...", flush=True)
 
     captured_records: list[dict] = []
-    seen_service_urls: list[str] = []
+    seen_urls: list[str] = []
 
     def handle_response(resp):
         try:
             if resp.status != 200 or "petadoption.oc.gov" not in resp.url.lower():
                 return
-            if "/service/" not in resp.url.lower() and "json" not in (resp.headers.get("content-type") or "").lower():
+            r_low = resp.url.lower()
+            if r_low.endswith((".js", ".css", ".png", ".jpg", ".svg", ".woff", ".woff2")):
                 return
-            seen_service_urls.append(resp.url)
+            seen_urls.append(resp.url)
             raw = resp.text()
             if not raw or len(raw) < 30:
                 return
@@ -1154,35 +1156,15 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
 
     page.on("response", handle_response)
     try:
+        # Boot SPA session first so direct hash navigation does not trigger #/logout
         page.goto(root_url, wait_until="domcontentloaded", timeout=25000)
         page.wait_for_timeout(1500)
+        page.goto(speciallist_url, wait_until="domcontentloaded", timeout=25000)
 
-        # Step 1: Click "SPECIAL NEEDS" or "General Special Needs List" (never LOGIN)
-        page.evaluate(
-            """() => {
-                const links = Array.from(document.querySelectorAll("a, button, [ng-click]"));
-                const specialLink = links.find(el => {
-                    const t = (el.innerText || "").trim().toUpperCase();
-                    return t === "SPECIAL NEEDS" || t.includes("GENERAL SPECIAL NEEDS");
-                });
-                if (specialLink) specialLink.click();
-            }"""
-        )
-        page.wait_for_timeout(2000)
-
-        # Step 2: Click the DOG category card/count on the Special Needs landing view
-        page.evaluate(
-            """() => {
-                const candidates = Array.from(document.querySelectorAll("a, button, div[ng-click], span[ng-click], [role='button']"));
-                const dogCard = candidates.find(el => {
-                    const t = (el.innerText || "").trim();
-                    const ng = (el.getAttribute("ng-click") || "") + " " + (el.getAttribute("href") || "");
-                    return /\\bDOG\\b/i.test(t) && !/LOGIN/i.test(t) && (t.length < 45 || /dog/i.test(ng));
-                });
-                if (dogCard) dogCard.click();
-            }"""
-        )
-        page.wait_for_timeout(2500)
+        try:
+            page.wait_for_selector("text=/\\bA\\d{5,8}\\b/", timeout=8500)
+        except Exception:
+            page.wait_for_timeout(3000)
 
         # Fallback: inspect AngularJS $scope arrays in memory
         if not captured_records:
@@ -1282,7 +1264,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             item.get("AnimalID") or item.get("AnimalId") or item.get("animalId")
             or item.get("animal_id") or item.get("PetID") or item.get("id") or ""
         )
-        if not re.match(r"^A\d{6,8}$", aid.strip(), re.IGNORECASE):
+        if not re.match(r"^A\d{5,8}$", aid.strip(), re.IGNORECASE):
             continue
         name = str(item.get("AnimalName") or item.get("Name") or item.get("name") or "")
         breed = str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or "")
@@ -1299,20 +1281,21 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         dom_rows = page.evaluate(
             """() => {
                 const out = [];
-                const idRe = /\\bA\\d{6,8}\\b/;
+                const idRe = /\\bA\\d{5,8}\\b/;
                 const seen = new Set();
-                for (const el of Array.from(document.querySelectorAll("a, tr, .card, [class*='card'], [ng-repeat], li, article"))) {
+                for (const el of Array.from(document.querySelectorAll("a, tr, .card, [class*='card'], [ng-repeat], li, article, div"))) {
                     const txt = ((el.getAttribute("href") || "") + " " + (el.innerText || "")).trim();
                     const m = txt.match(idRe);
-                    if (!m || txt.length > 1600) continue;
+                    if (!m || txt.length < 10 || txt.length > 1600) continue;
+                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
+                    if (nested) continue;
                     const aid = m[0].toUpperCase();
                     if (seen.has(aid)) continue;
                     seen.add(aid);
-                    const card = el.closest("tr, .card, [class*='card'], [ng-repeat], li, article") || el;
-                    const img = card.querySelector("img");
+                    const img = el.querySelector("img");
                     out.push({
                         aid,
-                        text: (card.innerText || "").trim(),
+                        text: (el.innerText || "").trim(),
                         img: img ? (img.src || img.getAttribute("data-src") || "") : ""
                     });
                 }
@@ -1348,12 +1331,11 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             )
 
     if not results:
-        body_snippet = clean_space(page.inner_text("body"))[:220]
-        print(f"  [debug] OC URL={page.url} | Services={seen_service_urls} | body={body_snippet!r}", flush=True)
+        body_snippet = clean_space(page.inner_text("body"))[:320]
+        print(f"  [debug] OC v3 URL={page.url} | URLs={seen_urls[-6:]} | body={body_snippet!r}", flush=True)
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
-
 
 # ---------------------------------------------------------------------------
 # PORTAL 7: LA COUNTY DACC (7 CARE CENTERS) - RESCUE ONLY & AP-KHOA
