@@ -209,12 +209,12 @@
     "contact": "Rescue/Transfer: transfer@rivco.org | Phone: (951) 358-7387",
     "intro": "At-risk dogs at Riverside County Department of Animal Services (RCDAS) flagged with exit deadlines, medical urgency, or Rescue Only status."
   },
-  {
-    "slug": "sacramento-county-animal-care",
-    "name": "Sacramento County Animal Care (Bradshaw)",
-    "short_name": "Sacramento County",
-    "city": "Sacramento",
-    "county": "Sacramento",
+{
+    "slug": "san-bernardino-city-animal-shelter",
+    "name": "San Bernardino City Animal Shelter",
+    "short_name": "San Bernardino City",
+    "city": "San Bernardino",
+    "county": "San Bernardino",
     "state": "CA",
     "timezone": "America/Los_Angeles",
     "foster_capable": true,
@@ -222,20 +222,22 @@
     "portal_config": {
       "boards": [
         {
-          "url": "https://24petconnect.com/SacramentoCountyAdoptablePets?at=DOG&sb=days_MaxMin",
-          "shelter_name": "Sacramento County Animal Care Services (Bradshaw)",
-          "portal_code": "SACC",
-          "require_urgent_flag": true,
-          "default_badge": "Urgent / At Risk",
-          "default_urgency": "Urgent Shelter Dog"
+          "url": "https://24petconnect.com/SanBernardinoCityShelterPets?at=DOG&sb=days_MaxMin",
+          "shelter_name": "San Bernardino City Animal Shelter",
+          "portal_code": "SBCT",
+          "require_urgent_flag": false,
+          "inspect_details_for_deadline": true,
+          "max_detail_checks": 120,
+          "default_badge": "Urgent / Exit Deadline",
+          "default_urgency": "Urgent / Rescue Only"
         }
       ]
     },
-    "title": "Sacramento County Bradshaw Animal Shelter Urgent Dogs | UrgentPaws",
-    "h1": "Sacramento County Animal Care (Bradshaw) Urgent Dogs",
-    "meta_desc": "Live tracker for urgent and at-risk dogs at Sacramento County Bradshaw Animal Shelter in Sacramento, CA. Updated every 3 hours with Animal IDs and shelter links.",
-    "address": "3839 Bradshaw Rd, Sacramento, CA 95827",
-    "contact": "Phone: (916) 368-7387 | Foster: foster@saccounty.gov",
-    "intro": "Urgent and at-risk dogs at Sacramento County Animal Care Services (Bradshaw Animal Shelter). Note the Animal ID when contacting the shelter or visiting Tuesday–Sunday."
+    "title": "San Bernardino City Animal Shelter Urgent & Rescue Only Dogs | UrgentPaws",
+    "h1": "San Bernardino City Animal Shelter Urgent Dogs",
+    "meta_desc": "Live tracker for dogs with Needs Placement By exit deadlines and medical/behavioral Rescue Only notices at San Bernardino City Animal Shelter (SBCT).",
+    "address": "333 Chandler Place, San Bernardino, CA 92408",
+    "contact": "Rescue: sbrescue@sbcity.org | Foster: fosterpet@sbcity.org | Phone: (909) 998-4000",
+    "intro": "At-risk and Rescue Only dogs at San Bernardino City Animal Shelter (distinct from county Devore) flagged with 'Needs Placement By' exit dates or rescue-partner medical/behavioral restrictions."
   }
 ]
