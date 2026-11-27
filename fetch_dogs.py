@@ -109,6 +109,67 @@ LAAS_ALERT_BOARDS = [
     },
 ]
 
+# Programmatic search-intent pages targeting real adopter, foster, networker & rescue queries
+PROGRAMMATIC_SEO_LANDERS = [
+    {
+        "slug": "california-shelter-euthanasia-list",
+        "name": "California Shelter Euthanasia & Red List Dogs",
+        "title": "California Shelter Euthanasia List & Final Call Red List Dogs (Live) | UrgentPaws",
+        "h1": "California Shelter Euthanasia List & Final Call Red List Dogs",
+        "meta_desc": "Live directory of California municipal shelter dogs on euthanasia lists, Final Call deadlines, and Red List alerts across Los Angeles, Bay Area, Inland Empire, and Central Valley.",
+        "intro": "Dogs with active euthanasia deadlines, Final Call exit timestamps, or Red List alerts across California municipal shelters. Contact the listed shelter rescue desk immediately with the dog's Animal ID.",
+        "filter_fn": lambda d: any(
+            k in (d.get("deadline_or_urgency") or "").upper()
+            for k in ("EUTHANASIA", "FINAL CALL", "DEADLINE", "RED STATUS", "ALERT")
+        ),
+    },
+    {
+        "slug": "rescue-only-dogs-california",
+        "name": "501(c)(3) Rescue Pull Only Dogs in California",
+        "title": "Rescue Only Shelter Dogs in California (501c3 Pull, RESQ-BHV, AP-KHOA, New Hope) | UrgentPaws",
+        "h1": "501(c)(3) Rescue Pull Only Shelter Dogs in California",
+        "meta_desc": "Live feed of California municipal shelter dogs restricted to approved 501(c)(3) rescue partners (OC RESQ-BHV, LA County DACC Rescue Only & AP-KHOA, LAAS New Hope, SBCT).",
+        "intro": "At-risk dogs designated Rescue Pull Only due to medical or behavioral holds. Approved 501(c)(3) rescue organizations can email the shelter rescue coordinator directly with the Animal ID to place a hold.",
+        "filter_fn": lambda d: "rescue pull only" in (d.get("needs_type") or "").lower(),
+    },
+    {
+        "slug": "foster-urgent-shelter-dogs-california",
+        "name": "Foster-Urgent Shelter Dogs in California",
+        "title": "Foster Urgent Shelter Dogs in California (Bay Area, LA & Inland Empire) | UrgentPaws",
+        "h1": "Foster-Urgent Shelter Dogs in California",
+        "meta_desc": "California municipal shelter dogs eligible for urgent foster placement or adoption to clear kennel space in Oakland, San Jose, Stanislaus, San Bernardino, and Los Angeles.",
+        "intro": "At-risk shelter dogs eligible for temporary foster placement or public adoption. Fostering frees critical kennel capacity and immediately removes a dog from euthanasia risk.",
+        "filter_fn": lambda d: "foster" in (d.get("needs_type") or "").lower(),
+    },
+    {
+        "slug": "urgent-huskies-california",
+        "name": "Urgent Huskies & Malamutes in California Shelters",
+        "title": "Urgent Siberian Huskies & Malamutes on California Shelter Lists | UrgentPaws",
+        "h1": "Urgent Siberian Huskies & Malamutes in California Shelters",
+        "meta_desc": "Live tracker of Siberian Huskies and Alaskan Malamutes on California municipal shelter urgent lists, euthanasia deadlines, and 501(c)(3) rescue-only boards.",
+        "intro": "Siberian Huskies, Alaskan Malamutes, and Husky mixes currently facing urgent deadlines or rescue-only status in California municipal shelters.",
+        "filter_fn": lambda d: bool(re.search(r"\b(husky|malamute)\b", d.get("breed") or "", re.IGNORECASE)),
+    },
+    {
+        "slug": "urgent-german-shepherds-california",
+        "name": "Urgent German Shepherds & Malinois in California Shelters",
+        "title": "Urgent German Shepherds & Belgian Malinois on California Shelter Lists | UrgentPaws",
+        "h1": "Urgent German Shepherds & Belgian Malinois in California Shelters",
+        "meta_desc": "Live tracker of German Shepherd Dogs and Belgian Malinois on California municipal shelter urgent lists, euthanasia alerts, and rescue-only boards.",
+        "intro": "German Shepherds, Belgian Malinois, and Shepherd mixes currently at risk in California municipal animal shelters.",
+        "filter_fn": lambda d: bool(re.search(r"\b(shepherd|malinois)\b", d.get("breed") or "", re.IGNORECASE)),
+    },
+    {
+        "slug": "urgent-pit-bulls-california",
+        "name": "Urgent Pit Bulls & Bully Breeds in California Shelters",
+        "title": "Urgent Pit Bulls, Staffies & Bully Breeds on California Shelter Lists | UrgentPaws",
+        "h1": "Urgent Pit Bulls, Staffies & Bully Breeds in California Shelters",
+        "meta_desc": "Live tracker of American Pit Bull Terriers, Staffordshire Terriers, and bully breed dogs on California shelter euthanasia lists and rescue-only boards.",
+        "intro": "Pit Bull Terriers, Staffordshire Terriers, American Bullies, and mixes currently on California municipal shelter urgent and rescue-only feeds.",
+        "filter_fn": lambda d: bool(re.search(r"\b(pit\s*bull|staffordshire|bully|bulldog)\b", d.get("breed") or "", re.IGNORECASE)),
+    },
+]
+
 
 def clean_space(text: str) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
@@ -1341,38 +1402,48 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             "last_checked": now_iso,
         })
 
-    # Inspect sample detail route if list items omitted photos to capture OC's detail photo URL pattern
+    # OC's list service omits image paths; probe the first detail route to discover OC's detail PHP service / image URL
     if results and not any(d.get("photo_url") for d in results):
         sample_aid = results[0]["animal_id"]
-        detail_imgs: list[str] = []
+        detail_service_urls: list[str] = []
+        detail_img_urls: list[str] = []
 
         def handle_detail_resp(resp):
             try:
-                if resp.status == 200 and "petadoption.oc.gov" in resp.url.lower():
-                    txt = resp.text()
-                    for m in re.finditer(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", txt, re.IGNORECASE):
-                        u = m.group(0)
-                        if not any(b in u.lower() for b in ("logo", "noimage", "placeholder")):
-                            detail_imgs.append(u)
+                if resp.status != 200 or "petadoption.oc.gov" not in resp.url.lower():
+                    return
+                r_low = resp.url.lower()
+                if r_low.endswith((".js", ".css", ".png", ".jpg", ".svg", ".woff", ".woff2")):
+                    return
+                if "/service/" in r_low or "detail" in r_low:
+                    detail_service_urls.append(resp.url)
+                txt = resp.text()
+                for m in re.finditer(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", txt, re.IGNORECASE):
+                    u = m.group(0)
+                    if not any(b in u.lower() for b in ("logo", "noimage", "placeholder")):
+                        detail_img_urls.append(u)
+                parsed = json.loads(txt)
+                if isinstance(parsed, str):
+                    parsed = json.loads(parsed)
+                recs: list[dict] = []
+                _extract_dict_records(parsed, recs)
+                for rec in recs:
+                    p = resolve_oc_photo(rec)
+                    if p:
+                        detail_img_urls.append(p)
             except Exception:
                 pass
 
         page.on("response", handle_detail_resp)
         try:
             page.goto(f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{sample_aid}", wait_until="domcontentloaded", timeout=15000)
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(2200)
             dom_detail_imgs = page.evaluate(
                 """() => Array.from(document.querySelectorAll("img"))
                     .map(i => i.currentSrc || i.src || "")
                     .filter(s => s && !/logo|icon|placeholder|noimage/i.test(s))"""
             )
-            detail_imgs.extend(dom_detail_imgs or [])
-            if detail_imgs and sample_aid in detail_imgs[0]:
-                template_url = detail_imgs[0]
-                for d in results:
-                    d["photo_url"] = template_url.replace(sample_aid, d["animal_id"])
-            elif detail_imgs:
-                print(f"  [debug] OC detail img sample: {detail_imgs[0]}", flush=True)
+            detail_img_urls.extend(dom_detail_imgs or [])
         except Exception:
             pass
         finally:
@@ -1380,6 +1451,43 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
                 page.remove_listener("response", handle_detail_resp)
             except Exception:
                 pass
+
+        if detail_img_urls and sample_aid in detail_img_urls[0]:
+            template_url = detail_img_urls[0]
+            for d in results:
+                d["photo_url"] = template_url.replace(sample_aid, d["animal_id"])
+        elif detail_service_urls and sample_aid in detail_service_urls[0]:
+            # Fetch detail JSON concurrently for all OC dogs using the discovered service URL
+            svc_template = detail_service_urls[0]
+
+            def fetch_oc_detail_photo(dog: dict) -> tuple[str, str]:
+                aid_q = dog["animal_id"]
+                svc_url = svc_template.replace(sample_aid, aid_q)
+                try:
+                    req = urllib.request.Request(svc_url, headers={"User-Agent": USER_AGENT})
+                    with urllib.request.urlopen(req, timeout=6) as resp:
+                        raw = resp.read().decode("utf-8", errors="replace")
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, str):
+                        parsed = json.loads(parsed)
+                    recs: list[dict] = []
+                    _extract_dict_records(parsed, recs)
+                    for rec in recs:
+                        p = resolve_oc_photo(rec)
+                        if p:
+                            return (aid_q, p)
+                    m = re.search(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", raw, re.IGNORECASE)
+                    if m and not any(b in m.group(0).lower() for b in ("logo", "noimage", "placeholder")):
+                        return (aid_q, m.group(0))
+                except Exception:
+                    pass
+                return (aid_q, "")
+
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                photo_map = dict(pool.map(fetch_oc_detail_photo, results))
+            for d in results:
+                if photo_map.get(d["animal_id"]):
+                    d["photo_url"] = photo_map[d["animal_id"]]
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
@@ -1548,7 +1656,7 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                             seen.add(aid);
 
                             let imgSrc = "";
-                            const img = el.querySelector("img");
+                            const img = el.querySelector("img[alt*='Picture of Animal'], img");
                             if (img) {
                                 const srcset = img.getAttribute("data-srcset") || img.getAttribute("srcset") || "";
                                 const firstSet = srcset ? srcset.split(",")[0].trim().split(" ")[0] : "";
@@ -1773,59 +1881,75 @@ def sync_static_page_navs() -> None:
                 f.write(updated)
 
 
-def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now_iso: str) -> None:
-    sync_static_page_navs()
-    print("Generating clean static shelter HTML pages and sitemap.xml for SEO...", flush=True)
-    base_url = "https://www.urgentpaws.org"
-    today_date = now_iso[:10]
-
-    try:
-        pt_dt = datetime.fromisoformat(now_iso.replace("Z", "+00:00")).astimezone(ZoneInfo("America/Los_Angeles"))
-        checked_label = pt_dt.strftime("%b %d, %Y at %I:%M %p PT")
-    except Exception:
-        checked_label = now_iso
-
-    footer_shelter_links = " &middot; ".join(
-        f'<a href="/{cfg["slug"]}">{html.escape(cfg["name"])}</a>'
-        for cfg in shelters
+def build_seo_faqs(page_name: str, contact: str, address: str, foster_capable: bool) -> list[tuple[str, str]]:
+    """Generates shelter- and intent-specific Q&As for visible content and FAQPage JSON-LD."""
+    foster_answer = (
+        f"Yes. {page_name} lists foster-eligible at-risk dogs alongside rescue-only cases. "
+        "Include the dog's Animal ID (e.g., A123456) when contacting the foster or rescue desk so staff can check availability before a deadline."
+        if foster_capable
+        else f"Many urgent dogs on {page_name}'s board are restricted to approved 501(c)(3) rescue partners (Rescue Pull Only). "
+        "Individuals who want to foster can apply to foster through a local 501(c)(3) rescue partner and share the dog's Animal ID so the rescue can place a pull hold."
     )
+    return [
+        (
+            f"How do 501(c)(3) rescues pull an urgent dog from {page_name}?",
+            f"Email the shelter's rescue coordinator ({contact or 'listed on the official shelter card'}) with your 501(c)(3) rescue organization name, puller contact details, and the dog's exact Animal ID (A#). Always verify pickup windows before sending transport.",
+        ),
+        (
+            f"Can the public adopt or foster urgent dogs from {page_name}?",
+            foster_answer,
+        ),
+        (
+            f"How often is this {page_name} urgent dog tracker updated?",
+            f"UrgentPaws syncs directly with {page_name}'s public feed every 3 hours and automatically removes dogs whose deadlines have passed or that have been marked adopted or rescued. Shelter location: {address or 'California'}.",
+        ),
+    ]
 
-    for cfg in shelters:
-        slug = cfg["slug"]
-        page_url = f"{base_url}/{slug}"
-        shelter_dogs = [
-            d for d in unique_dogs
-            if d.get("shelter_slug") == slug
-            or (not d.get("shelter_slug") and (d.get("county") or "").lower() == cfg["county"].lower())
-        ]
 
-        cards_html = []
-        ld_items = []
+def render_directory_html(
+    *,
+    page_url: str,
+    title: str,
+    meta_desc: str,
+    h1: str,
+    breadcrumb_label: str,
+    intro: str,
+    address: str,
+    contact: str,
+    foster_capable: bool,
+    dogs: list[dict],
+    footer_shelter_links: str,
+    footer_intent_links: str,
+    checked_label: str,
+    now_iso: str,
+) -> str:
+    cards_html = []
+    ld_items = []
 
-        for idx, dog in enumerate(shelter_dogs, start=1):
-            d_name = html.escape(dog.get("name") or f"Dog {dog.get('animal_id', '')}")
-            d_id = html.escape(dog.get("animal_id") or "")
-            d_breed = html.escape(dog.get("breed") or "Mixed Breed")
-            d_age = html.escape(dog.get("age") or "")
-            d_size = html.escape(dog.get("size") or "")
-            d_badge = html.escape(dog.get("deadline_or_urgency") or "Urgent")
-            d_needs = html.escape(dog.get("needs_type") or "")
-            d_shelter = html.escape(dog.get("shelter") or cfg["name"])
-            d_note = html.escape(dog.get("transport_note") or "")
-            d_url = html.escape(dog.get("listing_url") or base_url)
-            d_photo = html.escape(dog.get("photo_url") or "")
+    for idx, dog in enumerate(dogs, start=1):
+        d_name = html.escape(dog.get("name") or f"Dog {dog.get('animal_id', '')}")
+        d_id = html.escape(dog.get("animal_id") or "")
+        d_breed = html.escape(dog.get("breed") or "Mixed Breed")
+        d_age = html.escape(dog.get("age") or "")
+        d_size = html.escape(dog.get("size") or "")
+        d_badge = html.escape(dog.get("deadline_or_urgency") or "Urgent")
+        d_needs = html.escape(dog.get("needs_type") or "")
+        d_shelter = html.escape(dog.get("shelter") or breadcrumb_label)
+        d_note = html.escape(dog.get("transport_note") or "")
+        d_url = html.escape(dog.get("listing_url") or "https://www.urgentpaws.org")
+        d_photo = html.escape(dog.get("photo_url") or "")
 
-            meta_bits = [bit for bit in [d_breed, d_age, d_size] if bit]
-            meta_str = " &bull; ".join(meta_bits)
+        meta_bits = [bit for bit in [d_breed, d_age, d_size] if bit]
+        meta_str = " &bull; ".join(meta_bits)
 
-            img_tag = (
-                f'<img src="{d_photo}" alt="{d_name} ({d_id}) at {d_shelter}" loading="lazy">'
-                if d_photo
-                else '<div class="no-photo">Photo on Official Shelter Listing</div>'
-            )
+        img_tag = (
+            f'<img src="{d_photo}" alt="{d_name} ({d_id}) - {d_breed} urgent dog at {d_shelter}" loading="lazy">'
+            if d_photo
+            else '<div class="no-photo">Photo on Official Shelter Listing</div>'
+        )
 
-            cards_html.append(
-                f"""<article class="card">
+        cards_html.append(
+            f"""<article class="card">
   <div class="card-media">
     {img_tag}
     <span class="badge">{d_badge}</span>
@@ -1842,51 +1966,86 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
     <a class="btn" href="{d_url}" target="_blank" rel="noopener noreferrer">View Official Shelter Listing &rarr;</a>
   </div>
 </article>"""
-            )
+        )
 
-            ld_items.append({
-                "@type": "ListItem",
-                "position": idx,
-                "name": f"{dog.get('name', 'Urgent Dog')} ({dog.get('animal_id', '')}) - {dog.get('deadline_or_urgency', 'Urgent')}",
-                "url": dog.get("listing_url") or page_url,
-            })
+        ld_items.append({
+            "@type": "ListItem",
+            "position": idx,
+            "name": f"{dog.get('name', 'Urgent Dog')} ({dog.get('animal_id', '')}) - {dog.get('breed', 'Dog')} - {dog.get('deadline_or_urgency', 'Urgent')}",
+            "url": dog.get("listing_url") or page_url,
+        })
 
-        if not cards_html:
-            cards_section = (
-                '<div class="empty-state">'
-                '<h2>No Active Urgent Listings Right Now</h2>'
-                '<p>No dogs are currently posted on this shelter\'s urgent board, or the shelter is between updates. '
-                'Check back soon or <a href="/">browse all California shelters on UrgentPaws</a>.</p>'
-                '</div>'
-            )
-        else:
-            cards_section = f'<section class="grid">{"".join(cards_html)}</section>'
+    if not cards_html:
+        cards_section = (
+            '<div class="empty-state">'
+            '<h2>No Active Urgent Listings Right Now</h2>'
+            '<p>No dogs are currently posted on this urgent feed, or the shelter board is between updates. '
+            'Check back soon or <a href="/">browse all California shelters on UrgentPaws</a>.</p>'
+            '</div>'
+        )
+    else:
+        cards_section = f'<section class="grid">{"".join(cards_html)}</section>'
 
-        json_ld = json.dumps(
+    faqs = build_seo_faqs(breadcrumb_label, contact, address, foster_capable)
+    faq_html_blocks = "".join(
+        f'<div class="faq-item"><h3>{html.escape(q)}</h3><p>{html.escape(a)}</p></div>'
+        for q, a in faqs
+    )
+
+    json_ld = json.dumps(
+        [
             {
                 "@context": "https://schema.org",
                 "@type": "CollectionPage",
-                "name": cfg["title"],
-                "description": cfg["meta_desc"],
+                "name": title,
+                "description": meta_desc,
                 "url": page_url,
                 "dateModified": now_iso,
                 "mainEntity": {
                     "@type": "ItemList",
-                    "numberOfItems": len(shelter_dogs),
+                    "numberOfItems": len(dogs),
                     "itemListElement": ld_items,
                 },
             },
-            ensure_ascii=False,
-        )
+            {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": q,
+                        "acceptedAnswer": {"@type": "Answer", "text": a},
+                    }
+                    for q, a in faqs
+                ],
+            },
+        ],
+        ensure_ascii=False,
+    )
 
-        page_html = f"""<!DOCTYPE html>
+    meta_grid_items = []
+    if address:
+        meta_grid_items.append(f"<div><strong>Location:</strong> {html.escape(address)}</div>")
+    if contact:
+        meta_grid_items.append(f"<div><strong>Rescue / Foster Contact:</strong> {html.escape(contact)}</div>")
+    meta_grid_html = (
+        f'<div class="shelter-meta-grid">{"".join(meta_grid_items)}</div>'
+        if meta_grid_items
+        else ""
+    )
+
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{html.escape(cfg["title"])}</title>
-  <meta name="description" content="{html.escape(cfg["meta_desc"])}">
+  <title>{html.escape(title)}</title>
+  <meta name="description" content="{html.escape(meta_desc)}">
   <link rel="canonical" href="{page_url}">
+  <meta property="og:title" content="{html.escape(title)}">
+  <meta property="og:description" content="{html.escape(meta_desc)}">
+  <meta property="og:url" content="{page_url}">
+  <meta property="og:type" content="website">
   <script type="application/ld+json">{json_ld}</script>
   <style>
     :root {{
@@ -1977,6 +2136,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
       margin: 1.15rem 0 1.5rem;
     }}
     .shelter-card p {{ margin: 0 0 0.75rem; font-size: 0.95rem; color: #292524; }}
+    .shelter-card p:last-child {{ margin-bottom: 0; }}
     .shelter-meta-grid {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -1991,7 +2151,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.25rem;
-      margin-bottom: 2.75rem;
+      margin-bottom: 2.5rem;
     }}
     .card {{
       background: var(--surface);
@@ -2080,11 +2240,23 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
       border-radius: 12px;
       padding: 2.25rem 1.5rem;
       text-align: center;
-      margin-bottom: 2.75rem;
+      margin-bottom: 2.5rem;
     }}
     .empty-state h2 {{ margin: 0 0 0.4rem; font-size: 1.15rem; }}
     .empty-state p {{ margin: 0; color: var(--muted); font-size: 0.94rem; }}
     .empty-state a {{ color: #1d4ed8; font-weight: 600; }}
+    .faq-section {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem 1.5rem;
+      margin-bottom: 2.75rem;
+    }}
+    .faq-section h2 {{ margin: 0 0 1rem; font-size: 1.2rem; font-weight: 800; }}
+    .faq-item {{ padding: 0.75rem 0; border-top: 1px solid var(--border); }}
+    .faq-item:first-of-type {{ border-top: none; padding-top: 0; }}
+    .faq-item h3 {{ margin: 0 0 0.3rem; font-size: 0.98rem; font-weight: 700; }}
+    .faq-item p {{ margin: 0; font-size: 0.9rem; color: var(--muted); }}
     footer {{
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -2098,7 +2270,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
       color: var(--text);
     }}
     .footer-shelters-list {{
-      margin: 0 0 1.25rem;
+      margin: 0 0 1.15rem;
       line-height: 1.85;
     }}
     .footer-shelters-list a {{
@@ -2137,29 +2309,33 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
 
   <main class="wrap">
     <section class="hero">
-      <div class="breadcrumb"><a href="/">Urgent Dogs</a> &rsaquo; {html.escape(cfg["name"])}</div>
+      <div class="breadcrumb"><a href="/">Urgent Dogs</a> &rsaquo; {html.escape(breadcrumb_label)}</div>
       <div class="title-row">
-        <h1>{html.escape(cfg["h1"])}</h1>
-        <span class="count-pill">{len(shelter_dogs)} active</span>
+        <h1>{html.escape(h1)}</h1>
+        <span class="count-pill">{len(dogs)} active</span>
       </div>
       <p class="updated-sub">Auto-updated every 3 hours &bull; Last checked {html.escape(checked_label)}</p>
     </section>
 
     <section class="shelter-card">
-      <p>{html.escape(cfg["intro"])}</p>
-      <div class="shelter-meta-grid">
-        <div><strong>Address:</strong> {html.escape(cfg["address"])}</div>
-        <div><strong>Contact:</strong> {html.escape(cfg["contact"])}</div>
-      </div>
+      <p>{html.escape(intro)}</p>
+      {meta_grid_html}
     </section>
 
     {cards_section}
+
+    <section class="faq-section">
+      <h2>Rescue, Foster &amp; Adoption FAQ — {html.escape(breadcrumb_label)}</h2>
+      {faq_html_blocks}
+    </section>
   </main>
 
   <footer>
     <div class="wrap">
       <p class="footer-shelters-title">Browse Urgent Dogs by Shelter:</p>
       <p class="footer-shelters-list">{footer_shelter_links}</p>
+      <p class="footer-shelters-title">Browse by Urgency, Foster Eligibility &amp; Breed:</p>
+      <p class="footer-shelters-list">{footer_intent_links}</p>
       <div class="footer-bottom">
         <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
         <div class="footer-bottom-links">
@@ -2175,6 +2351,77 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
 </body>
 </html>
 """
+
+
+def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now_iso: str) -> None:
+    sync_static_page_navs()
+    print("Generating enriched shelter & intent SEO pages + sitemap.xml...", flush=True)
+    base_url = "https://www.urgentpaws.org"
+    today_date = now_iso[:10]
+
+    try:
+        pt_dt = datetime.fromisoformat(now_iso.replace("Z", "+00:00")).astimezone(ZoneInfo("America/Los_Angeles"))
+        checked_label = pt_dt.strftime("%b %d, %Y at %I:%M %p PT")
+    except Exception:
+        checked_label = now_iso
+
+    footer_shelter_links = " &middot; ".join(
+        f'<a href="/{cfg["slug"]}">{html.escape(cfg["name"])}</a>'
+        for cfg in shelters
+    )
+    footer_intent_links = " &middot; ".join(
+        f'<a href="/{lander["slug"]}">{html.escape(lander["name"])}</a>'
+        for lander in PROGRAMMATIC_SEO_LANDERS
+    )
+
+    for cfg in shelters:
+        slug = cfg["slug"]
+        page_url = f"{base_url}/{slug}"
+        shelter_dogs = [
+            d for d in unique_dogs
+            if d.get("shelter_slug") == slug
+            or (not d.get("shelter_slug") and (d.get("county") or "").lower() == cfg["county"].lower())
+        ]
+
+        page_html = render_directory_html(
+            page_url=page_url,
+            title=cfg["title"],
+            meta_desc=cfg["meta_desc"],
+            h1=cfg["h1"],
+            breadcrumb_label=cfg["name"],
+            intro=cfg["intro"],
+            address=cfg.get("address") or "",
+            contact=cfg.get("contact") or "",
+            foster_capable=bool(cfg.get("foster_capable")),
+            dogs=shelter_dogs,
+            footer_shelter_links=footer_shelter_links,
+            footer_intent_links=footer_intent_links,
+            checked_label=checked_label,
+            now_iso=now_iso,
+        )
+        with open(f"{slug}.html", "w", encoding="utf-8") as f:
+            f.write(page_html)
+
+    for lander in PROGRAMMATIC_SEO_LANDERS:
+        slug = lander["slug"]
+        page_url = f"{base_url}/{slug}"
+        matched_dogs = [d for d in unique_dogs if lander["filter_fn"](d)]
+        page_html = render_directory_html(
+            page_url=page_url,
+            title=lander["title"],
+            meta_desc=lander["meta_desc"],
+            h1=lander["h1"],
+            breadcrumb_label=lander["name"],
+            intro=lander["intro"],
+            address="Participating California Municipal Animal Shelters",
+            contact="See each dog's card for the direct shelter rescue/foster coordinator email",
+            foster_capable="foster" in slug,
+            dogs=matched_dogs,
+            footer_shelter_links=footer_shelter_links,
+            footer_intent_links=footer_intent_links,
+            checked_label=checked_label,
+            now_iso=now_iso,
+        )
         with open(f"{slug}.html", "w", encoding="utf-8") as f:
             f.write(page_html)
 
@@ -2206,6 +2453,16 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
   </url>"""
         )
 
+    for lander in PROGRAMMATIC_SEO_LANDERS:
+        sitemap_urls.append(
+            f"""  <url>
+    <loc>{base_url}/{lander["slug"]}</loc>
+    <lastmod>{today_date}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>"""
+        )
+
     sitemap_xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -2215,7 +2472,10 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
     with open("sitemap.xml", "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
-    print(f"  Generated {len(shelters)} clean static shelter pages + sitemap.xml", flush=True)
+    print(
+        f"  Generated {len(shelters)} shelter pages + {len(PROGRAMMATIC_SEO_LANDERS)} intent SEO pages + sitemap.xml",
+        flush=True,
+    )
 
 
 def run_shelter_scraper(page, cfg: dict, now_iso: str) -> list[dict]:
