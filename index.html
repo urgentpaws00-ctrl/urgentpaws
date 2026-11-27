@@ -617,9 +617,14 @@
       });
       document.getElementById('searchInput').value = '';
       document.getElementById('stateFilter').value = 'ALL';
+      document.getElementById('countyFilter').value = 'ALL';
+      document.getElementById('shelterFilter').value = 'ALL';
+      document.getElementById('urgencyFilter').value = 'ALL';
       syncCountyOptions();
       syncShelterOptions();
-      document.getElementById('urgencyFilter').value = 'ALL';
+      if (window.location.search) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
       render();
     });
 
