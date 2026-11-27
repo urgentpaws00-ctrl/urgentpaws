@@ -894,9 +894,11 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
                 if RESCUE_ONLY_PATTERN.search(body):
                     dog["needs_type"] = "Rescue Pull Only"
 
-                dl = re.search(r"(\*{0,3}DEADLINE[^\n\r*]{0,50})", body, re.IGNORECASE)
+                dl = re.search(r"(\*{0,3}DEADLINE[^\n\r*]{0,90})", body, re.IGNORECASE)
                 if dl:
-                    dog["deadline_or_urgency"] = clean_space(dl.group(1).replace("*", ""))[:38]
+                    raw_dl = clean_space(dl.group(1).replace("*", ""))
+                    raw_dl = re.sub(r"^DEADLINE[.:]?\s*MUST EXIT SHELTER BY\s*", "DEADLINE: ", raw_dl, flags=re.IGNORECASE)
+                    dog["deadline_or_urgency"] = raw_dl[:55]
                     dog["urgency_type"] = "Euthanasia / Exit Deadline"
 
                 note_match = re.search(r"More Info:\s*([^\n\r]{10,220})", body, re.IGNORECASE)
