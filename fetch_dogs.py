@@ -1749,7 +1749,7 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
 
 
 def sync_static_page_navs() -> None:
-    """Enforces nav labels and active page underline across all static info pages."""
+    """Enforces nav labels and active page underline across desktop & mobile burger navs."""
     info_pages = {
         "about-urgent-paws.html": "about-urgent-paws",
         "for-shelters.html": "for-shelters",
@@ -1767,19 +1767,22 @@ def sync_static_page_navs() -> None:
 
         def fix_header_nav(match: re.Match) -> str:
             nav_html = match.group(0)
-            nav_html = re.sub(r"\bunderline\s*", "", nav_html)
+            nav_html = re.sub(
+                r"\b(?:underline|underline-offset-4|text-neutral-950)\s*",
+                "",
+                nav_html,
+            )
             nav_html = re.sub(
                 rf'(<a\s+href="{re.escape(active_slug)}"\s+class=")',
-                r"\1underline ",
+                r"\1underline underline-offset-4 text-neutral-950 ",
                 nav_html,
             )
             return nav_html
 
         updated = re.sub(
-            r'<nav aria-label="Primary navigation"[\s\S]*?</nav>',
+            r'<nav[^>]*aria-label="(?:Primary|Mobile) navigation"[\s\S]*?</nav>',
             fix_header_nav,
             updated,
-            count=1,
         )
 
         if updated != content:
