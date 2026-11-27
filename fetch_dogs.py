@@ -1248,54 +1248,17 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         except Exception:
             pass
 
-    dom_cards_by_id: dict[str, dict] = {}
-    try:
-        dom_cards = page.evaluate(
-            """() => {
-                const out = [];
-                const idRe = /\\bA\\d{5,8}\\b/i;
-                const seen = new Set();
-                for (const el of Array.from(document.querySelectorAll("tr, .card, [class*='card'], [ng-repeat], li, article, div"))) {
-                    const txt = (el.innerText || "").trim();
-                    if (!txt || txt.length < 10 || txt.length > 1600) continue;
-                    const m = txt.match(idRe);
-                    if (!m) continue;
-                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || ""));
-                    if (nested) continue;
-                    const aid = m[0].toUpperCase();
-                    if (seen.has(aid)) continue;
-                    seen.add(aid);
-                    const img = el.querySelector("img");
-                    const src = img ? (img.currentSrc || img.src || img.getAttribute("ng-src") || img.getAttribute("data-src") || "") : "";
-                    const heading = el.querySelector("h1, h2, h3, h4, .name, [class*='name'], [class*='title'], strong, b");
-                    out.push({
-                        aid,
-                        text: txt,
-                        heading: heading ? (heading.innerText || "").trim() : "",
-                        img: /logo|icon|placeholder|blank/i.test(src) ? "" : src
-                    });
-                }
-                return out;
-            }"""
-        )
-        for c in dom_cards or []:
-            if c.get("aid") and c["aid"] not in dom_cards_by_id:
-                dom_cards_by_id[c["aid"]] = c
-    except Exception:
-        pass
-
     results: list[dict] = []
     seen_ids: set[str] = set()
-    logged_sample = False
 
-    def resolve_oc_photo(item: dict, aid_clean: str) -> str:
+    def resolve_oc_photo(item: dict) -> str:
         for k in (
             "PhotoUrl", "photoUrl", "photo_url", "ImageUrl", "imageUrl", "image_url",
             "Photo", "photo", "Image", "image", "Picture", "picture", "Pic", "pic",
             "PhotoLink", "PhotoPath", "ImagePath", "Thumbnail", "thumbnail", "FileName",
         ):
             val = clean_space(str(item.get(k) or ""))
-            if val and not val.lower().endswith(("noimage.jpg", "no_image.jpg")):
+            if val and not any(b in val.lower() for b in ("noimage", "no_image", "placeholder", "default")):
                 if val.startswith("http"):
                     return val
                 if "/" in val:
@@ -1303,15 +1266,16 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
                 return f"https://petadoption.oc.gov/rescuetrackportal/Images/{val}"
 
         for val in item.values():
-            if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE) and "logo" not in val.lower():
+            if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE):
                 s = val.strip()
+                if any(b in s.lower() for b in ("logo", "noimage", "no_image", "placeholder", "default")):
+                    continue
                 if s.startswith("http"):
                     return s
                 if "/" in s:
                     return f"https://petadoption.oc.gov/{s.lstrip('/')}"
                 return f"https://petadoption.oc.gov/rescuetrackportal/Images/{s}"
-
-        return (dom_cards_by_id.get(aid_clean) or {}).get("img", "")
+        return ""
 
     for item in captured_records:
         species = str(item.get("Species") or item.get("AnimalType") or item.get("animalType") or "Dog").lower()
@@ -1325,18 +1289,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             continue
         seen_ids.add(aid)
 
-        if not logged_sample:
-            logged_sample = True
-            print(f"  [debug] OC sample keys={list(item.keys())} | sample={json.dumps(item)[:350]}", flush=True)
-
-        dom_info = dom_cards_by_id.get(aid) or {}
-        name = resolve_record_name(
-            item,
-            aid,
-            dom_text=dom_info.get("text", ""),
-            dom_heading=dom_info.get("heading", ""),
-            fallback_prefix="OC Animal Care",
-        )
+        name = resolve_record_name(item, aid, fallback_prefix="OC Animal Care")
         breed = clean_space(str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or ""))
         age = clean_space(str(item.get("Age") or item.get("age") or ""))
         size_clean = clean_space(str(item.get("Weight") or item.get("Size") or item.get("weight") or ""))
@@ -1382,11 +1335,51 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             "deadline_or_urgency": badge,
             "needs_type": "Rescue Pull Only",
             "transport_note": full_note[:180],
-            "photo_url": resolve_oc_photo(item, aid),
+            "photo_url": resolve_oc_photo(item),
             "listing_url": f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{aid}",
             "updated_at": now_iso,
             "last_checked": now_iso,
         })
+
+    # Inspect sample detail route if list items omitted photos to capture OC's detail photo URL pattern
+    if results and not any(d.get("photo_url") for d in results):
+        sample_aid = results[0]["animal_id"]
+        detail_imgs: list[str] = []
+
+        def handle_detail_resp(resp):
+            try:
+                if resp.status == 200 and "petadoption.oc.gov" in resp.url.lower():
+                    txt = resp.text()
+                    for m in re.finditer(r"https?://[^\"'\s<>]+\.(?:jpg|jpeg|png|webp)", txt, re.IGNORECASE):
+                        u = m.group(0)
+                        if not any(b in u.lower() for b in ("logo", "noimage", "placeholder")):
+                            detail_imgs.append(u)
+            except Exception:
+                pass
+
+        page.on("response", handle_detail_resp)
+        try:
+            page.goto(f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{sample_aid}", wait_until="domcontentloaded", timeout=15000)
+            page.wait_for_timeout(2000)
+            dom_detail_imgs = page.evaluate(
+                """() => Array.from(document.querySelectorAll("img"))
+                    .map(i => i.currentSrc || i.src || "")
+                    .filter(s => s && !/logo|icon|placeholder|noimage/i.test(s))"""
+            )
+            detail_imgs.extend(dom_detail_imgs or [])
+            if detail_imgs and sample_aid in detail_imgs[0]:
+                template_url = detail_imgs[0]
+                for d in results:
+                    d["photo_url"] = template_url.replace(sample_aid, d["animal_id"])
+            elif detail_imgs:
+                print(f"  [debug] OC detail img sample: {detail_imgs[0]}", flush=True)
+        except Exception:
+            pass
+        finally:
+            try:
+                page.remove_listener("response", handle_detail_resp)
+            except Exception:
+                pass
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
@@ -1409,7 +1402,6 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
     print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
     results: list[dict] = []
     seen_ids: set[str] = set()
-    logged_sample = False
 
     def resolve_dacc_photo(item: dict | None, dom_img: str = "") -> str:
         candidates: list[str] = []
@@ -1428,11 +1420,14 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
         if dom_img:
             candidates.append(clean_space(dom_img))
 
+        bad_tokens = (
+            "logo", "icon", "placeholder", "noimage", "no_image", "no-image",
+            "nophoto", "no_photo", "no-photo", "default", "spinner", "heart",
+            "coming-soon", "coming_soon", "silhouette", "generic", "avatar",
+        )
         for raw in candidates:
             low = raw.lower()
-            if not raw or low.startswith("data:") or any(
-                bad in low for bad in ("logo", "icon", "placeholder", "noimage", "no_image", "spinner")
-            ):
+            if not raw or low.startswith("data:") or any(bad in low for bad in bad_tokens):
                 continue
             if raw.startswith("//"):
                 return f"https:{raw}"
@@ -1605,10 +1600,6 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             atype = str(item.get("animalType") or item.get("AnimalType") or item.get("species") or "DOG").upper()
             if atype and "DOG" not in atype:
                 continue
-
-            if not logged_sample:
-                logged_sample = True
-                print(f"  [debug] DACC sample keys={list(item.keys())} | sample={json.dumps(item)[:350]}", flush=True)
 
             seen_ids.add(aid)
             dom_match = dom_by_id.get(aid) or {}
