@@ -227,7 +227,8 @@
           "portal_code": "SBCT",
           "require_urgent_flag": false,
           "inspect_details_for_deadline": true,
-          "max_detail_checks": 120,
+          "max_pages": 6,
+          "max_detail_checks": 180,
           "default_badge": "Urgent / Exit Deadline",
           "default_urgency": "Urgent / Rescue Only"
         }
