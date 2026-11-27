@@ -56,29 +56,29 @@
         </button>
       </div>
 
-      <!-- Search and Cascading Dropdown Filters -->
+      <!-- Search and Dropdown Filters -->
       <div id="filterBar" class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-2.5">
         <input
           id="searchInput"
           type="search"
-          placeholder="Search Animal ID, name, breed, shelter..."
+          placeholder="Search ID, name, breed, shelter..."
           aria-label="Search Animal ID, name, breed, or shelter"
-          class="sm:col-span-5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          class="sm:col-span-4 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
         />
 
-        <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
           <option value="ALL">All States</option>
         </select>
 
-        <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
           <option value="ALL">All Counties</option>
         </select>
 
-        <select id="shelterFilter" aria-label="Filter by shelter" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="shelterFilter" aria-label="Filter by shelter" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
           <option value="ALL">All Shelters</option>
         </select>
 
-        <select id="urgencyFilter" aria-label="Filter by urgency" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm">
+        <select id="urgencyFilter" aria-label="Filter by urgency" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
           <option value="ALL">All Urgency Types</option>
           <option value="deadline">Urgent / Deadline Only</option>
           <option value="behavior">Behavior / Kennel Stress</option>
@@ -428,8 +428,8 @@
           stateSelect.appendChild(opt);
         });
         stateSelect.classList.remove('hidden');
-        searchInput.classList.remove('sm:col-span-5');
-        searchInput.classList.add('sm:col-span-3');
+        searchInput.classList.remove('sm:col-span-4');
+        searchInput.classList.add('sm:col-span-2');
       }
 
       syncCountyOptions();
@@ -591,19 +591,17 @@
     });
 
     document.getElementById('countyFilter').addEventListener('change', () => {
+      document.getElementById('shelterFilter').value = 'ALL';
       syncShelterOptions();
       render();
     });
 
     document.getElementById('shelterFilter').addEventListener('change', () => {
       const slug = document.getElementById('shelterFilter').value;
-      if (slug !== 'ALL' && sheltersBySlug[slug]?.county) {
-        const countySelect = document.getElementById('countyFilter');
-        if (countySelect.value !== sheltersBySlug[slug].county) {
-          countySelect.value = sheltersBySlug[slug].county;
-          syncShelterOptions();
-          document.getElementById('shelterFilter').value = slug;
-        }
+      if (slug !== 'ALL') {
+        document.getElementById('countyFilter').value = 'ALL';
+        syncShelterOptions();
+        document.getElementById('shelterFilter').value = slug;
       }
       render();
     });
