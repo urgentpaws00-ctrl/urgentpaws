@@ -22,7 +22,7 @@ NON_DOG_PATTERN = re.compile(
 )
 
 RESCUED_PATTERN = re.compile(
-    r"\b(i have been rescued|commitment rcvd|adopted|rescue hold|pending pickup)\b",
+    r"\b(i have been rescued|commitment rcvd|adopted|rescue hold|pending pickup|currently on hold for them|rescue partner is planning to take me)\b",
     re.IGNORECASE,
 )
 
@@ -43,7 +43,7 @@ SBCT_DEADLINE_RE = re.compile(
     re.IGNORECASE,
 )
 SBCT_RESCUE_ONLY_RE = re.compile(
-    r"not available for public adoption[^.]*only be placed with a rescue partner(?:\s+due to my\s+([a-z\s]+?)\s+needs)?",
+    r"only be placed with an?\s+(?:approved\s+501\(c\)\(3\)\s+rescue\s+organization|rescue\s+partner)(?:\s+due to my\s+([a-z\s]+?)\s+needs)?",
     re.IGNORECASE,
 )
 SBCT_FOSTER_RE = re.compile(
@@ -334,21 +334,32 @@ def parse_sbct_detail(body: str) -> dict | None:
         else ("Urgent Foster / Adopt" if foster_match else "Rescue Pull, Foster, or Adopt")
     )
 
+    name_m = re.search(r"\bName:\s*([A-Za-z][A-Za-z0-9' .-]{1,30}?)(?=\s+Species:|\s+Breed:)", clean_text)
+    parsed_name = clean_space(name_m.group(1)) if name_m else ""
+
+    wt_m = re.search(r"weigh approximately\s+([\d.]+)\s*lbs", clean_text, re.IGNORECASE)
+    parsed_size = f"{wt_m.group(1)} lbs" if wt_m else ""
+
     note_parts = []
     if deadline_match:
         note_parts.append(f"Needs placement by {deadline_match.group(1)}.")
     if rescue_match:
-        note_parts.append(rescue_match.group(0).rstrip(".") + ".")
+        note_parts.append("I can " + rescue_match.group(0).rstrip(".") + ".")
     training_match = re.search(r"I may benefit from additional training[^.]*\.", clean_text, re.IGNORECASE)
     if training_match:
         note_parts.append(training_match.group(0))
 
-    return {
+    out = {
         "deadline_or_urgency": badge,
         "urgency_type": urgency_type,
         "needs_type": needs_type,
         "transport_note": clean_space(" ".join(note_parts))[:160],
     }
+    if parsed_name and is_clean_meta(parsed_name, 35):
+        out["name"] = parsed_name
+    if parsed_size:
+        out["size"] = parsed_size
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -584,31 +595,54 @@ def fetch_rescuegroups(cfg: dict, now_iso: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# PORTAL 3: 24PETCONNECT BOARDS (Supports 1 or more boards per shelter config)
+# PORTAL 3: 24PETCONNECT BOARDS (Supports pagination + concurrent detail checks)
 # ---------------------------------------------------------------------------
 def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
     boards = cfg.get("portal_config", {}).get("boards", [])
     shelter_results = []
 
     for board in boards:
-        url = board["url"]
+        base_board_url = board["url"]
         shelter_name = board.get("shelter_name") or cfg["name"]
         portal_code = board["portal_code"]
         require_urgent_flag = board.get("require_urgent_flag", False)
         inspect_details = board.get("inspect_details_for_deadline", False)
+        max_pages = int(board.get("max_pages") or 1)
         max_checks = int(board.get("max_detail_checks") or 35)
         default_badge = board.get("default_badge", "Urgent / Rescue Needed")
         default_urgency = board.get("default_urgency", "At-Risk Shelter Dog")
 
-        print(f"Scraping {shelter_name} ({url})...", flush=True)
-        try:
-            page.goto(url, wait_until="domcontentloaded", timeout=20000)
-            wait_for_petconnect_cards(page, timeout_ms=7000)
-        except Exception as exc:
-            print(f"  Load error ({shelter_name}): {exc}", flush=True)
-            continue
+        raw_cards = []
+        seen_card_keys = set()
 
-        raw_cards = find_petconnect_cards_across_frames(page)
+        for page_idx in range(max_pages):
+            offset = page_idx * 30
+            if offset == 0:
+                page_url = base_board_url
+            else:
+                sep = "&" if "?" in base_board_url else "?"
+                page_url = f"{base_board_url}{sep}index={offset}"
+
+            print(f"Scraping {shelter_name} ({page_url})...", flush=True)
+            try:
+                page.goto(page_url, wait_until="domcontentloaded", timeout=20000)
+                wait_for_petconnect_cards(page, timeout_ms=7000)
+            except Exception as exc:
+                print(f"  Load error ({shelter_name} page {page_idx + 1}): {exc}", flush=True)
+                break
+
+            page_cards = find_petconnect_cards_across_frames(page)
+            new_on_page = 0
+            for c in page_cards:
+                k = (c.get("href") or "") + "|" + (c.get("text") or "")[:80]
+                if k not in seen_card_keys:
+                    seen_card_keys.add(k)
+                    raw_cards.append(c)
+                    new_on_page += 1
+
+            if new_on_page < 25:
+                break
+
         print(f"  Detected {len(raw_cards)} raw cards on {shelter_name}", flush=True)
 
         board_results = []
@@ -642,7 +676,7 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
             name = extract_field(txt, ("Meet", "Name"))
             if name:
                 name = re.sub(r"\s*\(A\d{5,8}\)\s*", "", name).replace("URGENT ", "").strip()
-            if not name:
+            if not name or name.upper() == animal_id:
                 name = f"Dog {animal_id}"
 
             breed = extract_field(txt, ("Breed",))
@@ -652,12 +686,12 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
             location = extract_field(txt, ("Located at", "Location")) or shelter_name
             photo_url = c.get("img") or ""
 
-            if "CCASDTransferPreferredPets" in url:
+            if "CCASDTransferPreferredPets" in base_board_url:
                 href = f"https://24petconnect.com/CCASDTransferPreferredPets/Details/CCST/{animal_id}"
-            elif "CCASDAvailablePets" in url:
+            elif "CCASDAvailablePets" in base_board_url:
                 href = f"https://24petconnect.com/CCASDAvailablePets/Details/CCST/{animal_id}"
             elif portal_code == "SBCT":
-                href = f"https://24petconnect.com/SanBernardinoCityShelterPets/Details/SBCT/{animal_id}"
+                href = f"https://24petconnect.com/DetailsMain/SBCT/{animal_id}"
             elif portal_code == "KernCountyRescue" or "KernCountyRescue/Details" in href or not href:
                 code_for_link = "KERN" if portal_code == "KernCountyRescue" else portal_code
                 href = f"https://24petconnect.com/DetailsMain/{code_for_link}/{animal_id}"
@@ -705,7 +739,7 @@ def scrape_24petconnect_shelter(page, cfg: dict, now_iso: str) -> list[dict]:
 
         if inspect_details and board_results:
             candidates = board_results[:max_checks]
-            with ThreadPoolExecutor(max_workers=12) as pool:
+            with ThreadPoolExecutor(max_workers=14) as pool:
                 http_results = list(pool.map(fetch_24petconnect_detail_http, candidates))
 
             verified = []
@@ -1082,42 +1116,65 @@ def fetch_sanjose_arcgis(cfg: dict, now_iso: str) -> list[dict]:
 # PORTAL 6: OC ANIMAL CARE - PUBLIC RESCUE TRACK PORTAL
 # ---------------------------------------------------------------------------
 def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
-    url = cfg["portal_config"]["url"]
+    landing_url = cfg["portal_config"]["url"]
     print(f"Scraping {cfg['name']} Rescue Track portal...", flush=True)
 
     captured_records: list[dict] = []
 
     def handle_response(resp):
         try:
-            r_url = resp.url.lower()
-            if resp.status != 200 or not any(k in r_url for k in ("rescuetrack", "animal", "special", "pet", "get")):
+            if resp.status != 200:
                 return
             ctype = (resp.headers.get("content-type") or "").lower()
             if "json" not in ctype and "javascript" not in ctype and "text/plain" not in ctype:
                 return
             raw = resp.text()
-            if not raw or len(raw) < 20:
+            if not raw or len(raw) < 30:
                 return
             parsed = json.loads(raw)
             if isinstance(parsed, str):
                 parsed = json.loads(parsed)
             if isinstance(parsed, dict):
-                for key in ("d", "data", "animals", "results", "items", "records"):
+                for key in ("d", "data", "animals", "results", "items", "records", "List"):
                     if isinstance(parsed.get(key), list):
                         parsed = parsed[key]
                         break
             if isinstance(parsed, list):
                 for item in parsed:
-                    if isinstance(item, dict) and any(k in item for k in ("AnimalID", "animalId", "animal_id", "PetID", "id", "Id")):
+                    if isinstance(item, dict) and any(
+                        k in item for k in ("AnimalID", "animalId", "animal_id", "PetID", "id", "Id")
+                    ):
                         captured_records.append(item)
         except Exception:
             pass
 
     page.on("response", handle_response)
     try:
-        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        page.goto(landing_url, wait_until="domcontentloaded", timeout=20000)
+        page.wait_for_timeout(1500)
+
+        # V2_public_speciallanding.html only displays counts; click the DOG card/link to load the dog list
+        clicked = page.evaluate(
+            """() => {
+                const targets = Array.from(document.querySelectorAll("a, button, div[ng-click], span[ng-click], [role='button']"));
+                const dogTarget = targets.find(el => {
+                    const txt = (el.innerText || "").trim();
+                    const ng = (el.getAttribute("ng-click") || "") + " " + (el.getAttribute("href") || "");
+                    return /\\bDOG\\b/i.test(txt) && (/dog|special/i.test(ng) || txt.length < 40);
+                });
+                if (dogTarget) {
+                    dogTarget.click();
+                    return true;
+                }
+                return false;
+            }"""
+        )
+
+        if not clicked:
+            page.goto("https://petadoption.oc.gov/rescuetrackportal/#/special", wait_until="domcontentloaded", timeout=20000)
+
         try:
-            page.wait_for_selector("text=/\\bA\\d{5,8}\\b/", timeout=7000)
+            page.wait_for_selector("text=/\\bA\\d{6,8}\\b/", timeout=8000)
         except Exception:
             page.wait_for_timeout(3500)
     except Exception as exc:
@@ -1140,7 +1197,6 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         code: str,
         note: str,
         photo: str,
-        listing_url: str,
     ) -> None:
         aid_clean = aid.strip().upper()
         if not aid_clean or aid_clean in seen_ids:
@@ -1182,7 +1238,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             "needs_type": "Rescue Pull Only",
             "transport_note": full_note[:180],
             "photo_url": clean_space(photo),
-            "listing_url": clean_space(listing_url) or url,
+            "listing_url": f"https://petadoption.oc.gov/rescuetrackportal/#/specialdetail/detail/{aid_clean}",
             "updated_at": now_iso,
             "last_checked": now_iso,
         })
@@ -1192,7 +1248,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         if species and "dog" not in species and "canine" not in species:
             continue
         aid = str(item.get("AnimalID") or item.get("animalId") or item.get("animal_id") or item.get("PetID") or item.get("id") or "")
-        if not re.match(r"^A\d{5,8}$", aid.strip(), re.IGNORECASE):
+        if not re.match(r"^A\d{6,8}$", aid.strip(), re.IGNORECASE):
             continue
         name = str(item.get("AnimalName") or item.get("Name") or item.get("name") or "")
         breed = str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or "")
@@ -1203,16 +1259,15 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         photo = str(item.get("PhotoUrl") or item.get("ImageUrl") or item.get("Photo") or item.get("photoUrl") or "")
         if photo and not photo.startswith("http"):
             photo = f"https://petadoption.oc.gov/{photo.lstrip('/')}"
-        detail_link = str(item.get("DetailUrl") or item.get("Url") or url)
-        build_oc_record(aid, name, breed, age, weight, code, note, photo, detail_link)
+        build_oc_record(aid, name, breed, age, weight, code, note, photo)
 
     if not results:
         dom_rows = page.evaluate(
             """() => {
                 const out = [];
-                const idRe = /\\bA\\d{5,8}\\b/;
+                const idRe = /\\bA\\d{6,8}\\b/;
                 const seen = new Set();
-                const nodes = Array.from(document.querySelectorAll("tr, .card, [class*='card'], [class*='pet'], [class*='animal'], li, article"));
+                const nodes = Array.from(document.querySelectorAll("tr, .card, [class*='card'], [class*='pet'], [class*='animal'], [ng-repeat], li, article"));
                 for (const el of nodes) {
                     const txt = (el.innerText || "").trim();
                     if (!txt || txt.length < 12 || txt.length > 1600) continue;
@@ -1224,12 +1279,10 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
                     if (seen.has(aid)) continue;
                     seen.add(aid);
                     const img = el.querySelector("img");
-                    const a = el.querySelector("a[href]");
                     out.push({
                         aid,
                         text: txt,
-                        img: img ? (img.src || img.getAttribute("data-src") || "") : "",
-                        href: a ? a.href : window.location.href
+                        img: img ? (img.src || img.getAttribute("data-src") || "") : ""
                     });
                 }
                 return out;
@@ -1244,10 +1297,10 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
             name = next(
                 (
-                    ln for ln in lines[:3]
+                    ln for ln in lines[:4]
                     if aid not in ln
                     and len(ln) < 35
-                    and not re.search(r"\b(RESQ|MEDICAL|MALE|FEMALE|DOG|YEARS?|MONTHS?)\b", ln, re.IGNORECASE)
+                    and not re.search(r"\b(RESQ|MEDICAL|MALE|FEMALE|DOG|YEARS?|MONTHS?|KENNEL)\b", ln, re.IGNORECASE)
                 ),
                 f"OC Animal Care {aid}",
             )
@@ -1256,7 +1309,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             breed = extract_field(txt, ("Breed",))
             age = extract_field(txt, ("Age",))
             size = extract_field(txt, ("Weight", "Size"))
-            build_oc_record(aid, name, breed, age, size, code, "", row.get("img") or "", row.get("href") or url)
+            build_oc_record(aid, name, breed, age, size, code, "", row.get("img") or "")
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
@@ -1276,214 +1329,112 @@ def format_dacc_care_center(raw_loc: str) -> tuple[str, str]:
 
 
 def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
-    url = cfg["portal_config"]["url"]
     print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
-
-    captured_items: list[dict] = []
-
-    def handle_response(resp):
-        try:
-            if resp.status != 200:
-                return
-            ctype = (resp.headers.get("content-type") or "").lower()
-            if "json" not in ctype:
-                return
-            r_url = resp.url.lower()
-            if not any(k in r_url for k in ("dacc", "animal", "search", "pet", "wp-json", "admin-ajax")):
-                return
-            data = json.loads(resp.text())
-            if isinstance(data, dict):
-                for k in ("data", "animals", "results", "items", "pets", "rows"):
-                    if isinstance(data.get(k), list):
-                        data = data[k]
-                        break
-            if isinstance(data, list):
-                for entry in data:
-                    if isinstance(entry, dict) and any(
-                        k in entry for k in ("animal_id", "animalId", "AnimalID", "id", "pet_id")
-                    ):
-                        captured_items.append(entry)
-        except Exception:
-            pass
-
-    page.on("response", handle_response)
-    try:
-        page.goto(url, wait_until="domcontentloaded", timeout=25000)
-        try:
-            page.wait_for_selector("select, input, form, [class*='search'], [class*='animal']", timeout=7000)
-        except Exception:
-            page.wait_for_timeout(3000)
-
-        # Trigger searches for Dog + Rescue Only and Dog + AP-KHOA if standard form controls are present
-        for target_status in ("Rescue Only", "AP-KHOA"):
-            try:
-                page.evaluate(
-                    """(statusTarget) => {
-                        const selects = Array.from(document.querySelectorAll("select"));
-                        for (const sel of selects) {
-                            const opts = Array.from(sel.options);
-                            const dogOpt = opts.find(o => /^dog$/i.test(o.text.trim()) || /^dog$/i.test(o.value.trim()));
-                            if (dogOpt) {
-                                sel.value = dogOpt.value;
-                                sel.dispatchEvent(new Event("change", { bubbles: true }));
-                            }
-                            const stOpt = opts.find(o =>
-                                o.text.toLowerCase().includes(statusTarget.toLowerCase()) ||
-                                o.value.toLowerCase().includes(statusTarget.toLowerCase())
-                            );
-                            if (stOpt) {
-                                sel.value = stOpt.value;
-                                sel.dispatchEvent(new Event("change", { bubbles: true }));
-                            }
-                        }
-                        const btn = Array.from(document.querySelectorAll("button, input[type='submit']")).find(b =>
-                            /search|filter|apply|submit/i.test((b.innerText || b.value || ""))
-                        );
-                        if (btn) btn.click();
-                    }""",
-                    target_status,
-                )
-                page.wait_for_timeout(2200)
-            except Exception:
-                continue
-    except Exception as exc:
-        print(f"  LA County DACC load error: {exc}", flush=True)
-    finally:
-        try:
-            page.remove_listener("response", handle_response)
-        except Exception:
-            pass
-
     results: list[dict] = []
     seen_ids: set[str] = set()
 
-    def add_dacc_dog(
-        aid: str,
-        name: str,
-        breed: str,
-        age: str,
-        size: str,
-        raw_center: str,
-        raw_status: str,
-        note: str,
-        photo: str,
-        detail_url: str,
-    ) -> None:
-        aid_clean = aid.strip().upper()
-        if not aid_clean or aid_clean in seen_ids:
-            return
-        seen_ids.add(aid_clean)
+    status_queries = [
+        ("RESCUE ONLY", "DACC RESCUE ONLY", "LA County DACC — Rescue Only", "Rescue Pull Only"),
+        ("AP-KHOA", "DACC AP-KHOA", "LA County DACC — AP-KHOA (Urgent)", "Rescue Pull or Adopt"),
+    ]
 
-        status_upper = clean_space(raw_status).upper()
-        if "KHOA" in status_upper:
-            badge = "DACC AP-KHOA"
-            urgency_type = "LA County DACC — AP-KHOA (Urgent)"
-            needs = "Rescue Pull or Adopt"
-        else:
-            badge = "DACC RESCUE ONLY"
-            urgency_type = "LA County DACC — Rescue Only"
-            needs = "Rescue Pull Only"
-
-        shelter_label, center_email = format_dacc_care_center(raw_center)
-        note_bits = [clean_space(note), f"Rescue desk: {center_email}" if center_email else ""]
-        full_note = " • ".join(b for b in note_bits if b)
-
-        results.append({
-            "id": f"dacc-{aid_clean.lower()}",
-            "shelter_slug": cfg["slug"],
-            "animal_id": aid_clean,
-            "name": clean_space(name) or f"DACC {aid_clean}",
-            "breed": clean_space(breed),
-            "shelter": shelter_label,
-            "city": cfg["city"],
-            "county": cfg["county"],
-            "state": cfg["state"],
-            "size": clean_space(size),
-            "age": clean_space(age),
-            "urgency_type": urgency_type,
-            "deadline_or_urgency": badge,
-            "needs_type": needs,
-            "transport_note": full_note[:180],
-            "photo_url": clean_space(photo),
-            "listing_url": clean_space(detail_url) or f"https://animalcare.lacounty.gov/view-our-animals/?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid_clean}",
-            "updated_at": now_iso,
-            "last_checked": now_iso,
-        })
-
-    for item in captured_items:
-        atype = str(item.get("animalType") or item.get("animal_type") or item.get("species") or "DOG").upper()
-        if atype and "DOG" not in atype:
-            continue
-        status_val = str(item.get("animalStatus") or item.get("status") or item.get("intake_status") or "")
-        if not re.search(r"rescue\s*only|ap-khoa|khoa", status_val, re.IGNORECASE):
-            continue
-        aid = str(item.get("animalID") or item.get("animal_id") or item.get("animalId") or item.get("id") or "")
-        if not re.match(r"^A\d{6,8}$", aid.strip(), re.IGNORECASE):
-            continue
-        name = str(item.get("animalName") or item.get("name") or "")
-        breed = str(item.get("primaryBreed") or item.get("breed") or "")
-        age = str(item.get("animalAge") or item.get("age") or "")
-        size = str(item.get("animalSize") or item.get("weight") or item.get("size") or "")
-        center = str(item.get("animalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
-        note = str(item.get("memo") or item.get("notes") or item.get("description") or "")
-        photo = str(item.get("photoUrl") or item.get("photo_url") or item.get("image") or "")
-        detail_link = str(item.get("detailUrl") or item.get("url") or "")
-        add_dacc_dog(aid, name, breed, age, size, center, status_val, note, photo, detail_link)
-
-    # DOM fallback if the search page rendered cards directly without a JSON endpoint
-    dom_cards = page.evaluate(
-        """() => {
-            const out = [];
-            const idRe = /\\bA\\d{6,8}\\b/;
-            const seen = new Set();
-            const cards = Array.from(document.querySelectorAll(".card, [class*='animal'], [class*='pet'], article, tr, li"));
-            for (const el of cards) {
-                const txt = (el.innerText || "").trim();
-                if (!txt || txt.length < 15 || txt.length > 1800) continue;
-                const m = txt.match(idRe);
-                if (!m) continue;
-                if (!/rescue\\s*only|ap-khoa|khoa/i.test(txt)) continue;
-                const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
-                if (nested) continue;
-                const aid = m[0].toUpperCase();
-                if (seen.has(aid)) continue;
-                seen.add(aid);
-                const img = el.querySelector("img");
-                const a = el.querySelector("a[href]");
-                out.push({
-                    aid,
-                    text: txt,
-                    img: img ? (img.src || img.getAttribute("data-src") || "") : "",
-                    href: a ? a.href : ""
-                });
-            }
-            return out;
-        }"""
-    )
-
-    for c in dom_cards:
-        txt = c.get("text") or ""
-        if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
-            continue
-        aid = c["aid"]
-        lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
-        name = next(
-            (
-                ln for ln in lines[:3]
-                if aid not in ln
-                and len(ln) < 35
-                and not re.search(r"\b(RESCUE ONLY|AP-KHOA|DOWNEY|LANCASTER|PALMDALE|BALDWIN|CARSON|AGOURA|CASTAIC|DOG)\b", ln, re.IGNORECASE)
-            ),
-            f"DACC {aid}",
+    for status_param, badge, urgency_type, needs in status_queries:
+        search_url = (
+            "https://animalcare.lacounty.gov/view-our-animals/"
+            f"?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus={urllib.request.quote(status_param)}"
         )
-        status_m = re.search(r"\b(Rescue Only|AP-KHOA)\b", txt, re.IGNORECASE)
-        status_str = status_m.group(1) if status_m else "Rescue Only"
-        center_m = re.search(r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b", txt, re.IGNORECASE)
-        center_str = center_m.group(1) if center_m else ""
-        breed = extract_field(txt, ("Breed",))
-        age = extract_field(txt, ("Age",))
-        size = extract_field(txt, ("Weight", "Size"))
-        add_dacc_dog(aid, name, breed, age, size, center_str, status_str, "", c.get("img") or "", c.get("href") or "")
+        try:
+            page.goto(search_url, wait_until="domcontentloaded", timeout=25000)
+            try:
+                page.wait_for_selector("text=/\\bA\\d{6,8}\\b/", timeout=8000)
+            except Exception:
+                page.wait_for_timeout(3000)
+        except Exception as exc:
+            print(f"  LA County DACC ({status_param}) load error: {exc}", flush=True)
+            continue
+
+        dom_cards = page.evaluate(
+            """() => {
+                const out = [];
+                const idRe = /\\bA\\d{6,8}\\b/;
+                const seen = new Set();
+                const cards = Array.from(document.querySelectorAll(".card, [class*='animal'], [class*='pet'], [class*='result'], article, tr, li"));
+                for (const el of cards) {
+                    const txt = (el.innerText || "").trim();
+                    if (!txt || txt.length < 15 || txt.length > 1800) continue;
+                    const m = txt.match(idRe);
+                    if (!m) continue;
+                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
+                    if (nested) continue;
+                    const aid = m[0].toUpperCase();
+                    if (seen.has(aid)) continue;
+                    seen.add(aid);
+                    const img = el.querySelector("img");
+                    const a = el.querySelector("a[href]");
+                    out.push({
+                        aid,
+                        text: txt,
+                        img: img ? (img.src || img.getAttribute("data-src") || "") : "",
+                        href: a ? a.href : ""
+                    });
+                }
+                return out;
+            }"""
+        )
+
+        for c in dom_cards:
+            txt = c.get("text") or ""
+            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
+                continue
+            aid = c["aid"]
+            if aid in seen_ids:
+                continue
+            seen_ids.add(aid)
+
+            lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
+            name = next(
+                (
+                    ln for ln in lines[:4]
+                    if aid not in ln
+                    and len(ln) < 35
+                    and not re.search(r"\b(RESCUE ONLY|AP-KHOA|DOWNEY|LANCASTER|PALMDALE|BALDWIN|CARSON|GARDENA|AGOURA|CASTAIC|DOG|AVAILABLE)\b", ln, re.IGNORECASE)
+                ),
+                f"DACC {aid}",
+            )
+            center_m = re.search(
+                r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b",
+                txt,
+                re.IGNORECASE,
+            )
+            shelter_label, center_email = format_dacc_care_center(center_m.group(1) if center_m else "")
+            breed = extract_field(txt, ("Breed",))
+            age = extract_field(txt, ("Age",))
+            size = extract_field(txt, ("Weight", "Size"))
+            detail_url = clean_space(c.get("href") or "") or (
+                f"https://animalcare.lacounty.gov/view-our-animals/?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid}"
+            )
+
+            results.append({
+                "id": f"dacc-{aid.lower()}",
+                "shelter_slug": cfg["slug"],
+                "animal_id": aid,
+                "name": name,
+                "breed": breed,
+                "shelter": shelter_label,
+                "city": cfg["city"],
+                "county": cfg["county"],
+                "state": cfg["state"],
+                "size": size,
+                "age": age,
+                "urgency_type": urgency_type,
+                "deadline_or_urgency": badge,
+                "needs_type": needs,
+                "transport_note": f"Rescue desk: {center_email}" if center_email else f"Status: {status_param}",
+                "photo_url": clean_space(c.get("img") or ""),
+                "listing_url": detail_url,
+                "updated_at": now_iso,
+                "last_checked": now_iso,
+            })
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
@@ -1887,7 +1838,11 @@ def main():
         shelter_cfg = shelters_by_slug.get(slug)
         tz_name = shelter_cfg.get("timezone", "America/Los_Angeles") if shelter_cfg else "America/Los_Angeles"
 
-        if is_deadline_expired(dog, tz_name, now_utc):
+        is_live_sbct = (
+            slug == "san-bernardino-city-animal-shelter"
+            and dog.get("last_checked") == now_iso
+        )
+        if not is_live_sbct and is_deadline_expired(dog, tz_name, now_utc):
             expired_dropped += 1
             continue
 
