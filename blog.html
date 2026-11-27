@@ -57,7 +57,7 @@
             <a href="./" class="hover:text-neutral-950">Urgent Dogs</a>
             <a href="about-urgent-paws" class="hover:text-neutral-950">About</a>
             <a href="for-shelters" class="hover:text-neutral-950">For Shelters</a>
-            <a href="blog" class="hover:text-neutral-950">Guide</a>
+            <a href="blog" class="underline underline-offset-4 text-neutral-950 hover:text-neutral-950">Guide</a>
             <a href="contact-us" class="hover:text-neutral-950">Contact</a>
           </nav>
 
@@ -87,7 +87,7 @@
           <a href="./" class="px-3.5 py-2 hover:bg-neutral-100">Urgent Dogs</a>
           <a href="about-urgent-paws" class="px-3.5 py-2 hover:bg-neutral-100">About</a>
           <a href="for-shelters" class="px-3.5 py-2 hover:bg-neutral-100">For Shelters</a>
-          <a href="blog" class="px-3.5 py-2 hover:bg-neutral-100">Guide</a>
+          <a href="blog" class="underline underline-offset-4 text-neutral-950 px-3.5 py-2 hover:bg-neutral-100">Guide</a>
           <a href="contact-us" class="px-3.5 py-2 hover:bg-neutral-100">Contact</a>
         </nav>
       </div>
@@ -237,5 +237,40 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      const btn = document.getElementById('mobileMenuBtn');
+      const drawer = document.getElementById('mobileNavDrawer');
+      const openIcon = document.getElementById('burgerIconOpen');
+      const closeIcon = document.getElementById('burgerIconClose');
+
+      function setMenuOpen(open) {
+        if (!drawer || !btn) return;
+        drawer.classList.toggle('hidden', !open);
+        drawer.classList.toggle('flex', open);
+        if (openIcon) openIcon.classList.toggle('hidden', open);
+        if (closeIcon) closeIcon.classList.toggle('hidden', !open);
+        btn.setAttribute('aria-expanded', String(open));
+      }
+
+      if (btn && drawer) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setMenuOpen(drawer.classList.contains('hidden'));
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!drawer.classList.contains('hidden') && !drawer.contains(e.target) && !btn.contains(e.target)) {
+            setMenuOpen(false);
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') setMenuOpen(false);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
