@@ -1134,7 +1134,6 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
     print(f"Scraping {cfg['name']} Rescue Track portal...", flush=True)
 
     captured_records: list[dict] = []
-    seen_urls: list[str] = []
 
     def handle_response(resp):
         try:
@@ -1143,7 +1142,6 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             r_low = resp.url.lower()
             if r_low.endswith((".js", ".css", ".png", ".jpg", ".svg", ".woff", ".woff2")):
                 return
-            seen_urls.append(resp.url)
             raw = resp.text()
             if not raw or len(raw) < 30:
                 return
@@ -1156,7 +1154,6 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
 
     page.on("response", handle_response)
     try:
-        # Boot SPA session first so direct hash navigation does not trigger #/logout
         page.goto(root_url, wait_until="domcontentloaded", timeout=25000)
         page.wait_for_timeout(1500)
         page.goto(speciallist_url, wait_until="domcontentloaded", timeout=25000)
@@ -1166,7 +1163,6 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         except Exception:
             page.wait_for_timeout(3000)
 
-        # Fallback: inspect AngularJS $scope arrays in memory
         if not captured_records:
             scope_items = page.evaluate(
                 """() => {
@@ -1198,8 +1194,63 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         except Exception:
             pass
 
+    # Map any rendered <img> tags on #/speciallist/DOG to their Animal ID
+    dom_photos_by_id: dict[str, str] = {}
+    try:
+        dom_img_pairs = page.evaluate(
+            """() => {
+                const pairs = [];
+                const idRe = /\\bA\\d{5,8}\\b/i;
+                for (const img of Array.from(document.querySelectorAll("img"))) {
+                    const src = img.currentSrc || img.src || img.getAttribute("ng-src") || img.getAttribute("data-src") || "";
+                    if (!src || /logo|icon|placeholder|blank/i.test(src)) continue;
+                    const card = img.closest("tr, .card, [class*='card'], [ng-repeat], li, article, div");
+                    const blob = (src + " " + (card ? card.innerText : "")).trim();
+                    const m = blob.match(idRe);
+                    if (m) pairs.push([m[0].toUpperCase(), src]);
+                }
+                return pairs;
+            }"""
+        )
+        for aid_k, img_u in dom_img_pairs or []:
+            if aid_k not in dom_photos_by_id and img_u:
+                dom_photos_by_id[aid_k] = img_u
+    except Exception:
+        pass
+
     results: list[dict] = []
     seen_ids: set[str] = set()
+    logged_sample = False
+
+    def resolve_oc_photo(item: dict, aid_clean: str) -> str:
+        # 1. Check explicit photo keys first
+        for k in (
+            "PhotoUrl", "photoUrl", "photo_url", "ImageUrl", "imageUrl", "image_url",
+            "Photo", "photo", "Image", "image", "Picture", "picture", "Pic", "pic",
+            "PhotoLink", "PhotoPath", "ImagePath", "Thumbnail", "thumbnail", "FileName",
+        ):
+            val = clean_space(str(item.get(k) or ""))
+            if val and not val.lower().endswith("noimage.jpg") and not val.lower().endswith("no_image.jpg"):
+                if val.startswith("http"):
+                    return val
+                if "/" in val:
+                    return f"https://petadoption.oc.gov/{val.lstrip('/')}"
+                return f"https://petadoption.oc.gov/rescuetrackportal/Images/{val}"
+
+        # 2. Scan all string values in the dict for any .jpg/.jpeg/.png/.webp URL or path
+        for val in item.values():
+            if not isinstance(val, str):
+                continue
+            s = val.strip()
+            if re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", s, re.IGNORECASE) and "logo" not in s.lower():
+                if s.startswith("http"):
+                    return s
+                if "/" in s:
+                    return f"https://petadoption.oc.gov/{s.lstrip('/')}"
+                return f"https://petadoption.oc.gov/rescuetrackportal/Images/{s}"
+
+        # 3. Fallback to rendered DOM <img> matched by AnimalID
+        return dom_photos_by_id.get(aid_clean, "")
 
     def build_oc_record(
         aid: str,
@@ -1216,6 +1267,10 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             return
         seen_ids.add(aid_clean)
 
+        size_clean = clean_space(size)
+        if size_clean and re.match(r"^\d+(?:\.\d+)?$", size_clean):
+            size_clean = f"{int(round(float(size_clean)))} lbs"
+
         code_upper = clean_space(code).upper()
         if "BHV" in code_upper or "BEHAV" in code_upper:
             badge = "OC RESQ-BHV"
@@ -1223,7 +1278,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         elif "MED" in code_upper:
             badge = "OC MEDICAL"
             urgency_type = "OC Rescue Track — Medical"
-        elif code_upper:
+        elif code_upper and code_upper != "RESQ":
             badge = f"OC {code_upper}"[:28]
             urgency_type = f"OC Rescue Track ({code_upper})"
         else:
@@ -1244,7 +1299,7 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
             "city": cfg["city"],
             "county": cfg["county"],
             "state": cfg["state"],
-            "size": clean_space(size),
+            "size": size_clean,
             "age": clean_space(age),
             "urgency_type": urgency_type,
             "deadline_or_urgency": badge,
@@ -1263,80 +1318,32 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
         aid = str(
             item.get("AnimalID") or item.get("AnimalId") or item.get("animalId")
             or item.get("animal_id") or item.get("PetID") or item.get("id") or ""
-        )
-        if not re.match(r"^A\d{5,8}$", aid.strip(), re.IGNORECASE):
+        ).strip().upper()
+        if not re.match(r"^A\d{5,8}$", aid):
             continue
-        name = str(item.get("AnimalName") or item.get("Name") or item.get("name") or "")
+
+        if not logged_sample:
+            logged_sample = True
+            print(f"  [debug] OC sample record keys={list(item.keys())} | sample={json.dumps(item)[:320]}", flush=True)
+
+        name = str(
+            item.get("PetName") or item.get("pet_name") or item.get("AnimalName")
+            or item.get("Animal_Name") or item.get("Name") or item.get("name") or ""
+        )
         breed = str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or "")
         age = str(item.get("Age") or item.get("age") or "")
         weight = str(item.get("Weight") or item.get("Size") or item.get("weight") or "")
-        code = str(item.get("Status") or item.get("RescueCode") or item.get("SpecialCode") or item.get("Category") or "RESQ")
-        note = str(item.get("Memo") or item.get("Notes") or item.get("Reason") or item.get("Description") or "")
-        photo = str(item.get("PhotoUrl") or item.get("ImageUrl") or item.get("Photo") or item.get("photoUrl") or "")
-        if photo and not photo.startswith("http"):
-            photo = f"https://petadoption.oc.gov/{photo.lstrip('/')}"
-        build_oc_record(aid, name, breed, age, weight, code, note, photo)
-
-    if not results:
-        dom_rows = page.evaluate(
-            """() => {
-                const out = [];
-                const idRe = /\\bA\\d{5,8}\\b/;
-                const seen = new Set();
-                for (const el of Array.from(document.querySelectorAll("a, tr, .card, [class*='card'], [ng-repeat], li, article, div"))) {
-                    const txt = ((el.getAttribute("href") || "") + " " + (el.innerText || "")).trim();
-                    const m = txt.match(idRe);
-                    if (!m || txt.length < 10 || txt.length > 1600) continue;
-                    const nested = Array.from(el.children).some(ch => idRe.test(ch.innerText || "") && ch.querySelector("img"));
-                    if (nested) continue;
-                    const aid = m[0].toUpperCase();
-                    if (seen.has(aid)) continue;
-                    seen.add(aid);
-                    const img = el.querySelector("img");
-                    out.push({
-                        aid,
-                        text: (el.innerText || "").trim(),
-                        img: img ? (img.src || img.getAttribute("data-src") || "") : ""
-                    });
-                }
-                return out;
-            }"""
+        code = str(
+            item.get("SubStatus") or item.get("RescueStatus") or item.get("StatusCode")
+            or item.get("Status") or item.get("RescueCode") or item.get("SpecialCode")
+            or item.get("Category") or "RESQ"
         )
-        for row in dom_rows:
-            txt = row.get("text") or ""
-            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
-                continue
-            aid = row["aid"]
-            lines = [clean_space(ln) for ln in txt.splitlines() if clean_space(ln)]
-            name = next(
-                (
-                    ln for ln in lines[:4]
-                    if aid not in ln
-                    and len(ln) < 35
-                    and not re.search(r"\b(RESQ|MEDICAL|MALE|FEMALE|DOG|YEARS?|MONTHS?|KENNEL)\b", ln, re.IGNORECASE)
-                ),
-                f"OC Animal Care {aid}",
-            )
-            code_m = re.search(r"\b(RESQ-BHV|MEDICAL|RESQ[A-Z0-9-]*)\b", txt, re.IGNORECASE)
-            code = code_m.group(1) if code_m else "RESQ"
-            build_oc_record(
-                aid,
-                name,
-                extract_field(txt, ("Breed",)),
-                extract_field(txt, ("Age",)),
-                extract_field(txt, ("Weight", "Size")),
-                code,
-                "",
-                row.get("img") or "",
-            )
-
-    if not results:
-        body_snippet = clean_space(page.inner_text("body"))[:320]
-        print(f"  [debug] OC v3 URL={page.url} | URLs={seen_urls[-6:]} | body={body_snippet!r}", flush=True)
+        note = str(item.get("Memo") or item.get("Notes") or item.get("Reason") or item.get("Description") or "")
+        photo = resolve_oc_photo(item, aid)
+        build_oc_record(aid, name, breed, age, weight, code, note, photo)
 
     print(f"  {cfg['name']} saved: {len(results)}", flush=True)
     return results
-
 # ---------------------------------------------------------------------------
 # PORTAL 7: LA COUNTY DACC (7 CARE CENTERS) - RESCUE ONLY & AP-KHOA
 # ---------------------------------------------------------------------------
