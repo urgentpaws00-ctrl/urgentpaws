@@ -2478,7 +2478,7 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
     except Exception:
         checked_label = now_iso
 
-   footer_shelter_links = " ".join(
+    footer_shelter_links = " ".join(
         f'<a href="/{cfg["slug"]}">{html.escape(cfg["name"])}</a>'
         for cfg in shelters
     )
