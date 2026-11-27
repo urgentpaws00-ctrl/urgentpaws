@@ -17,7 +17,7 @@ USER_AGENT = (
 BLOCKED_RESOURCE_TYPES = {"image", "media", "font"}
 
 NON_DOG_PATTERN = re.compile(
-    r"\b(animal type:\s*(cat|bird|rabbit|other)|domestic shorthair|domestic mediumhair|domestic longhair|siamese|calico|tabby|kitten|chicken|pigeon|rabbit|bunny|guinea pig|hamster|ferret)\b",
+    r"\b(animal type:\s*(cat|feline|bird|rabbit|other)|cat|feline|domestic\s*(?:sh|mh|lh|short|medium|long)(?:hair)?|siamese|calico|tabby|tortoiseshell|maine\s*coon|ragdoll|bengal|persian|kitten|chicken|pigeon|rabbit|bunny|guinea pig|hamster|ferret)\b",
     re.IGNORECASE,
 )
 
@@ -37,7 +37,7 @@ BOILERPLATE_PATTERN = re.compile(
 )
 
 NAME_NOISE_RE = re.compile(
-    r"^(?:dog|canine|male|female|neutered|spayed|unknown|available|rescue\s*only|ap-khoa|resq[a-z0-9-]*|medical|urgent|tustin|downey|lancaster|palmdale|baldwin\s*park|carson|gardena|agoura|castaic|santa\s*clarita\s*valley|oc\s*animal\s*care|la\s*county\s*dacc)$",
+    r"^(?:dog|canine|male|female|neutered|spayed|intact|altered|unknown|available|stray\s*wait|owner\s*surrender|confiscate|quarantine|hold|web|foster|adoptable|rescue\s*only|ap-khoa|resq[a-z0-9-]*|medical|urgent|tustin|downey|lancaster|palmdale|baldwin\s*park|carson|gardena|agoura|castaic|santa\s*clarita\s*valley|oc\s*animal\s*care|la\s*county\s*dacc)$",
     re.IGNORECASE,
 )
 
@@ -237,7 +237,7 @@ def resolve_record_name(
             candidates.append(named_field)
         for ln in dom_text.splitlines():
             s = clean_space(ln)
-            if s and len(s) <= 35:
+            if s and len(s) <= 35 and not (s.isupper() and " " in s):
                 candidates.append(s)
 
     for raw in candidates:
@@ -1325,6 +1325,8 @@ def scrape_oc_rescuetrack(page, cfg: dict, now_iso: str) -> list[dict]:
 
         name = resolve_record_name(item, aid, fallback_prefix="OC Animal Care")
         breed = clean_space(str(item.get("PrimaryBreed") or item.get("Breed") or item.get("breed") or ""))
+        if NON_DOG_PATTERN.search(breed):
+            continue
         age = clean_space(str(item.get("Age") or item.get("age") or ""))
         size_clean = clean_space(str(item.get("Weight") or item.get("Size") or item.get("weight") or ""))
         if size_clean and re.match(r"^\d+(?:\.\d+)?$", size_clean):
@@ -1396,16 +1398,23 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
     print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
     results: list[dict] = []
     seen_ids: set[str] = set()
-    logged_dacc_sample = False
 
     bad_tokens = (
         "logo", "icon", "placeholder", "noimage", "no_image", "no-image",
         "nophoto", "no_photo", "no-photo", "default", "spinner", "heart",
         "coming-soon", "coming_soon", "silhouette", "generic", "avatar",
-        "040-pets", "goback",
+        "040-pets", "goback", "banner", "header", "footer", "wp-content/themes",
     )
 
     def resolve_dacc_photo(item: dict | None, dom_imgs: list[str] | None = None) -> str:
+        # DACC JSON explicitly reports imageCount; 0 means only the 040-pets placeholder exists
+        if item is not None:
+            try:
+                if int(item.get("imageCount") or 0) <= 0:
+                    return ""
+            except (TypeError, ValueError):
+                pass
+
         candidates: list[str] = []
         if item:
             for k in (
@@ -1458,8 +1467,11 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
 
     for keyword, badge, urgency_type, needs in status_targets:
         captured_json: list[dict] = []
+        accept_responses = False
 
         def handle_dacc_resp(resp):
+            if not accept_responses:
+                return
             try:
                 if resp.status != 200 or "lacounty.gov" not in resp.url.lower():
                     return
@@ -1480,6 +1492,8 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             page.goto(target_search_url, wait_until="domcontentloaded", timeout=25000)
             page.wait_for_timeout(1500)
 
+            # Only capture XHRs triggered by our filtered search submission (ignore initial unfiltered load)
+            accept_responses = True
             for frame in page.frames:
                 try:
                     frame.evaluate(
@@ -1560,11 +1574,6 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                                     if (u) imgs.push(u);
                                 }
                             }
-                            for (const bgEl of Array.from(el.querySelectorAll("[style*='background']"))) {
-                                const bgM = (bgEl.getAttribute("style") || "").match(/url\\(['"]?([^'")]+)['"]?\\)/i);
-                                if (bgM && bgM[1]) imgs.push(bgM[1]);
-                            }
-
                             const heading = el.querySelector("h1, h2, h3, h4, .name, [class*='name'], [class*='title'], strong, b");
                             const headingTxt = heading ? (heading.innerText || "").trim() : "";
                             const a = el.querySelector("a[href]");
@@ -1587,37 +1596,51 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
 
         for item in captured_json:
             aid = str(
-                item.get("animalID") or item.get("AnimalID") or item.get("animal_id")
-                or item.get("animalId") or item.get("PetID") or item.get("id") or ""
+                item.get("animalId") or item.get("animalID") or item.get("AnimalID")
+                or item.get("animal_id") or item.get("PetID") or item.get("id") or ""
             ).strip().upper()
             if not re.match(r"^A\d{6,8}$", aid) or aid in seen_ids:
                 continue
-            atype = str(item.get("animalType") or item.get("AnimalType") or item.get("species") or "DOG").upper()
-            if atype and "DOG" not in atype:
+
+            atype = str(item.get("animalType") or item.get("AnimalType") or item.get("species") or "").strip().upper()
+            if atype != "DOG":
                 continue
 
-            if not logged_dacc_sample:
-                logged_dacc_sample = True
-                print(f"  [debug] DACC JSON keys={list(item.keys())} | sample={json.dumps(item)[:320]}", flush=True)
+            breed = clean_space(str(item.get("breed") or item.get("primaryBreed") or ""))
+            if NON_DOG_PATTERN.search(breed):
+                continue
+
+            # Verify record actually belongs to the requested Rescue Only / AP-KHOA status
+            status_blob = " ".join(
+                str(item.get(k) or "")
+                for k in ("kennelStat", "kennelSubStat", "rescueOnly", "medicalStat", "outcomeType")
+            ).upper()
+            if keyword == "rescue" and "RESCUE" not in status_blob:
+                continue
+            if keyword == "khoa" and "KHOA" not in status_blob:
+                continue
 
             seen_ids.add(aid)
             dom_match = dom_by_id.get(aid) or {}
 
-            name = resolve_record_name(
-                item,
-                aid,
-                dom_text=dom_match.get("text", ""),
-                dom_heading=dom_match.get("heading", ""),
-                fallback_prefix="DACC",
-            )
+            raw_json_name = clean_space(str(item.get("animalName") or ""))
+            if not raw_json_name or raw_json_name.upper() == aid:
+                name = f"DACC {aid}"
+            else:
+                name = resolve_record_name(item, aid, fallback_prefix="DACC")
 
-            breed = clean_space(str(item.get("primaryBreed") or item.get("PrimaryBreed") or item.get("breed") or item.get("Breed") or ""))
-            age = clean_space(str(item.get("animalAge") or item.get("AnimalAge") or item.get("age") or item.get("Age") or ""))
-            size = clean_space(str(item.get("animalSize") or item.get("AnimalSize") or item.get("weight") or item.get("Weight") or item.get("size") or ""))
-            center = str(item.get("animalCareCenter") or item.get("AnimalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
+            yrs = int(item.get("yearsOld") or 0)
+            mos = int(item.get("monthsOld") or 0)
+            age_parts = [f"{yrs} yrs" if yrs else "", f"{mos} mos" if mos else ""]
+            age = " ".join(p for p in age_parts if p) or clean_space(str(item.get("animalAge") or ""))
+
+            wt = item.get("weight")
+            size = f"{int(round(float(wt)))} lbs" if wt else clean_space(str(item.get("animalSize") or ""))
+
+            center = str(item.get("location") or item.get("animalCareCenter") or "")
             shelter_label, center_email = format_dacc_care_center(center)
             photo = resolve_dacc_photo(item, dom_match.get("imgs") or [])
-            detail_url = clean_space(str(item.get("detailUrl") or item.get("DetailUrl") or item.get("url") or dom_match.get("href") or "")) or (
+            detail_url = clean_space(str(item.get("detailUrl") or dom_match.get("href") or "")) or (
                 f"{target_search_url.split('?')[0]}?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid}"
             )
 
@@ -1641,59 +1664,12 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 "listing_url": detail_url,
                 "updated_at": now_iso,
                 "last_checked": now_iso,
+                "_image_count": int(item.get("imageCount") or 0),
             })
 
-        for c in dom_cards_all:
-            txt = c.get("text") or ""
-            if NON_DOG_PATTERN.search(txt) or RESCUED_PATTERN.search(txt):
-                continue
-            aid = c["aid"]
-            if aid in seen_ids:
-                continue
-            seen_ids.add(aid)
-
-            name = resolve_record_name(
-                None,
-                aid,
-                dom_text=txt,
-                dom_heading=c.get("heading", ""),
-                fallback_prefix="DACC",
-            )
-            center_m = re.search(
-                r"\b(Downey|Baldwin Park|Carson|Gardena|Lancaster|Palmdale|Agoura|Castaic)\b",
-                txt,
-                re.IGNORECASE,
-            )
-            shelter_label, center_email = format_dacc_care_center(center_m.group(1) if center_m else "")
-            detail_url = clean_space(c.get("href") or "") or (
-                f"{target_search_url.split('?')[0]}?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid}"
-            )
-
-            results.append({
-                "id": f"dacc-{aid.lower()}",
-                "shelter_slug": cfg["slug"],
-                "animal_id": aid,
-                "name": name,
-                "breed": extract_field(txt, ("Breed",)),
-                "shelter": shelter_label,
-                "city": cfg["city"],
-                "county": cfg["county"],
-                "state": cfg["state"],
-                "size": extract_field(txt, ("Weight", "Size")),
-                "age": extract_field(txt, ("Age",)),
-                "urgency_type": urgency_type,
-                "deadline_or_urgency": badge,
-                "needs_type": needs,
-                "transport_note": f"Rescue desk: {center_email}" if center_email else f"Status: {badge}",
-                "photo_url": resolve_dacc_photo(None, c.get("imgs") or []),
-                "listing_url": detail_url,
-                "updated_at": now_iso,
-                "last_checked": now_iso,
-            })
-
-    # Fast in-browser detail check for any DACC dog missing a photo on the search grid
-    missing_aids = [d["animal_id"] for d in results if not d.get("photo_url")]
-    if missing_aids:
+    # Only check detail pages for dogs where DACC reports imageCount > 0
+    missing_with_images = [d["animal_id"] for d in results if not d.get("photo_url") and d.get("_image_count", 0) > 0]
+    if missing_with_images:
         base_search = target_search_url.split("?")[0]
         detail_photo_candidates = page.evaluate(
             """async ({ baseSearch, aids }) => {
@@ -1712,7 +1688,7 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 }));
                 return out;
             }""",
-            {"baseSearch": base_search, "aids": missing_aids},
+            {"baseSearch": base_search, "aids": missing_with_images},
         )
         if isinstance(detail_photo_candidates, dict):
             for d in results:
@@ -1721,17 +1697,8 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                     if cand:
                         d["photo_url"] = cand
 
-    # Strip any shared fallback placeholder image URLs
-    url_counts: dict[str, int] = {}
     for d in results:
-        p = d.get("photo_url") or ""
-        if p:
-            url_counts[p] = url_counts.get(p, 0) + 1
-    repeated_urls = {u for u, cnt in url_counts.items() if cnt >= 2}
-    if repeated_urls:
-        for d in results:
-            if d.get("photo_url") in repeated_urls:
-                d["photo_url"] = ""
+        d.pop("_image_count", None)
 
     with_photos = sum(1 for d in results if d.get("photo_url"))
     print(f"  {cfg['name']} saved: {len(results)} (with real photos: {with_photos})", flush=True)
@@ -2533,6 +2500,9 @@ def main():
     unique_dogs = []
     expired_dropped = 0
     for dog in all_dogs:
+        if NON_DOG_PATTERN.search(f"{dog.get('breed') or ''} {dog.get('name') or ''}"):
+            continue
+
         slug = infer_shelter_slug(dog, shelters_by_county)
         shelter_cfg = shelters_by_slug.get(slug)
         tz_name = shelter_cfg.get("timezone", "America/Los_Angeles") if shelter_cfg else "America/Los_Angeles"
