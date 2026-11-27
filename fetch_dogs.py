@@ -1748,14 +1748,64 @@ def normalize_dog_record(dog: dict, shelter_cfg: dict | None) -> dict:
     return dog
 
 
-def sync_static_page_navs() -> None:
-    """Enforces nav labels and active page underline across desktop & mobile burger navs."""
+def sync_static_page_navs(shelters: list[dict] | None = None) -> None:
+    """Enforces nav labels, active page underline, and unified compact footer across static pages."""
     info_pages = {
         "about-urgent-paws.html": "about-urgent-paws",
         "for-shelters.html": "for-shelters",
         "blog.html": "blog",
         "contact-us.html": "contact-us",
     }
+
+    unified_footer = ""
+    if shelters:
+        shelter_links_html = "\n              ".join(
+            f'<a href="{html.escape(cfg["slug"])}" class="hover:text-neutral-950 underline truncate">{html.escape(cfg["name"])}</a>'
+            for cfg in shelters
+        )
+        intent_links_html = "\n              ".join(
+            f'<a href="{html.escape(lander["slug"])}" class="hover:text-neutral-950 underline">{html.escape(lander["name"])}</a>'
+            for lander in PROGRAMMATIC_SEO_LANDERS
+        )
+        unified_footer = f"""  <footer class="bg-white border-t border-neutral-200 mt-10">
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-3 text-xs text-neutral-500">
+      <details class="group border-b border-neutral-200 pb-3">
+        <summary class="flex items-center justify-between cursor-pointer list-none font-semibold text-neutral-700 hover:text-neutral-950 select-none">
+          <span>Browse Urgent Dogs by Shelter &amp; Category</span>
+          <svg class="w-4 h-4 text-neutral-500 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </summary>
+
+        <nav aria-label="Shelter Urgent Lists" class="pt-3 space-y-3">
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">By Shelter</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-1.5 text-neutral-600">
+              {shelter_links_html}
+            </div>
+          </div>
+          <div class="pt-2 border-t border-neutral-100">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-1.5">By Urgency &amp; Breed</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-neutral-600">
+              {intent_links_html}
+            </div>
+          </div>
+        </nav>
+      </details>
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
+        <div class="flex flex-wrap gap-4">
+          <a href="./" class="hover:text-neutral-900">Home</a>
+          <a href="about-urgent-paws" class="hover:text-neutral-900">About</a>
+          <a href="for-shelters" class="hover:text-neutral-900">For Shelters</a>
+          <a href="blog" class="hover:text-neutral-900">Guide</a>
+          <a href="contact-us" class="hover:text-neutral-900">Contact Us</a>
+        </div>
+      </div>
+    </div>
+  </footer>"""
+
     for filename, active_slug in info_pages.items():
         if not os.path.exists(filename):
             continue
@@ -1785,10 +1835,17 @@ def sync_static_page_navs() -> None:
             updated,
         )
 
+        if unified_footer:
+            updated = re.sub(
+                r"<footer[\s\S]*?</footer>",
+                unified_footer,
+                updated,
+                count=1,
+            )
+
         if updated != content:
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(updated)
-
 
 def build_seo_faqs(page_name: str, contact: str, address: str, foster_capable: bool) -> list[tuple[str, str]]:
     """Generates shelter- and intent-specific Q&As for visible content and FAQPage JSON-LD."""
@@ -2410,7 +2467,7 @@ def render_directory_html(
 
 
 def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now_iso: str) -> None:
-    sync_static_page_navs()
+    sync_static_page_navs(shelters)
     print("Generating enriched shelter & intent SEO pages + sitemap.xml...", flush=True)
     base_url = "https://www.urgentpaws.org"
     today_date = now_iso[:10]
@@ -2421,11 +2478,11 @@ def generate_static_seo_pages(unique_dogs: list[dict], shelters: list[dict], now
     except Exception:
         checked_label = now_iso
 
-    footer_shelter_links = " &middot; ".join(
+   footer_shelter_links = " ".join(
         f'<a href="/{cfg["slug"]}">{html.escape(cfg["name"])}</a>'
         for cfg in shelters
     )
-    footer_intent_links = " &middot; ".join(
+    footer_intent_links = " ".join(
         f'<a href="/{lander["slug"]}">{html.escape(lander["name"])}</a>'
         for lander in PROGRAMMATIC_SEO_LANDERS
     )
