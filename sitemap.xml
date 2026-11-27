@@ -96,4 +96,40 @@
     <changefreq>hourly</changefreq>
     <priority>0.85</priority>
   </url>
+  <url>
+    <loc>https://www.urgentpaws.org/california-shelter-euthanasia-list</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.urgentpaws.org/rescue-only-dogs-california</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.urgentpaws.org/foster-urgent-shelter-dogs-california</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.urgentpaws.org/urgent-huskies-california</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.urgentpaws.org/urgent-german-shepherds-california</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.urgentpaws.org/urgent-pit-bulls-california</loc>
+    <lastmod>2026-11-27</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
