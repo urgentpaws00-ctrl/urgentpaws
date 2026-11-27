@@ -1396,8 +1396,16 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
     print(f"Scraping {cfg['name']} (Rescue Only & AP-KHOA)...", flush=True)
     results: list[dict] = []
     seen_ids: set[str] = set()
+    logged_dacc_sample = False
 
-    def resolve_dacc_photo(item: dict | None, dom_img: str = "") -> str:
+    bad_tokens = (
+        "logo", "icon", "placeholder", "noimage", "no_image", "no-image",
+        "nophoto", "no_photo", "no-photo", "default", "spinner", "heart",
+        "coming-soon", "coming_soon", "silhouette", "generic", "avatar",
+        "040-pets", "goback",
+    )
+
+    def resolve_dacc_photo(item: dict | None, dom_imgs: list[str] | None = None) -> str:
         candidates: list[str] = []
         if item:
             for k in (
@@ -1411,15 +1419,9 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             for val in item.values():
                 if isinstance(val, str) and re.search(r"\.(?:jpg|jpeg|png|webp)(?:\?|$)", val.strip(), re.IGNORECASE):
                     candidates.append(val.strip())
-        if dom_img:
-            candidates.append(clean_space(dom_img))
+        if dom_imgs:
+            candidates.extend(clean_space(u) for u in dom_imgs if u)
 
-        bad_tokens = (
-            "logo", "icon", "placeholder", "noimage", "no_image", "no-image",
-            "nophoto", "no_photo", "no-photo", "default", "spinner", "heart",
-            "coming-soon", "coming_soon", "silhouette", "generic", "avatar",
-            "040-pets", "goback",
-        )
         for raw in candidates:
             low = raw.lower()
             if not raw or low.startswith("data:") or any(bad in low for bad in bad_tokens):
@@ -1542,27 +1544,25 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                             if (seen.has(aid)) continue;
                             seen.add(aid);
 
-                            let imgSrc = "";
-                            const img = el.querySelector("img[alt*='Picture of Animal'], img");
-                            if (img) {
+                            const imgs = [];
+                            for (const img of Array.from(el.querySelectorAll("img"))) {
                                 const srcset = img.getAttribute("data-srcset") || img.getAttribute("srcset") || "";
                                 const firstSet = srcset ? srcset.split(",")[0].trim().split(" ")[0] : "";
-                                imgSrc =
-                                    img.getAttribute("data-src") ||
-                                    img.getAttribute("data-lazy-src") ||
-                                    img.getAttribute("data-original") ||
-                                    img.getAttribute("ng-src") ||
-                                    firstSet ||
-                                    img.getAttribute("src") ||
-                                    img.currentSrc ||
-                                    "";
-                            }
-                            if (!imgSrc) {
-                                const bgEl = Array.from(el.querySelectorAll("[style*='background']")).find(d => /url\\(/i.test(d.getAttribute("style") || ""));
-                                if (bgEl) {
-                                    const bgM = (bgEl.getAttribute("style") || "").match(/url\\(['"]?([^'")]+)['"]?\\)/i);
-                                    if (bgM) imgSrc = bgM[1];
+                                for (const u of [
+                                    img.getAttribute("data-src"),
+                                    img.getAttribute("data-lazy-src"),
+                                    img.getAttribute("data-original"),
+                                    img.getAttribute("ng-src"),
+                                    firstSet,
+                                    img.getAttribute("src"),
+                                    img.currentSrc
+                                ]) {
+                                    if (u) imgs.push(u);
                                 }
+                            }
+                            for (const bgEl of Array.from(el.querySelectorAll("[style*='background']"))) {
+                                const bgM = (bgEl.getAttribute("style") || "").match(/url\\(['"]?([^'")]+)['"]?\\)/i);
+                                if (bgM && bgM[1]) imgs.push(bgM[1]);
                             }
 
                             const heading = el.querySelector("h1, h2, h3, h4, .name, [class*='name'], [class*='title'], strong, b");
@@ -1572,7 +1572,7 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                                 aid,
                                 text: txt,
                                 heading: headingTxt,
-                                img: imgSrc,
+                                imgs,
                                 href: a ? a.href : ""
                             });
                         }
@@ -1596,6 +1596,10 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             if atype and "DOG" not in atype:
                 continue
 
+            if not logged_dacc_sample:
+                logged_dacc_sample = True
+                print(f"  [debug] DACC JSON keys={list(item.keys())} | sample={json.dumps(item)[:320]}", flush=True)
+
             seen_ids.add(aid)
             dom_match = dom_by_id.get(aid) or {}
 
@@ -1612,8 +1616,10 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             size = clean_space(str(item.get("animalSize") or item.get("AnimalSize") or item.get("weight") or item.get("Weight") or item.get("size") or ""))
             center = str(item.get("animalCareCenter") or item.get("AnimalCareCenter") or item.get("care_center") or item.get("location") or item.get("shelter") or "")
             shelter_label, center_email = format_dacc_care_center(center)
-            photo = resolve_dacc_photo(item, dom_match.get("img") or "")
-            detail_url = clean_space(str(item.get("detailUrl") or item.get("DetailUrl") or item.get("url") or dom_match.get("href") or "")) or page.url
+            photo = resolve_dacc_photo(item, dom_match.get("imgs") or [])
+            detail_url = clean_space(str(item.get("detailUrl") or item.get("DetailUrl") or item.get("url") or dom_match.get("href") or "")) or (
+                f"{target_search_url.split('?')[0]}?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid}"
+            )
 
             results.append({
                 "id": f"dacc-{aid.lower()}",
@@ -1659,6 +1665,9 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 re.IGNORECASE,
             )
             shelter_label, center_email = format_dacc_care_center(center_m.group(1) if center_m else "")
+            detail_url = clean_space(c.get("href") or "") or (
+                f"{target_search_url.split('?')[0]}?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID={aid}"
+            )
 
             results.append({
                 "id": f"dacc-{aid.lower()}",
@@ -1676,13 +1685,43 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
                 "deadline_or_urgency": badge,
                 "needs_type": needs,
                 "transport_note": f"Rescue desk: {center_email}" if center_email else f"Status: {badge}",
-                "photo_url": resolve_dacc_photo(None, c.get("img") or ""),
-                "listing_url": clean_space(c.get("href") or "") or page.url,
+                "photo_url": resolve_dacc_photo(None, c.get("imgs") or []),
+                "listing_url": detail_url,
                 "updated_at": now_iso,
                 "last_checked": now_iso,
             })
 
-    # Strip any shared fallback placeholder image URLs (such as DACC's 040-pets.png pink-heart cartoon)
+    # Fast in-browser detail check for any DACC dog missing a photo on the search grid
+    missing_aids = [d["animal_id"] for d in results if not d.get("photo_url")]
+    if missing_aids:
+        base_search = target_search_url.split("?")[0]
+        detail_photo_candidates = page.evaluate(
+            """async ({ baseSearch, aids }) => {
+                const out = {};
+                await Promise.all(aids.map(async (aid) => {
+                    try {
+                        const u = `${baseSearch}?animalCareCenter=ALL&animalType=DOG&sex=ALL&breed=ALL&animalAge=ALL&animalSize=ALL&animalStatus=ALL&animalID=${aid}`;
+                        const resp = await fetch(u, { credentials: "include" });
+                        const html = await resp.text();
+                        const doc = new DOMParser().parseFromString(html, "text/html");
+                        const imgs = Array.from(doc.querySelectorAll("img"))
+                            .map(i => i.getAttribute("data-src") || i.getAttribute("src") || "")
+                            .filter(Boolean);
+                        out[aid] = imgs;
+                    } catch (e) {}
+                }));
+                return out;
+            }""",
+            {"baseSearch": base_search, "aids": missing_aids},
+        )
+        if isinstance(detail_photo_candidates, dict):
+            for d in results:
+                if not d.get("photo_url"):
+                    cand = resolve_dacc_photo(None, detail_photo_candidates.get(d["animal_id"]) or [])
+                    if cand:
+                        d["photo_url"] = cand
+
+    # Strip any shared fallback placeholder image URLs
     url_counts: dict[str, int] = {}
     for d in results:
         p = d.get("photo_url") or ""
@@ -1694,7 +1733,8 @@ def scrape_lacounty_dacc(page, cfg: dict, now_iso: str) -> list[dict]:
             if d.get("photo_url") in repeated_urls:
                 d["photo_url"] = ""
 
-    print(f"  {cfg['name']} saved: {len(results)}", flush=True)
+    with_photos = sum(1 for d in results if d.get("photo_url"))
+    print(f"  {cfg['name']} saved: {len(results)} (with real photos: {with_photos})", flush=True)
     return results
 
 
