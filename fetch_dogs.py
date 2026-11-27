@@ -1951,6 +1951,7 @@ def render_directory_html(
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(meta_desc)}">
   <link rel="canonical" href="{page_url}">
+  <link rel="icon" href="logo.png" type="image/png">
   <meta property="og:title" content="{html.escape(title)}">
   <meta property="og:description" content="{html.escape(meta_desc)}">
   <meta property="og:url" content="{page_url}">
@@ -1958,11 +1959,11 @@ def render_directory_html(
   <script type="application/ld+json">{json_ld}</script>
   <style>
     :root {{
-      --bg: #fafaf9;
+      --bg: #f5f5f4;
       --surface: #ffffff;
-      --text: #1c1917;
-      --muted: #57534e;
-      --border: #e7e5e4;
+      --text: #171717;
+      --muted: #525252;
+      --border: #e5e5e5;
       --accent: #dc2626;
       --accent-soft: #fef2f2;
     }}
@@ -1979,35 +1980,100 @@ def render_directory_html(
     .topbar {{
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0.9rem 0;
+      padding: 0.7rem 0;
     }}
     .topbar-inner {{
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 0.75rem;
     }}
-    .brand {{
+    .brand-link {{
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+      color: var(--text);
+    }}
+    .brand-logo {{
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      object-fit: contain;
+    }}
+    .brand-title {{
       font-size: 1.15rem;
       font-weight: 800;
-      color: var(--text);
-      text-decoration: none;
       letter-spacing: -0.02em;
+      line-height: 1.1;
     }}
-    .nav-links {{ display: flex; gap: 1.25rem; flex-wrap: wrap; }}
+    .brand-sub {{
+      display: none;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }}
+    .nav-links {{
+      display: none;
+      gap: 1.1rem;
+      align-items: center;
+    }}
     .nav-links a {{
-      color: var(--muted);
+      color: #404040;
       text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
+      font-size: 0.8rem;
+      font-weight: 600;
     }}
-    .nav-links a:hover {{ color: var(--text); }}
-    .hero {{ padding: 1.75rem 0 1rem; }}
+    .nav-links a:hover {{ color: #0a0a0a; }}
+    .burger-btn {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #d4d4d4;
+      background: #ffffff;
+      color: #262626;
+      cursor: pointer;
+      padding: 0;
+    }}
+    .burger-btn:hover {{ background: #f5f5f5; }}
+    .mobile-drawer {{
+      display: none;
+      position: absolute;
+      right: 1.25rem;
+      top: calc(100% + 0.45rem);
+      width: 176px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.35rem 0;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      z-index: 40;
+      flex-direction: column;
+    }}
+    .mobile-drawer.open {{ display: flex; }}
+    .mobile-drawer a {{
+      padding: 0.5rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #262626;
+      text-decoration: none;
+    }}
+    .mobile-drawer a:hover {{ background: #f5f5f5; }}
+    @media (min-width: 640px) {{
+      .topbar {{ position: sticky; top: 0; z-index: 20; padding: 0.9rem 0; }}
+      .brand-sub {{ display: block; }}
+      .nav-links {{ display: flex; }}
+      .burger-btn, .mobile-drawer {{ display: none !important; }}
+    }}
+    .hero {{ padding: 1.5rem 0 1rem; }}
     .breadcrumb {{
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--muted);
-      margin-bottom: 0.6rem;
+      margin-bottom: 0.5rem;
     }}
     .breadcrumb a {{ color: var(--muted); text-decoration: none; }}
     .breadcrumb a:hover {{ text-decoration: underline; }}
@@ -2019,22 +2085,22 @@ def render_directory_html(
     }}
     h1 {{
       margin: 0;
-      font-size: 1.75rem;
+      font-size: 1.65rem;
       font-weight: 800;
       letter-spacing: -0.02em;
     }}
     .count-pill {{
-      background: #f5f5f4;
+      background: #ffffff;
       border: 1px solid var(--border);
       color: var(--text);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       padding: 0.15rem 0.65rem;
       border-radius: 999px;
     }}
     .updated-sub {{
       margin: 0.35rem 0 0;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: var(--muted);
     }}
     .shelter-card {{
@@ -2042,9 +2108,9 @@ def render_directory_html(
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.15rem 1.35rem;
-      margin: 1.15rem 0 1.5rem;
+      margin: 1.1rem 0 1.5rem;
     }}
-    .shelter-card p {{ margin: 0 0 0.75rem; font-size: 0.95rem; color: #292524; }}
+    .shelter-card p {{ margin: 0 0 0.75rem; font-size: 0.94rem; color: #262626; }}
     .shelter-card p:last-child {{ margin-bottom: 0; }}
     .shelter-meta-grid {{
       display: grid;
@@ -2052,7 +2118,7 @@ def render_directory_html(
       gap: 0.65rem 1.25rem;
       padding-top: 0.75rem;
       border-top: 1px solid var(--border);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: var(--muted);
     }}
     .shelter-meta-grid strong {{ color: var(--text); }}
@@ -2071,7 +2137,7 @@ def render_directory_html(
       flex-direction: column;
       box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }}
-    .card-media {{ position: relative; background: #f5f5f4; }}
+    .card-media {{ position: relative; background: #e5e5e5; }}
     .card-media img {{
       width: 100%;
       height: 245px;
@@ -2113,36 +2179,36 @@ def render_directory_html(
       justify-content: space-between;
       gap: 0.5rem;
     }}
-    .card-head h2 {{ margin: 0; font-size: 1.18rem; font-weight: 800; }}
-    .aid {{ color: var(--muted); font-size: 0.85rem; font-weight: 600; flex-shrink: 0; }}
-    .shelter-loc {{ margin: 0.2rem 0 0.3rem; font-size: 0.86rem; color: var(--muted); }}
-    .meta {{ margin: 0 0 0.55rem; font-size: 0.88rem; font-weight: 500; color: #292524; }}
+    .card-head h2 {{ margin: 0; font-size: 1.15rem; font-weight: 800; }}
+    .aid {{ color: var(--muted); font-size: 0.84rem; font-weight: 600; flex-shrink: 0; }}
+    .shelter-loc {{ margin: 0.2rem 0 0.3rem; font-size: 0.85rem; color: var(--muted); }}
+    .meta {{ margin: 0 0 0.55rem; font-size: 0.86rem; font-weight: 500; color: #262626; }}
     .needs-pill {{
       display: inline-block;
       align-self: flex-start;
       background: var(--accent-soft);
       border: 1px solid #fecaca;
       color: #991b1b;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 700;
       padding: 0.2rem 0.55rem;
       border-radius: 6px;
       margin-bottom: 0.55rem;
     }}
-    .note {{ margin: 0 0 0.9rem; font-size: 0.85rem; color: var(--muted); }}
+    .note {{ margin: 0 0 0.9rem; font-size: 0.84rem; color: var(--muted); }}
     .btn {{
       margin-top: auto;
       display: block;
       text-align: center;
-      background: #1c1917;
+      background: #171717;
       color: #ffffff;
       text-decoration: none;
       padding: 0.62rem 0.9rem;
-      border-radius: 8px;
+      border-radius: 999px;
       font-weight: 600;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
     }}
-    .btn:hover {{ background: #292524; }}
+    .btn:hover {{ background: #262626; }}
     .empty-state {{
       background: var(--surface);
       border: 1px solid var(--border);
@@ -2159,29 +2225,50 @@ def render_directory_html(
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.35rem 1.5rem;
-      margin-bottom: 2.75rem;
+      margin-bottom: 2.5rem;
     }}
-    .faq-section h2 {{ margin: 0 0 1rem; font-size: 1.2rem; font-weight: 800; }}
+    .faq-section h2 {{ margin: 0 0 1rem; font-size: 1.15rem; font-weight: 800; }}
     .faq-item {{ padding: 0.75rem 0; border-top: 1px solid var(--border); }}
     .faq-item:first-of-type {{ border-top: none; padding-top: 0; }}
-    .faq-item h3 {{ margin: 0 0 0.3rem; font-size: 0.98rem; font-weight: 700; }}
-    .faq-item p {{ margin: 0; font-size: 0.9rem; color: var(--muted); }}
+    .faq-item h3 {{ margin: 0 0 0.3rem; font-size: 0.96rem; font-weight: 700; }}
+    .faq-item p {{ margin: 0; font-size: 0.88rem; color: var(--muted); }}
     footer {{
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 1.75rem 0 2.25rem;
-      font-size: 0.86rem;
+      padding: 1rem 0 1.5rem;
+      font-size: 0.82rem;
       color: var(--muted);
     }}
-    .footer-shelters-title {{
-      margin: 0 0 0.45rem;
+    .footer-details {{
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.85rem;
+      margin-bottom: 0.85rem;
+    }}
+    .footer-details summary {{
+      cursor: pointer;
       font-weight: 700;
       color: var(--text);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }}
+    .footer-details summary::-webkit-details-marker {{ display: none; }}
+    .footer-details[open] .chevron {{ transform: rotate(180deg); }}
+    .footer-dir-body {{ padding-top: 0.75rem; }}
+    .footer-subhead {{
+      margin: 0 0 0.35rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #737373;
     }}
     .footer-shelters-list {{
-      margin: 0 0 1.15rem;
-      line-height: 1.85;
+      margin: 0 0 0.85rem;
+      line-height: 1.8;
     }}
+    .footer-shelters-list:last-child {{ margin-bottom: 0; }}
     .footer-shelters-list a {{
       color: var(--muted);
       text-decoration: underline;
@@ -2189,8 +2276,6 @@ def render_directory_html(
     }}
     .footer-shelters-list a:hover {{ color: var(--text); }}
     .footer-bottom {{
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -2205,13 +2290,37 @@ def render_directory_html(
 <body>
   <header class="topbar">
     <div class="wrap topbar-inner">
-      <a class="brand" href="/">UrgentPaws</a>
+      <a class="brand-link" href="/">
+        <img src="logo.png" alt="UrgentPaws logo" class="brand-logo" onerror="this.style.display='none'">
+        <div>
+          <div class="brand-title">UrgentPaws</div>
+          <div class="brand-sub">Municipal shelter dogs facing urgent deadlines, with direct IDs and shelter links.</div>
+        </div>
+      </a>
+
       <nav class="nav-links" aria-label="Primary navigation">
         <a href="/">Urgent Dogs</a>
         <a href="/about-urgent-paws">About</a>
         <a href="/for-shelters">For Shelters</a>
         <a href="/blog">Guide</a>
-        <a href="/contact-us">Contact Us</a>
+        <a href="/contact-us">Contact</a>
+      </nav>
+
+      <button id="mobileMenuBtn" class="burger-btn" type="button" aria-expanded="false" aria-controls="mobileNavDrawer" aria-label="Open navigation menu">
+        <svg id="burgerIconOpen" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="burgerIconClose" style="display:none" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <nav id="mobileNavDrawer" class="mobile-drawer" aria-label="Mobile navigation">
+        <a href="/">Urgent Dogs</a>
+        <a href="/about-urgent-paws">About</a>
+        <a href="/for-shelters">For Shelters</a>
+        <a href="/blog">Guide</a>
+        <a href="/contact-us">Contact</a>
       </nav>
     </div>
   </header>
@@ -2241,10 +2350,18 @@ def render_directory_html(
 
   <footer>
     <div class="wrap">
-      <p class="footer-shelters-title">Browse Urgent Dogs by Shelter:</p>
-      <p class="footer-shelters-list">{footer_shelter_links}</p>
-      <p class="footer-shelters-title">Browse by Urgency, Foster Eligibility &amp; Breed:</p>
-      <p class="footer-shelters-list">{footer_intent_links}</p>
+      <details class="footer-details">
+        <summary>
+          <span>Browse Urgent Dogs by Shelter &amp; Category</span>
+          <span class="chevron" aria-hidden="true">&#9662;</span>
+        </summary>
+        <div class="footer-dir-body">
+          <p class="footer-subhead">By Shelter</p>
+          <p class="footer-shelters-list">{footer_shelter_links}</p>
+          <p class="footer-subhead">By Urgency, Foster Eligibility &amp; Breed</p>
+          <p class="footer-shelters-list">{footer_intent_links}</p>
+        </div>
+      </details>
       <div class="footer-bottom">
         <span>&copy; 2026 UrgentPaws | Urgent Municipal Shelter Dog Directory</span>
         <div class="footer-bottom-links">
@@ -2257,6 +2374,36 @@ def render_directory_html(
       </div>
     </div>
   </footer>
+
+  <script>
+    (function () {{
+      var btn = document.getElementById('mobileMenuBtn');
+      var drawer = document.getElementById('mobileNavDrawer');
+      var openIcon = document.getElementById('burgerIconOpen');
+      var closeIcon = document.getElementById('burgerIconClose');
+      function setOpen(open) {{
+        if (!drawer || !btn) return;
+        drawer.classList.toggle('open', open);
+        if (openIcon) openIcon.style.display = open ? 'none' : 'block';
+        if (closeIcon) closeIcon.style.display = open ? 'block' : 'none';
+        btn.setAttribute('aria-expanded', String(open));
+      }}
+      if (btn && drawer) {{
+        btn.addEventListener('click', function (e) {{
+          e.stopPropagation();
+          setOpen(!drawer.classList.contains('open'));
+        }});
+        document.addEventListener('click', function (e) {{
+          if (drawer.classList.contains('open') && !drawer.contains(e.target) && !btn.contains(e.target)) {{
+            setOpen(false);
+          }}
+        }});
+        document.addEventListener('keydown', function (e) {{
+          if (e.key === 'Escape') setOpen(false);
+        }});
+      }}
+    }})();
+  </script>
 </body>
 </html>
 """
