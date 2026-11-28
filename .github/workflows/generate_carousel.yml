@@ -2,9 +2,9 @@ name: Generate UrgentPaws Carousel
 
 on:
   schedule:
-    # Runs daily at 7:17 AM PST (15:17 UTC)
-    - cron: "17 15 * * *"
-  workflow_dispatch:
+    # Runs daily at 7:32 AM PST (15:32 UTC), 15 mins after generate_reel.yml
+    - cron: "32 15 * * *"
+    workflow_dispatch:
 
 permissions:
   contents: write
