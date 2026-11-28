@@ -112,12 +112,12 @@
           </div>
 
           <!-- Dropdowns: hidden by default on mobile until toggled, always visible on sm+ -->
-          <div id="dropdownGroup" class="hidden sm:grid sm:col-span-8 sm:grid-cols-8 gap-2">
+          <div id="dropdownGroup" class="hidden sm:grid sm:col-span-8 sm:grid-cols-12 gap-2">
             <select id="stateFilter" aria-label="Filter by state" class="hidden sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
               <option value="ALL">All States</option>
             </select>
 
-            <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-2 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+            <select id="countyFilter" aria-label="Filter by county" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
               <option value="ALL">All Counties</option>
             </select>
 
@@ -132,6 +132,12 @@
               <option value="medical">Medical Alert</option>
               <option value="capacity">Space / Capacity / High-Risk</option>
               <option value="rescue">Rescue Pull Only</option>
+            </select>
+
+            <select id="sortFilter" aria-label="Sort dogs" class="sm:col-span-3 w-full rounded-lg border border-neutral-300 bg-white px-2.5 py-2 text-sm truncate">
+              <option value="DEFAULT">Sort: Default</option>
+              <option value="DEADLINE">Sort: Soonest Deadline</option>
+              <option value="RECENT">Sort: Recently Verified</option>
             </select>
           </div>
         </div>
@@ -306,13 +312,44 @@
       return cfg ? (dog.county || '').toLowerCase() === (cfg.county || '').toLowerCase() : false;
     }
 
+    function getDeadlineTimestamp(dog) {
+      const text = `${dog.deadline_or_urgency || ''} ${dog.urgency_type || ''}`;
+      const match = text.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+      if (!match) return Number.POSITIVE_INFINITY;
+
+      const month = parseInt(match[1], 10);
+      const day = parseInt(match[2], 10);
+      const now = new Date();
+      let year = now.getFullYear();
+
+      if (match[3]) {
+        year = match[3].length === 2 ? 2000 + parseInt(match[3], 10) : parseInt(match[3], 10);
+      } else if (now.getMonth() === 11 && month === 1) {
+        year += 1;
+      }
+
+      let hours = 23;
+      let minutes = 59;
+      const timeMatch = text.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i);
+      if (timeMatch) {
+        hours = parseInt(timeMatch[1], 10);
+        minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+        const mer = timeMatch[3].toLowerCase();
+        if (mer === 'pm' && hours < 12) hours += 12;
+        if (mer === 'am' && hours === 12) hours = 0;
+      }
+
+      return new Date(year, month - 1, day, hours, minutes, 0).getTime();
+    }
+
     function updateMobileFilterBadge() {
       const state = document.getElementById('stateFilter').value;
       const county = document.getElementById('countyFilter').value;
       const shelter = document.getElementById('shelterFilter').value;
       const urgency = document.getElementById('urgencyFilter').value;
+      const sort = document.getElementById('sortFilter').value;
 
-      const activeCount = [state, county, shelter, urgency].filter(v => v && v !== 'ALL').length;
+      const activeCount = [state, county, shelter, urgency].filter(v => v && v !== 'ALL').length + (sort && sort !== 'DEFAULT' ? 1 : 0);
       const btn = document.getElementById('mobileFilterToggle');
       const lbl = document.getElementById('mobileFilterLabel');
       const chevron = document.getElementById('mobileFilterChevron');
@@ -524,8 +561,10 @@
         stateSelect.classList.remove('hidden');
         searchWrap.classList.remove('sm:col-span-4');
         searchWrap.classList.add('sm:col-span-3');
-        dropdownGroup.classList.remove('sm:col-span-8', 'sm:grid-cols-8');
-        dropdownGroup.classList.add('sm:col-span-9', 'sm:grid-cols-10');
+        dropdownGroup.classList.remove('sm:col-span-8');
+        dropdownGroup.classList.add('sm:col-span-9');
+        document.getElementById('countyFilter').classList.replace('sm:col-span-3', 'sm:col-span-2');
+        document.getElementById('urgencyFilter').classList.replace('sm:col-span-3', 'sm:col-span-2');
       }
 
       syncCountyOptions();
@@ -549,6 +588,7 @@
       const county = document.getElementById('countyFilter').value;
       const shelterSlug = document.getElementById('shelterFilter').value;
       const urgency = document.getElementById('urgencyFilter').value;
+      const sortMode = document.getElementById('sortFilter').value;
 
       updateMobileFilterBadge();
 
@@ -566,6 +606,16 @@
 
         return isRoleMatch && matchesState && matchesCounty && matchesShelter && isUrgencyMatch && matchesQuery;
       });
+
+      if (sortMode === 'DEADLINE') {
+        filtered.sort((a, b) => getDeadlineTimestamp(a) - getDeadlineTimestamp(b));
+      } else if (sortMode === 'RECENT') {
+        filtered.sort((a, b) => {
+          const tsA = new Date(a.updated_at || a.last_checked || 0).getTime() || 0;
+          const tsB = new Date(b.updated_at || b.last_checked || 0).getTime() || 0;
+          return tsB - tsA;
+        });
+      }
 
       const activeShelterObj = shelterSlug !== 'ALL' ? sheltersBySlug[shelterSlug] : null;
       const scopeSuffix = activeShelterObj
@@ -749,6 +799,7 @@
 
     document.getElementById('searchInput').addEventListener('input', render);
     document.getElementById('urgencyFilter').addEventListener('change', render);
+    document.getElementById('sortFilter').addEventListener('change', render);
     document.getElementById('resetBtn').addEventListener('click', () => {
       selectedRole = 'ALL';
       document.querySelectorAll('.role-pill').forEach((b, i) => {
@@ -761,6 +812,7 @@
       document.getElementById('countyFilter').value = 'ALL';
       document.getElementById('shelterFilter').value = 'ALL';
       document.getElementById('urgencyFilter').value = 'ALL';
+      document.getElementById('sortFilter').value = 'DEFAULT';
       syncCountyOptions();
       syncShelterOptions();
       if (window.location.search) {
