@@ -800,7 +800,12 @@ if (sharedDogParam) {
       render();
     });
 
-    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+  if (!e.target.value.trim() && window.location.search.includes('dog=')) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  render();
+});
     document.getElementById('urgencyFilter').addEventListener('change', render);
     document.getElementById('sortFilter').addEventListener('change', render);
     document.getElementById('resetBtn').addEventListener('click', () => {
