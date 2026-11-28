@@ -2,12 +2,16 @@ name: Generate UrgentPaws Carousel
 
 on:
   schedule:
-    # Runs daily at 7:32 AM PST (15:32 UTC), 15 mins after generate_reel.yml
+    # Runs daily at 7:32 AM PST (15:32 UTC), 15 mins after generate-reel.yml
     - cron: "32 15 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: urgentpaws-media-generation
+  cancel-in-progress: false
 
 jobs:
   build-carousel:
@@ -27,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('generate_carousel.py') }}
+          key: playwright-${{ runner.os }}-chromium
           restore-keys: |
             playwright-${{ runner.os }}-
 
