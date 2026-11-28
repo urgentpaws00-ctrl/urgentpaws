@@ -663,7 +663,7 @@ def build_cta_slide_html() -> str:
       </div>
     </div>
     <div class="url-box">
-      <small>Search all 11 California shelter systems free at</small>
+      <small>Search all California shelter systems free at</small>
       <strong>urgentpaws.org</strong>
     </div>
   </div>
