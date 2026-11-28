@@ -453,51 +453,50 @@
     }
 
     async function shareDogById(btn, dogUid) {
-      const dog = allDogs.find(d => (d.id || d.animal_id) === dogUid);
-      const name = dog?.name || 'Urgent Shelter Dog';
-      const aid = dog?.animal_id ? ` (#${dog.animal_id})` : '';
-      const shelter = dog?.shelter || 'Municipal Shelter';
-      const deadline = dog?.deadline_or_urgency ? ` - ${dog.deadline_or_urgency}` : '';
-      const shareUrl = dog?.id
-        ? `${window.location.origin}/?dog=${encodeURIComponent(dog.id)}`
-        : window.location.href;
-      const shareText = `URGENT: ${name}${aid} at ${shelter}${deadline}. View live status & shelter link:`;
+  const dog = allDogs.find(d => (d.id || d.animal_id) === dogUid);
+  const name = dog?.name || 'Urgent Shelter Dog';
+  const aid = dog?.animal_id ? ` (#${dog.animal_id})` : '';
+  const shelter = dog?.shelter || 'Municipal Shelter';
+  const deadline = dog?.deadline_or_urgency ? ` - ${dog.deadline_or_urgency}` : '';
+  const shareUrl = dog?.id
+    ? `${window.location.origin}/?dog=${encodeURIComponent(dog.id)}`
+    : window.location.href;
+  const shareText = `URGENT: ${name}${aid} at ${shelter}${deadline}. View live status & shelter link:`;
 
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: `${name} - UrgentPaws`,
-            text: shareText,
-            url: shareUrl,
-          });
-          return;
-        } catch (err) {
-          if (err && err.name === 'AbortError') return;
-        }
-      }
-
-      const fullCopy = `${shareText} ${shareUrl}`;
-      try {
-        await navigator.clipboard.writeText(fullCopy);
-      } catch {
-        const ta = document.createElement('textarea');
-        ta.value = fullCopy;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        ta.remove();
-      }
-
-      const orig = btn.textContent;
-      btn.textContent = 'Copied Link!';
-      btn.classList.remove('bg-white', 'text-neutral-900', 'border-neutral-300');
-      btn.classList.add('bg-green-600', 'text-white', 'border-green-600');
-      setTimeout(() => {
-        btn.textContent = orig;
-        btn.classList.remove('bg-green-600', 'text-white', 'border-green-600');
-        btn.classList.add('bg-white', 'text-neutral-900', 'border-neutral-300');
-      }, 1800);
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${name}${aid} - ${shelter} | UrgentPaws`,
+        url: shareUrl,
+      });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
     }
+  }
+
+  const fullCopy = `${shareText}\n${shareUrl}`;
+  try {
+    await navigator.clipboard.writeText(fullCopy);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = fullCopy;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+
+  const orig = btn.textContent;
+  btn.textContent = 'Copied Link!';
+  btn.classList.remove('bg-white', 'text-neutral-900', 'border-neutral-300');
+  btn.classList.add('bg-green-600', 'text-white', 'border-green-600');
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.classList.remove('bg-green-600', 'text-white', 'border-green-600');
+    btn.classList.add('bg-white', 'text-neutral-900', 'border-neutral-300');
+  }, 1800);
+}
 
     async function loadDogs() {
       const grid = document.getElementById('dogGrid');
@@ -572,12 +571,16 @@
       renderFooterShelters();
 
       const sharedDogParam = new URLSearchParams(window.location.search).get('dog');
-      if (sharedDogParam) {
-        const target = allDogs.find(d => d.id === sharedDogParam);
-        if (target && target.animal_id) {
-          document.getElementById('searchInput').value = target.animal_id;
-        }
-      }
+if (sharedDogParam) {
+  const normalizedParam = sharedDogParam.trim().toLowerCase();
+  const target = allDogs.find(
+    d => (d.id && d.id.toLowerCase() === normalizedParam) ||
+         (d.animal_id && d.animal_id.toLowerCase() === normalizedParam)
+  );
+  if (target) {
+    document.getElementById('searchInput').value = target.animal_id || target.name || '';
+  }
+}
 
       render();
     }
