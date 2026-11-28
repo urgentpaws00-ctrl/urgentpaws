@@ -1,0 +1,64 @@
+name: Generate UrgentPaws Carousel
+
+on:
+  schedule:
+    # Runs daily at 7:17 AM PST (15:17 UTC)
+    - cron: "17 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-carousel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('generate_carousel.py') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
+            playwright install chromium
+          fi
+          playwright install-deps chromium
+
+      - name: Generate 4:5 Carousel PNGs and Caption
+        run: python generate_carousel.py
+
+      - name: Upload Carousel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: urgentpaws-carousel
+          path: |
+            carousel_slides/
+            carousel_caption.txt
+            reel_history.json
+
+      - name: Commit carousel_slides, carousel_caption.txt, and reel_history.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A carousel_slides/ carousel_caption.txt reel_history.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-generate UrgentPaws daily carousel"
+            git pull --rebase origin main
+            git push
+          fi
