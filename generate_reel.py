@@ -101,11 +101,11 @@ def save_history(dog_id: str, shelter: str) -> None:
     if dog_id:
         ids = [x for x in hist["dog_ids"] if x != dog_id]
         ids.append(dog_id)
-        hist["dog_ids"] = ids[-30:]
+        hist["dog_ids"] = ids[-60:]
     if shelter:
         s_clean = shelter.strip().lower()
         shelters = hist["shelters"] + [s_clean]
-        hist["shelters"] = shelters[-10:]
+        hist["shelters"] = shelters[-20:]
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(hist, f, indent=2)
         f.write("\n")
@@ -295,8 +295,6 @@ def build_single_dog_html(dog: dict) -> str:
       align-items: center;
       justify-content: center;
     }}
-    /* 3-cut visual pattern interrupt over 8.5s without cropping off ears/head:
-       0-2.8s full hero portrait -> 2.8-5.6s closer face focus -> 5.6-8.5s steady medium zoom */
     .photo-box img.fg-dog {{
       width: 100%;
       height: 100%;
@@ -470,6 +468,8 @@ def write_caption(dog: dict) -> None:
     shelter = clean_shelter_label(dog.get("shelter") or "", dog.get("city") or "", aid)
     badge = dog.get("deadline_or_urgency") or "Urgent"
     needs = dog.get("needs_type") or "Rescue, Foster, or Adopter Needed"
+    dog_uid = dog.get("id") or aid
+    direct_link = f"https://www.urgentpaws.org/?dog={dog_uid}" if dog_uid else "https://www.urgentpaws.org"
     is_laas = "los angeles" in (dog.get("county") or "").lower()
 
     hashtags = (
@@ -485,7 +485,7 @@ def write_caption(dog: dict) -> None:
         "",
         "Please share this to your Story or send to someone in California who can foster, adopt, or tag a 501(c)(3) rescue before time runs out.",
         "",
-        "🔗 Direct shelter link & live status in bio → urgentpaws.org",
+        f"🔗 Direct shelter link & live status:\n{direct_link}",
         "",
         hashtags,
     ]
@@ -511,7 +511,6 @@ def generate_video(stage_html: str, out_mp4: str = "latest_reel.mp4") -> None:
             page = context.new_page()
             page.goto(f"file://{html_path}", wait_until="networkidle", timeout=30000)
 
-            # Hold 8.5 seconds on the single spotlighted dog while 3-cut zoom runs
             page.wait_for_timeout(8500)
 
             video_path = page.video.path()
